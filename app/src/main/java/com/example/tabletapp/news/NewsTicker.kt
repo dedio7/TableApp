@@ -26,6 +26,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
@@ -56,7 +57,7 @@ fun NewsTicker(
 ) {
     val accentColor = Color(0xFF4FC3F7) // Light blue accent for source names
     val separatorColor = Color(0xAAFFFFFF) // Semi-transparent white for dots
-    val backgroundColor = Color(0xCC000000) // Semi-transparent black background
+    val backgroundColor = Color(0xFF000000) // Solid black background for maximum contrast and readability
 
     val newsItems: State<List<NewsItem>> = remember { mutableStateOf(emptyList()) }
     val isLoading = remember { mutableStateOf(true) }
@@ -64,20 +65,29 @@ fun NewsTicker(
 
     val repository = remember { NewsRepository() }
 
-    // Fetch news and auto-refresh every 30 minutes
+    // Fetch news and auto-refresh every 30 minutes (or 10 seconds if it fails)
     LaunchedEffect(Unit) {
         while (isActive) {
             isLoading.value = true
+            var success = false
             try {
                 val items = repository.fetchNews()
                 (newsItems as androidx.compose.runtime.MutableState).value = items
-                hasError.value = items.isEmpty()
+                val empty = items.isEmpty()
+                hasError.value = empty
+                success = !empty
             } catch (e: Exception) {
                 hasError.value = true
+                success = false
             }
             isLoading.value = false
-            // Wait 30 minutes before next refresh
-            delay(30L * 60L * 1000L)
+            if (success) {
+                // Wait 30 minutes before next refresh
+                delay(30L * 60L * 1000L)
+            } else {
+                // Wait 10 seconds then retry
+                delay(10L * 1000L)
+            }
         }
     }
 
@@ -91,7 +101,7 @@ fun NewsTicker(
     }
 
     val textStyle = TextStyle(
-        fontSize = 18.sp,
+        fontSize = 20.sp, // Increased font size for better readability
         letterSpacing = 0.5.sp
     )
 
@@ -116,9 +126,9 @@ fun NewsTicker(
     }
 
     // Animation duration scales with text length for consistent speed
-    // ~60 pixels per second for readable scrolling
+    // ~12 pixels per second for readable scrolling (reduced from 30f to be much slower and very readable)
     val durationMs = remember(totalScrollDistance) {
-        ((totalScrollDistance / 60f) * 1000f).toInt().coerceAtLeast(10000)
+        ((totalScrollDistance / 12f) * 1000f).toInt().coerceAtLeast(10000)
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "newsTicker")
@@ -247,22 +257,22 @@ private fun buildTickerText(
                 SpanStyle(
                     color = accentColor,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 20.sp
                 )
             ) {
                 append(item.source)
             }
             // Separator between source and title
-            withStyle(SpanStyle(color = separatorColor, fontSize = 18.sp)) {
+            withStyle(SpanStyle(color = separatorColor, fontSize = 20.sp)) {
                 append(" | ")
             }
             // Headline text
-            withStyle(SpanStyle(color = textColor, fontSize = 18.sp)) {
+            withStyle(SpanStyle(color = textColor, fontSize = 20.sp)) {
                 append(item.title)
             }
             // Dot separator between items
             if (index < items.size - 1) {
-                withStyle(SpanStyle(color = separatorColor, fontSize = 18.sp)) {
+                withStyle(SpanStyle(color = separatorColor, fontSize = 20.sp)) {
                     append("  •  ")
                 }
             }
