@@ -14,13 +14,14 @@ class MainScreenTest {
 
   @Before
   fun setup() {
-    composeTestRule.setContent { MainScreen(FAKE_DATA) }
+    // Fixed: MainScreen expects (NavKey) -> Unit as the first argument.
+    composeTestRule.setContent { MainScreen(onItemClick = {}) }
   }
 
   @Test
-  fun firstItem_exists() {
-    FAKE_DATA.forEach { composeTestRule.onNodeWithText("Hello $it!").assertExists() }
+  fun batteryWidget_isDisplayed() {
+    // BatteryWidget shows "100%" and "Batteria" by default in its initial state
+    composeTestRule.onNodeWithText("100%").assertExists()
+    composeTestRule.onNodeWithText("Batteria").assertExists()
   }
 }
-
-private val FAKE_DATA = listOf("Sample1", "Sample2", "Sample3")
