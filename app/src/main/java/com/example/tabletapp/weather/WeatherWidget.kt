@@ -50,27 +50,30 @@ import kotlin.math.roundToInt
 @Composable
 fun WeatherWidget(
     modifier: Modifier = Modifier,
-    textColor: Color = Color.White
+    textColor: Color = Color.White,
+    latitude: Double = 41.9028,
+    longitude: Double = 12.4964,
+    cityName: String = "Roma"
 ) {
     val repository = remember { WeatherRepository() }
     val weatherData = remember { mutableStateOf<WeatherData?>(null) }
     val isLoading = remember { mutableStateOf(true) }
     val hasError = remember { mutableStateOf(false) }
-    val cityName = remember { mutableStateOf("Roma") }
     val refreshTrigger = remember { mutableLongStateOf(0L) }
 
-    // Default location: Rome
-    val latitude = remember { mutableStateOf(41.9028) }
-    val longitude = remember { mutableStateOf(12.4964) }
-
     val coroutineScope = rememberCoroutineScope()
+
+    // Re-fetch when coordinates change
+    LaunchedEffect(latitude, longitude) {
+        refreshTrigger.longValue = System.currentTimeMillis()
+    }
 
     // Auto-refresh every 30 minutes
     LaunchedEffect(refreshTrigger.longValue) {
         isLoading.value = true
         hasError.value = false
 
-        val result = repository.fetchWeather(latitude.value, longitude.value)
+        val result = repository.fetchWeather(latitude, longitude)
         if (result != null) {
             weatherData.value = result
             hasError.value = false
@@ -111,7 +114,7 @@ fun WeatherWidget(
                 val data = weatherData.value!!
                 WeatherContent(
                     data = data,
-                    cityName = cityName.value,
+                    cityName = cityName,
                     textColor = textColor,
                     secondaryTextColor = secondaryTextColor
                 )
