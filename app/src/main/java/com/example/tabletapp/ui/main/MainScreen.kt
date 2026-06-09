@@ -66,6 +66,8 @@ fun MainScreen(
     val clockTypeName by appSettings.clockType.collectAsStateWithLifecycle(initialValue = "FLIP")
     val clockColorLong by appSettings.clockColor.collectAsStateWithLifecycle(initialValue = 0xFFEEEEEEL)
     val showSeconds by appSettings.showSeconds.collectAsStateWithLifecycle(initialValue = true)
+    val binaryModeName by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
+    val binaryThemeName by appSettings.binaryClockTheme.collectAsStateWithLifecycle(initialValue = "DEFAULT")
 
     // ── News settings ─────────────────────────────────────────────────────────
     val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
@@ -180,7 +182,9 @@ fun MainScreen(
                             clockType = clockType,
                             modifier = Modifier.fillMaxSize(),
                             textColor = clockColor,
-                            showSeconds = showSeconds
+                            showSeconds = showSeconds,
+                            binaryMode = binaryModeName,
+                            binaryTheme = binaryThemeName
                         )
                     }
                 }

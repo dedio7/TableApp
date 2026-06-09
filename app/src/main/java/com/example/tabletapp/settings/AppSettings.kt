@@ -27,6 +27,8 @@ class AppSettings(private val context: Context) {
         val CLOCK_TYPE = stringPreferencesKey("clock_type")
         val CLOCK_COLOR = longPreferencesKey("clock_color")
         val SHOW_SECONDS = booleanPreferencesKey("show_seconds")
+        val BINARY_CLOCK_MODE = stringPreferencesKey("binary_clock_mode") // "BINARY" or "BCD"
+        val BINARY_CLOCK_THEME = stringPreferencesKey("binary_clock_theme") // "DEFAULT" or "ACCENT"
 
         // Weather settings
         val WEATHER_LATITUDE = doublePreferencesKey("weather_latitude")
@@ -78,6 +80,26 @@ class AppSettings(private val context: Context) {
     suspend fun setShowSeconds(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[SHOW_SECONDS] = show
+        }
+    }
+
+    val binaryClockMode: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[BINARY_CLOCK_MODE] ?: "BINARY"
+    }
+
+    suspend fun setBinaryClockMode(mode: String) {
+        context.dataStore.edit { prefs ->
+            prefs[BINARY_CLOCK_MODE] = mode
+        }
+    }
+
+    val binaryClockTheme: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[BINARY_CLOCK_THEME] ?: "DEFAULT"
+    }
+
+    suspend fun setBinaryClockTheme(theme: String) {
+        context.dataStore.edit { prefs ->
+            prefs[BINARY_CLOCK_THEME] = theme
         }
     }
 

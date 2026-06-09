@@ -110,6 +110,8 @@ fun SettingsPanel(
     val newsRefreshMinutes by appSettings.newsRefreshMinutes.collectAsStateWithLifecycle(initialValue = 30)
     val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
     val currentCity by appSettings.weatherCity.collectAsStateWithLifecycle(initialValue = "Roma")
+    val binaryMode by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
+    val binaryTheme by appSettings.binaryClockTheme.collectAsStateWithLifecycle(initialValue = "DEFAULT")
 
     // Weather search state
     val weatherRepo = remember { WeatherRepository() }
@@ -227,6 +229,89 @@ fun SettingsPanel(
                     checked = showSeconds,
                     onCheckedChange = { scope.launch { appSettings.setShowSeconds(it) } }
                 )
+
+                // ── OPZIONI BINARIE (Mostrate solo se l'orologio è BINARY) ──────
+                if (clockType == "BINARY") {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Impostazioni Orologio Binario",
+                        color = AccentBlue,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Mode: Binary vs BCD
+                    SettingLabel(label = "Modalità Visualizzazione")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("BINARY" to "Binario Puro", "BCD" to "BCD (Cifre)").forEach { (code, label) ->
+                            val isSelected = binaryMode == code
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg)
+                                    .border(
+                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                        color = if (isSelected) AccentBlue else DividerColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { scope.launch { appSettings.setBinaryClockMode(code) } }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) AccentBlue else TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Theme: Default vs Accent
+                    SettingLabel(label = "Tema Colori")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("DEFAULT" to "Standard", "ACCENT" to "Neon Accent").forEach { (code, label) ->
+                            val isSelected = binaryTheme == code
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg)
+                                    .border(
+                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                        color = if (isSelected) AccentBlue else DividerColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { scope.launch { appSettings.setBinaryClockTheme(code) } }
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) AccentBlue else TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
