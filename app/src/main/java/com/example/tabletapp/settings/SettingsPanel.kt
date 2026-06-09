@@ -72,14 +72,22 @@ private val DividerColor = Color(0xFF263254)
  * Clock color presets for the picker.
  */
 private val CLOCK_COLOR_PRESETS: List<Pair<String, Color>> = listOf(
-    "Bianco" to Color(0xFFEEEEEE),
-    "Arancione" to Color(0xFFE8722A),
-    "Azzurro" to Color(0xFF4FC3F7),
-    "Verde" to Color(0xFF66BB6A),
-    "Giallo" to Color(0xFFFFD54F),
-    "Rosa" to Color(0xFFF48FB1),
-    "Viola" to Color(0xFFCE93D8),
-    "Rosso" to Color(0xFFEF5350),
+    "Bianco" to Color(0xFFFFFFFF),     // Brillante puro
+    "Arancione" to Color(0xFFFF9100),  // Neon Orange
+    "Azzurro" to Color(0xFF00B0FF),    // Vivid Blue
+    "Verde" to Color(0xFF00E676),      // Bright Green
+    "Giallo" to Color(0xFFFFEA00),     // Neon Yellow
+    "Rosa" to Color(0xFFFF4081),       // Bright Pink
+    "Viola" to Color(0xFFD500F9),      // Vivid Purple
+    "Rosso" to Color(0xFFFF1744),      // Bright Red
+    "Teal" to Color(0xFF1DE9B6),       // Bright Teal
+    "Ambra" to Color(0xFFFFC400),      // Vivid Amber
+    "Indaco" to Color(0xFF651FFF),     // Deep Purple/Indigo
+    "Lime" to Color(0xFFC6FF00),       // Neon Lime
+    "Ciano" to Color(0xFF00E5FF),      // Electric Cyan
+    "Deep Orange" to Color(0xFFFF3D00),// Intense Orange
+    "Grigio" to Color(0xFFCFD8DC),     // Lighter Grey
+    "Oro" to Color(0xFFFFD700)        // Gold
 )
 
 /**

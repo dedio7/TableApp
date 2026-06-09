@@ -52,12 +52,14 @@ fun PixelClock(
         val colonDots = 2  // width in dot-columns
         val spacingDots = 1
         val totalDotCols = 3 * 4 + colonDots + spacingDots * 5
-        val dotSize = (cw / (totalDotCols + 2f)).coerceAtMost(ch / 9f)
+        
+        // Ulteriore riduzione della dimensione dei punti per farlo stare meglio nello schermo
+        val dotSize = (cw / (totalDotCols + 8f)).coerceAtMost(ch / 13f)
         val gap = dotSize * 0.35f
         val cellSize = dotSize + gap
 
         val gridH = 5 * cellSize
-        val startY = if (showSeconds) ch * 0.18f else (ch - gridH) / 2f
+        val startY = if (showSeconds) (ch - gridH * 2.2f) / 2f else (ch - gridH) / 2f
         val totalW = totalDotCols * cellSize
         val startX = (cw - totalW) / 2f
 

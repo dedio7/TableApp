@@ -57,8 +57,9 @@ fun DigitalClock(
         val spacing = cw * 0.025f
         val totalMainW = cw - colonW - spacing * 4
         val digitW = totalMainW / 4f
-        val digitH = (ch * 0.60f).coerceAtMost(digitW * 1.8f)
-        val startY = if (showSeconds) ch * 0.22f else (ch - digitH) / 2f
+        // Riduzione della dimensione: da 0.60f a 0.50f e rapporto digitW ridotto
+        val digitH = (ch * 0.50f).coerceAtMost(digitW * 1.5f)
+        val startY = if (showSeconds) (ch - digitH * 1.6f) / 2f else (ch - digitH) / 2f
         val startX = (cw - (digitW * 4 + colonW + spacing * 4)) / 2f
 
         val h0 = hour.intValue / 10

@@ -1,5 +1,12 @@
 package com.example.tabletapp.ui.main
 
+import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.view.WindowManager
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -17,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +64,39 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
+
+    // --- Screen On Logic ---
+    DisposableEffect(context) {
+        val activity = context as? Activity
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+                val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
+                
+                val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL ||
+                        plugged == BatteryManager.BATTERY_PLUGGED_AC ||
+                        plugged == BatteryManager.BATTERY_PLUGGED_USB ||
+                        plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS
+
+                activity?.window?.let { window ->
+                    if (isCharging) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    }
+                }
+            }
+        }
+        
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        context.registerReceiver(receiver, filter)
+        
+        onDispose {
+            context.unregisterReceiver(receiver)
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     // ── Background settings ───────────────────────────────────────────────────
     val bgPrimary by appSettings.bgPrimaryColor.collectAsStateWithLifecycle(initialValue = 0xFF0D1B2A)
@@ -123,14 +164,18 @@ fun MainScreen(
                     .padding(top = 8.dp, end = 8.dp)
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                    .background(Color.White.copy(alpha = 0.15f))
+                    .border(1.2.dp, Color.White.copy(alpha = 0.4f), CircleShape)
                     .clickable { settingsOpen = !settingsOpen }
                     .rotate(gearRotation),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.size(28.dp)) {
-                    val style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Normal)
+                    val style = TextStyle(
+                        fontSize = 22.sp, 
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White // Colore bianco pieno per risalto
+                    )
                     val measured = textMeasurer.measure(AnnotatedString("⚙"), style)
                     drawText(
                         textLayoutResult = measured,
