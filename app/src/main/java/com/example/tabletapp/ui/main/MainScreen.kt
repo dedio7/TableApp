@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +37,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -49,13 +53,16 @@ import androidx.navigation3.runtime.NavKey
 import com.example.tabletapp.background.AmbientBackground
 import com.example.tabletapp.background.BackgroundConfig
 import com.example.tabletapp.battery.BatteryWidget
+import com.example.tabletapp.calendar.CalendarWidget
 import com.example.tabletapp.clock.ClockDisplay
 import com.example.tabletapp.clock.ClockType
 import com.example.tabletapp.clock.DateWidget
+import com.example.tabletapp.media.MediaWidget
 import com.example.tabletapp.news.NewsTicker
 import com.example.tabletapp.settings.AppSettings
 import com.example.tabletapp.settings.SettingsPanel
 import com.example.tabletapp.weather.WeatherWidget
+import kotlinx.coroutines.delay
 
 @Composable
 fun MainScreen(
@@ -121,6 +128,8 @@ fun MainScreen(
 
     // ── Date format ───────────────────────────────────────────────────────────
     val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
+    val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
 
     val config = remember(bgPrimary, bgSecondary, bgUseGradient) {
         BackgroundConfig(
@@ -143,10 +152,47 @@ fun MainScreen(
         animationSpec = tween(durationMillis = 300),
         label = "gearRotation"
     )
+    
+    // --- Burn-in Protection State ---
+    var burnInOffset by remember { mutableStateOf(Offset.Zero) }
+    LaunchedEffect(antiBurnInEnabled) {
+        if (antiBurnInEnabled) {
+            while (true) {
+                delay(60_000L) // Shift every minute
+                burnInOffset = Offset(
+                    x = (-3..3).random().toFloat(),
+                    y = (-3..3).random().toFloat()
+                )
+            }
+        } else {
+            burnInOffset = Offset.Zero
+        }
+    }
+
+    // --- Night Shift State ---
+    val isNightTime = remember {
+        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        hour >= 22 || hour < 7
+    }
+    val applyNightShift = nightShiftEnabled && isNightTime
+
     val textMeasurer = rememberTextMeasurer()
 
     AmbientBackground(config = config, modifier = Modifier.fillMaxSize()) {
-        Box(modifier = modifier.fillMaxSize()) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .then(
+                    if (antiBurnInEnabled) {
+                        Modifier.layout { measurable, constraints ->
+                            val placeable = measurable.measure(constraints)
+                            layout(placeable.width, placeable.height) {
+                                placeable.placeRelative(burnInOffset.x.toInt(), burnInOffset.y.toInt())
+                            }
+                        }
+                    } else Modifier
+                )
+        ) {
 
             // 1. Battery widget — top-right (shifted left to clear gear button)
             Box(
@@ -234,21 +280,24 @@ fun MainScreen(
                     }
                 }
 
-                // ── Right: Weather widget ─────────────────────────────────────
-                Box(
+                // ── Right: Weather + Calendar + Media ─────────────────────────
+                Column(
                     modifier = Modifier
-                        .weight(0.8f)
+                        .weight(1f)
                         .fillMaxHeight(),
-                    contentAlignment = Alignment.Center
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
                 ) {
                     WeatherWidget(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         latitude = weatherLat,
                         longitude = weatherLon,
                         cityName = weatherCity
                     )
+
+                    CalendarWidget(modifier = Modifier.fillMaxWidth())
+
+                    MediaWidget(modifier = Modifier.fillMaxWidth())
                 }
             }
 
@@ -274,5 +323,15 @@ fun MainScreen(
             onDismiss = { settingsOpen = false },
             onNewsRefresh = { newsRefreshTrigger++ }
         )
+
+        // 6. Night Shift Overlay
+        if (applyNightShift) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFE8722A).copy(alpha = 0.15f)) // Warm amber overlay
+                    .background(Color.Black.copy(alpha = 0.10f)) // Additional dimming
+            )
+        }
     }
 }

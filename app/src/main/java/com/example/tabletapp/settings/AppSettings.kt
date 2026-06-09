@@ -49,6 +49,8 @@ class AppSettings(private val context: Context) {
         // General settings
         val DATE_FORMAT = stringPreferencesKey("date_format") // "IT" or "EN"
         val BRIGHTNESS = intPreferencesKey("brightness")
+        val NIGHT_SHIFT_ENABLED = booleanPreferencesKey("night_shift_enabled")
+        val ANTI_BURN_IN_ENABLED = booleanPreferencesKey("anti_burn_in_enabled")
     }
 
     // --- Clock settings ---
@@ -188,6 +190,26 @@ class AppSettings(private val context: Context) {
     suspend fun setDateFormat(format: String) {
         context.dataStore.edit { prefs ->
             prefs[DATE_FORMAT] = format
+        }
+    }
+
+    val nightShiftEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[NIGHT_SHIFT_ENABLED] ?: false
+    }
+
+    suspend fun setNightShiftEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[NIGHT_SHIFT_ENABLED] = enabled
+        }
+    }
+
+    val antiBurnInEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[ANTI_BURN_IN_ENABLED] ?: true
+    }
+
+    suspend fun setAntiBurnInEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[ANTI_BURN_IN_ENABLED] = enabled
         }
     }
 }

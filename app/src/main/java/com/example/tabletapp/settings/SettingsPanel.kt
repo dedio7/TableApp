@@ -120,6 +120,8 @@ fun SettingsPanel(
     val currentCity by appSettings.weatherCity.collectAsStateWithLifecycle(initialValue = "Roma")
     val binaryMode by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
     val binaryTheme by appSettings.binaryClockTheme.collectAsStateWithLifecycle(initialValue = "DEFAULT")
+    val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
 
     // Weather search state
     val weatherRepo = remember { WeatherRepository() }
@@ -514,6 +516,22 @@ fun SettingsPanel(
 
                 // ── SEZIONE GENERALE ──────────────────────────────────────────
                 SectionHeader(title = "🌍  Generale")
+
+                // Night Shift
+                SettingSwitch(
+                    label = "Night Shift (Filtro Luce Blu)",
+                    checked = nightShiftEnabled,
+                    onCheckedChange = { scope.launch { appSettings.setNightShiftEnabled(it) } }
+                )
+
+                // Anti Burn-in
+                SettingSwitch(
+                    label = "Protezione Anti Burn-in",
+                    checked = antiBurnInEnabled,
+                    onCheckedChange = { scope.launch { appSettings.setAntiBurnInEnabled(it) } }
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 SettingLabel(label = "Formato data")
                 Row(
