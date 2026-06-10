@@ -27,6 +27,6 @@ fun DailyPulseTheme(
     MaterialTheme(
         colorScheme = AmbientColorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

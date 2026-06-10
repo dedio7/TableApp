@@ -37,7 +37,7 @@ class NewsRepository {
         SimpleDateFormat("dd MMM yyyy HH:mm:ss Z", Locale.ENGLISH),
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ENGLISH),
         SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH),
-        SimpleDateFormat("EEE, dd MMM yyyy HH:mm Z", Locale.ENGLISH)
+        SimpleDateFormat("EEE, dd MMM yyyy HH:mm Z", Locale.ENGLISH),
     )
 
     /**
@@ -66,7 +66,7 @@ class NewsRepository {
                     async {
                         try {
                             fetchFromSource(source)
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             // Skip failed sources, return empty list
                             emptyList()
                         }
@@ -76,8 +76,10 @@ class NewsRepository {
 
             // Sort by parsed date (newest first), fall back to original order
             allItems
+                .asSequence()
                 .sortedByDescending { item -> parseDate(item.pubDate)?.time ?: 0L }
                 .take(MAX_ITEMS)
+                .toList()
         }
     }
 
@@ -95,14 +97,15 @@ class NewsRepository {
         connection.setRequestProperty("User-Agent", "DailyPulse/1.0 RSS Reader")
         connection.setRequestProperty("Accept", "application/rss+xml, application/xml, text/xml")
 
-        try {
+        return try {
             connection.connect()
             val responseCode = connection.responseCode
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                return emptyList()
+                emptyList()
+            } else {
+                val inputStream: InputStream = connection.inputStream
+                parseRssFeed(inputStream, source.name)
             }
-            val inputStream: InputStream = connection.inputStream
-            return parseRssFeed(inputStream, source.name)
         } finally {
             connection.disconnect()
         }
@@ -178,7 +181,7 @@ class NewsRepository {
                                     description = cleanDescription,
                                     pubDate = pubDate.trim(),
                                     source = sourceName,
-                                    link = link.trim()
+                                    link = link.trim(),
                                 )
                             )
                         }

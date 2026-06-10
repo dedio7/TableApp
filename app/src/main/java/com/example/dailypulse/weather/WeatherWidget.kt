@@ -42,6 +42,7 @@ import com.example.dailypulse.ui.i18n.Strings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * A compact, elegant weather widget that displays current weather conditions.
@@ -56,13 +57,13 @@ fun WeatherWidget(
     textColor: Color = Color.White,
     latitude: Double = 41.9028,
     longitude: Double = 12.4964,
-    cityName: String = "Roma"
+    cityName: String = "Roma",
 ) {
     val repository = remember { WeatherRepository() }
     val strings = LocalStrings.current
     val weatherData = remember { mutableStateOf<WeatherData?>(null) }
-    val isLoading = remember { mutableStateOf(true) }
-    val hasError = remember { mutableStateOf(false) }
+    val isLoading = remember { mutableStateOf(value = true) }
+    val hasError = remember { mutableStateOf(value = false) }
     val refreshTrigger = remember { mutableLongStateOf(0L) }
 
     val coroutineScope = rememberCoroutineScope()
@@ -87,7 +88,7 @@ fun WeatherWidget(
         isLoading.value = false
 
         // Wait 30 minutes then refresh
-        delay(30 * 60 * 1000L)
+        delay(30.minutes)
         refreshTrigger.longValue = System.currentTimeMillis()
     }
 
@@ -239,8 +240,8 @@ private fun WeatherShimmer(textColor: Color) {
 
     val shimmerBrush = Brush.linearGradient(
         colors = listOf(shimmerColor, shimmerHighlight, shimmerColor),
-        start = Offset(shimmerProgress.value * 300f - 100f, 0f),
-        end = Offset(shimmerProgress.value * 300f + 100f, 0f)
+        start = Offset((shimmerProgress.value * 300f) - 100f, 0f),
+        end = Offset((shimmerProgress.value * 300f) + 100f, 0f)
     )
 
     Column(
@@ -321,8 +322,8 @@ private fun WeatherShimmer(textColor: Color) {
 @Composable
 private fun WeatherError(
     textColor: Color,
-    strings: com.example.dailypulse.ui.i18n.Strings,
-    onRetry: () -> Unit
+    strings: Strings,
+    onRetry: () -> Unit,
 ) {
     val secondaryTextColor = textColor.copy(alpha = 0.7f)
 
@@ -331,12 +332,12 @@ private fun WeatherError(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .padding(vertical = 16.dp),
     ) {
         Text(
             text = "⚠️",
             fontSize = 36.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -346,7 +347,7 @@ private fun WeatherError(
             color = textColor,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -355,7 +356,7 @@ private fun WeatherError(
             text = strings.weatherCheckConnection,
             color = secondaryTextColor,
             fontSize = 13.sp,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -369,7 +370,7 @@ private fun WeatherError(
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.White.copy(alpha = 0.15f))
                 .clickable { onRetry() }
-                .padding(horizontal = 24.dp, vertical = 10.dp)
+                .padding(horizontal = 24.dp, vertical = 10.dp),
         )
     }
 }

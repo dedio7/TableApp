@@ -37,8 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -49,7 +47,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavKey
 import com.example.dailypulse.background.AmbientBackground
 import com.example.dailypulse.background.BackgroundConfig
 import com.example.dailypulse.battery.BatteryWidget
@@ -64,10 +61,10 @@ import com.example.dailypulse.settings.SettingsPanel
 import com.example.dailypulse.ui.i18n.ProvideLocalization
 import com.example.dailypulse.weather.WeatherWidget
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun MainScreen(
-    onItemClick: (NavKey) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -81,11 +78,11 @@ fun MainScreen(
                 val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
                 val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
                 
-                val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                        status == BatteryManager.BATTERY_STATUS_FULL ||
-                        plugged == BatteryManager.BATTERY_PLUGGED_AC ||
-                        plugged == BatteryManager.BATTERY_PLUGGED_USB ||
-                        plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS
+                val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                        (status == BatteryManager.BATTERY_STATUS_FULL) ||
+                        (plugged == BatteryManager.BATTERY_PLUGGED_AC) ||
+                        (plugged == BatteryManager.BATTERY_PLUGGED_USB) ||
+                        (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS)
 
                 activity?.window?.let { window ->
                     if (isCharging) {
@@ -138,7 +135,7 @@ fun MainScreen(
         BackgroundConfig(
             primaryColor = Color(bgPrimary),
             secondaryColor = Color(bgSecondary),
-            useGradient = bgUseGradient
+            useGradient = bgUseGradient,
         )
     }
 
@@ -148,12 +145,12 @@ fun MainScreen(
     val clockColor = Color(clockColorLong)
 
     // Settings panel & news refresh state
-    var settingsOpen by remember { mutableStateOf(false) }
+    var settingsOpen by remember { mutableStateOf(value = false) }
     var newsRefreshTrigger by remember { mutableIntStateOf(0) }
     val gearRotation by animateFloatAsState(
         targetValue = if (settingsOpen) 90f else 0f,
         animationSpec = tween(durationMillis = 300),
-        label = "gearRotation"
+        label = "gearRotation",
     )
     
     // --- Burn-in Protection State ---
@@ -161,7 +158,7 @@ fun MainScreen(
     LaunchedEffect(antiBurnInEnabled) {
         if (antiBurnInEnabled) {
             while (true) {
-                delay(60_000L) // Shift every minute
+                delay(1.minutes) // Shift every minute
                 burnInOffset = Offset(
                     x = (-3..3).random().toFloat(),
                     y = (-3..3).random().toFloat()
@@ -174,8 +171,9 @@ fun MainScreen(
 
     // --- Night Shift State ---
     val isNightTime = remember {
-        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        hour >= 22 || hour < 7
+        val calendar = java.util.Calendar.getInstance()
+        val hour = calendar[java.util.Calendar.HOUR_OF_DAY]
+        hour in 22..23 || hour in 0..6
     }
     val applyNightShift = nightShiftEnabled && isNightTime
 
@@ -333,9 +331,10 @@ fun MainScreen(
             // 5. Settings overlay (on top of everything)
             SettingsPanel(
                 visible = settingsOpen,
-                onDismiss = { settingsOpen = false },
-                onNewsRefresh = { newsRefreshTrigger++ }
-            )
+                onDismiss = { settingsOpen = false }
+            ) {
+                newsRefreshTrigger++
+            }
 
             // 6. Night Shift Overlay
             if (applyNightShift) {
