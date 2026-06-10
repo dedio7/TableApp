@@ -13,6 +13,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -61,6 +64,7 @@ import com.example.dailypulse.settings.SettingsPanel
 import com.example.dailypulse.ui.i18n.ProvideLocalization
 import com.example.dailypulse.weather.WeatherWidget
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.minutes
 
 @Composable
@@ -69,6 +73,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
+    val scope = rememberCoroutineScope()
 
     // --- Screen On Logic ---
     DisposableEffect(context) {
@@ -270,7 +275,30 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .pointerInput(Unit) {
+                                    var totalDrag = 0f
+                                    detectHorizontalDragGestures(
+                                        onDragEnd = {
+                                            if (kotlin.math.abs(totalDrag) > 100f) {
+                                                val allTypes = ClockType.entries
+                                                val currentIndex = allTypes.indexOf(clockType)
+                                                val nextIndex = if (totalDrag < 0) {
+                                                    (currentIndex + 1) % allTypes.size
+                                                } else {
+                                                    (currentIndex - 1 + allTypes.size) % allTypes.size
+                                                }
+                                                scope.launch {
+                                                    appSettings.setClockType(allTypes[nextIndex].name)
+                                                }
+                                            }
+                                            totalDrag = 0f
+                                        },
+                                        onHorizontalDrag = { _, dragAmount ->
+                                            totalDrag += dragAmount
+                                        }
+                                    )
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             ClockDisplay(

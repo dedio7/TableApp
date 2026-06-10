@@ -18,9 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,19 +60,20 @@ fun NewsTicker(
     val refreshBtnBg = Color(0xFF1A2240)
     val strings = LocalStrings.current
 
-    val newsItems: State<List<NewsItem>> = remember { mutableStateOf(emptyList()) }
-    val isLoading = remember { mutableStateOf(true) }
-    val hasError = remember { mutableStateOf(false) }
-    val fetchKey = remember { mutableIntStateOf(0) }
+    var newsItems by remember { mutableStateOf<List<NewsItem>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var hasError by remember { mutableStateOf(false) }
+    var fetchKey by remember { mutableIntStateOf(0) }
+    var readerOpen by remember { mutableStateOf(false) }
 
     val repository = remember { NewsRepository() }
 
     LaunchedEffect(refreshTrigger) {
-        if (refreshTrigger > 0) fetchKey.intValue++
+        if (refreshTrigger > 0) fetchKey++
     }
 
-    LaunchedEffect(fetchKey.intValue, enabledSources, language) {
-        isLoading.value = true
+    LaunchedEffect(fetchKey, enabledSources, language) {
+        isLoading = true
         var success = false
         try {
             val filteredSources = if (enabledSources.isEmpty()) {
@@ -79,25 +82,25 @@ fun NewsTicker(
                 DEFAULT_RSS_SOURCES.filter { it.name in enabledSources }
             }
             val items = repository.fetchNews(filteredSources)
-            (newsItems as androidx.compose.runtime.MutableState).value = items
+            newsItems = items
             val empty = items.isEmpty()
-            hasError.value = empty
+            hasError = empty
             success = !empty
         } catch (e: Exception) {
-            hasError.value = true
+            hasError = true
             success = false
         }
-        isLoading.value = false
+        isLoading = false
 
         if (isActive) {
             val wait = if (success) refreshIntervalMs else 10_000L
             delay(wait)
-            fetchKey.intValue++
+            fetchKey++
         }
     }
 
-    val tickerText: AnnotatedString = remember(newsItems.value) {
-        if (newsItems.value.isEmpty()) AnnotatedString("") else buildTickerText(newsItems.value, accentColor, textColor, separatorColor)
+    val tickerText: AnnotatedString = remember(newsItems) {
+        if (newsItems.isEmpty()) AnnotatedString("") else buildTickerText(newsItems, accentColor, textColor, separatorColor)
     }
 
     val textStyle = TextStyle(fontSize = 20.sp, letterSpacing = 0.5.sp)
@@ -127,10 +130,17 @@ fun NewsTicker(
         label = "spin"
     )
 
-    Box(modifier = modifier.fillMaxWidth().height(48.dp).background(backgroundColor), contentAlignment = Alignment.CenterStart) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(backgroundColor)
+            .clickable(enabled = newsItems.isNotEmpty()) { readerOpen = true },
+        contentAlignment = Alignment.CenterStart
+    ) {
         Box(modifier = Modifier.fillMaxWidth().height(48.dp).padding(end = 56.dp).clipToBounds()) {
             when {
-                isLoading.value && newsItems.value.isEmpty() -> {
+                isLoading && newsItems.isEmpty() -> {
                     val loadingStyle = TextStyle(fontSize = 18.sp, color = textColor.copy(alpha = 0.7f), letterSpacing = 0.5.sp)
                     Canvas(modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp)) {
                         val measured = textMeasurer.measure(AnnotatedString("..."), loadingStyle)
@@ -138,7 +148,7 @@ fun NewsTicker(
                     }
                 }
 
-                hasError.value && newsItems.value.isEmpty() -> {
+                hasError && newsItems.isEmpty() -> {
                     val errorStyle = TextStyle(fontSize = 18.sp, color = textColor.copy(alpha = 0.5f), letterSpacing = 0.5.sp)
                     Canvas(modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 16.dp)) {
                         val msg = if (enabledSources.isEmpty()) "Seleziona fonti / Select sources" else strings.weatherNotAvailable
@@ -163,14 +173,30 @@ fun NewsTicker(
             }
         }
 
-        Box(modifier = Modifier.align(Alignment.CenterEnd).padding(end = 8.dp).size(36.dp).clip(CircleShape).background(refreshBtnBg).clickable { fetchKey.intValue++ }, contentAlignment = Alignment.Center) {
-            val refreshStyle = TextStyle(fontSize = 20.sp, color = if (isLoading.value) accentColor else Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 8.dp)
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(refreshBtnBg)
+                .clickable { fetchKey++ },
+            contentAlignment = Alignment.Center
+        ) {
+            val refreshStyle = TextStyle(fontSize = 20.sp, color = if (isLoading) accentColor else Color.White.copy(alpha = 0.8f), fontWeight = FontWeight.Bold)
             val measured = remember(refreshStyle) { textMeasurer.measure(AnnotatedString("↻"), refreshStyle) }
-            Canvas(modifier = Modifier.size(28.dp).then(if (isLoading.value) Modifier.rotate(spinAngle.value) else Modifier)) {
+            Canvas(modifier = Modifier.size(28.dp).then(if (isLoading) Modifier.rotate(spinAngle.value) else Modifier)) {
                 drawText(textLayoutResult = measured, topLeft = Offset(size.width / 2f - measured.size.width / 2f, size.height / 2f - measured.size.height / 2f))
             }
         }
     }
+
+    // Full News Reader Overlay
+    NewsReaderPanel(
+        visible = readerOpen,
+        newsItems = newsItems,
+        onDismiss = { readerOpen = false }
+    )
 }
 
 private fun buildTickerText(items: List<NewsItem>, accentColor: Color, textColor: Color, separatorColor: Color): AnnotatedString {

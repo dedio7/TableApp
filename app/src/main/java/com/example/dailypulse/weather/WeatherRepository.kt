@@ -9,6 +9,9 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 /**
  * Repository for fetching weather data from the Open-Meteo API.
@@ -25,7 +28,7 @@ class WeatherRepository {
     }
 
     /**
-     * Fetches current weather data for the given coordinates.
+     * Fetches current weather data and forecasts for the given coordinates.
      *
      * @param latitude Geographic latitude
      * @param longitude Geographic longitude
@@ -39,7 +42,10 @@ class WeatherRepository {
                     append("?latitude=").append(latitude)
                     append("&longitude=").append(longitude)
                     append("&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,apparent_temperature,is_day")
+                    append("&hourly=temperature_2m,weather_code")
+                    append("&daily=weather_code,temperature_2m_max,temperature_2m_min")
                     append("&timezone=auto")
+                    append("&forecast_days=7")
                 }
 
                 val responseBody = performGetRequest(urlString)
@@ -58,9 +64,6 @@ class WeatherRepository {
 
     /**
      * Searches for cities matching the given query string.
-     *
-     * @param query City name to search for
-     * @return List of matching WeatherLocation entries
      */
     suspend fun searchCity(query: String): List<WeatherLocation> {
         return withContext(Dispatchers.IO) {
@@ -87,9 +90,6 @@ class WeatherRepository {
         }
     }
 
-    /**
-     * Performs an HTTP GET request and returns the response body as a String.
-     */
     private fun performGetRequest(urlString: String): String? {
         var connection: HttpURLConnection? = null
         try {
@@ -124,22 +124,78 @@ class WeatherRepository {
         }
     }
 
-    /**
-     * Parses the Open-Meteo weather API JSON response into a WeatherData object.
-     */
     private fun parseWeatherResponse(jsonString: String): WeatherData? {
         return try {
             val json = JSONObject(jsonString)
+            
+            // 1. Current Weather
             val current = json.getJSONObject("current")
-
             val temperature = current.getDouble("temperature_2m")
             val humidity = current.getInt("relative_humidity_2m")
             val weatherCode = current.getInt("weather_code")
             val windSpeed = current.getDouble("wind_speed_10m")
             val feelsLike = current.getDouble("apparent_temperature")
             val isDay = current.getInt("is_day") == 1
-
             val (description, iconEmoji) = getWeatherDescription(weatherCode, isDay)
+
+            // 2. Hourly Forecast (Next 24 hours starting from now)
+            val hourly = json.getJSONObject("hourly")
+            val hTimes = hourly.getJSONArray("time")
+            val hTemps = hourly.getJSONArray("temperature_2m")
+            val hCodes = hourly.getJSONArray("weather_code")
+            
+            val hourlyForecasts = mutableListOf<HourlyForecast>()
+            val currentHour = SimpleDateFormat("yyyy-MM-dd'T'HH:00", Locale.getDefault()).format(Calendar.getInstance().time)
+            
+            var startIndex = 0
+            for (i in 0 until hTimes.length()) {
+                if (hTimes.getString(i) >= currentHour) {
+                    startIndex = i
+                    break
+                }
+            }
+
+            for (i in startIndex until (startIndex + 24).coerceAtMost(hTimes.length())) {
+                val rawTime = hTimes.getString(i)
+                val hourStr = rawTime.substringAfter('T')
+                val hCode = hCodes.getInt(i)
+                val (_, hEmoji) = getWeatherDescription(hCode, true) // Use day icon for hourly simplicity
+                
+                hourlyForecasts.add(HourlyForecast(
+                    time = hourStr,
+                    temperature = hTemps.getDouble(i),
+                    weatherCode = hCode,
+                    iconEmoji = hEmoji
+                ))
+            }
+
+            // 3. Daily Forecast (7 days)
+            val daily = json.getJSONObject("daily")
+            val dTimes = daily.getJSONArray("time")
+            val dMaxs = daily.getJSONArray("temperature_2m_max")
+            val dMins = daily.getJSONArray("temperature_2m_min")
+            val dCodes = daily.getJSONArray("weather_code")
+            
+            val dailyForecasts = mutableListOf<DailyForecast>()
+            val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+            val apiFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+            for (i in 0 until dTimes.length()) {
+                val dateStr = dTimes.getString(i)
+                val date = apiFormat.parse(dateStr)
+                val displayDate = if (i == 0) "Oggi" else dayFormat.format(date!!).replaceFirstChar { it.uppercase() }
+                
+                val dCode = dCodes.getInt(i)
+                val (_, dEmoji) = getWeatherDescription(dCode, true)
+
+                dailyForecasts.add(DailyForecast(
+                    date = displayDate,
+                    maxTemp = dMaxs.getDouble(i),
+                    minTemp = dMins.getDouble(i),
+                    weatherCode = dCode,
+                    iconEmoji = dEmoji
+                ))
+            }
 
             WeatherData(
                 temperature = temperature,
@@ -149,7 +205,9 @@ class WeatherRepository {
                 feelsLike = feelsLike,
                 description = description,
                 iconEmoji = iconEmoji,
-                isDay = isDay
+                isDay = isDay,
+                hourly = hourlyForecasts,
+                daily = dailyForecasts
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing weather JSON response", e)
@@ -157,49 +215,32 @@ class WeatherRepository {
         }
     }
 
-    /**
-     * Parses the Open-Meteo geocoding API JSON response into a list of WeatherLocation.
-     */
     private fun parseGeocodingResponse(jsonString: String): List<WeatherLocation> {
         return try {
             val json = JSONObject(jsonString)
-
-            if (!json.has("results")) {
-                return emptyList()
-            }
+            if (!json.has("results")) return emptyList()
 
             val results = json.getJSONArray("results")
             val locations = mutableListOf<WeatherLocation>()
 
             for (i in 0 until results.length()) {
                 val item = results.getJSONObject(i)
-                val latitude = item.getDouble("latitude")
-                val longitude = item.getDouble("longitude")
-
-                // Build a descriptive city name with admin area and country
                 val name = item.optString("name", "")
                 val admin1 = item.optString("admin1", "")
                 val country = item.optString("country", "")
 
                 val cityName = buildString {
                     append(name)
-                    if (admin1.isNotEmpty() && admin1 != name) {
-                        append(", ").append(admin1)
-                    }
-                    if (country.isNotEmpty()) {
-                        append(", ").append(country)
-                    }
+                    if (admin1.isNotEmpty() && admin1 != name) append(", ").append(admin1)
+                    if (country.isNotEmpty()) append(", ").append(country)
                 }
 
-                locations.add(
-                    WeatherLocation(
-                        latitude = latitude,
-                        longitude = longitude,
-                        cityName = cityName
-                    )
-                )
+                locations.add(WeatherLocation(
+                    latitude = item.getDouble("latitude"),
+                    longitude = item.getDouble("longitude"),
+                    cityName = cityName
+                ))
             }
-
             locations
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing geocoding JSON response", e)

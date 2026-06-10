@@ -22,10 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,9 +49,6 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * A compact, elegant weather widget that displays current weather conditions.
  * Auto-refreshes every 30 minutes. Shows loading shimmer and error state with retry.
- *
- * @param modifier Modifier for layout customization
- * @param textColor Primary text color for the widget
  */
 @Composable
 fun WeatherWidget(
@@ -61,35 +60,35 @@ fun WeatherWidget(
 ) {
     val repository = remember { WeatherRepository() }
     val strings = LocalStrings.current
-    val weatherData = remember { mutableStateOf<WeatherData?>(null) }
-    val isLoading = remember { mutableStateOf(value = true) }
-    val hasError = remember { mutableStateOf(value = false) }
-    val refreshTrigger = remember { mutableLongStateOf(0L) }
+    var weatherData by remember { mutableStateOf<WeatherData?>(null) }
+    var isLoading by remember { mutableStateOf(value = true) }
+    var hasError by remember { mutableStateOf(value = false) }
+    var refreshTrigger by remember { mutableLongStateOf(0L) }
+    var detailsOpen by remember { mutableStateOf(false) }
 
     val coroutineScope = rememberCoroutineScope()
 
     // Re-fetch when coordinates change
     LaunchedEffect(latitude, longitude) {
-        refreshTrigger.longValue = System.currentTimeMillis()
+        refreshTrigger = System.currentTimeMillis()
     }
 
-    // Auto-refresh every 30 minutes
-    LaunchedEffect(refreshTrigger.longValue) {
-        isLoading.value = true
-        hasError.value = false
+    // Auto-refresh logic
+    LaunchedEffect(refreshTrigger) {
+        isLoading = true
+        hasError = false
 
         val result = repository.fetchWeather(latitude, longitude)
         if (result != null) {
-            weatherData.value = result
-            hasError.value = false
+            weatherData = result
+            hasError = false
         } else {
-            hasError.value = true
+            hasError = true
         }
-        isLoading.value = false
+        isLoading = false
 
-        // Wait 30 minutes then refresh
         delay(30.minutes)
-        refreshTrigger.longValue = System.currentTimeMillis()
+        refreshTrigger = System.currentTimeMillis()
     }
 
     val cardBackground = Color.Black.copy(alpha = 0.35f)
@@ -99,27 +98,25 @@ fun WeatherWidget(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(cardBackground)
-            .padding(12.dp) // Reduced padding from 20.dp
+            .clickable(enabled = weatherData != null) { detailsOpen = true }
+            .padding(12.dp)
     ) {
         when {
-            isLoading.value -> {
-                WeatherShimmer(textColor = textColor)
-            }
-            hasError.value -> {
+            isLoading -> WeatherShimmer(textColor = textColor)
+            hasError -> {
                 WeatherError(
                     textColor = textColor,
                     strings = strings,
                     onRetry = {
                         coroutineScope.launch {
-                            refreshTrigger.longValue = System.currentTimeMillis()
+                            refreshTrigger = System.currentTimeMillis()
                         }
                     }
                 )
             }
-            weatherData.value != null -> {
-                val data = weatherData.value!!
+            weatherData != null -> {
                 WeatherContent(
-                    data = data,
+                    data = weatherData!!,
                     cityName = cityName,
                     textColor = textColor,
                     secondaryTextColor = secondaryTextColor
@@ -127,11 +124,18 @@ fun WeatherWidget(
             }
         }
     }
+
+    // Expansion Panel
+    weatherData?.let { data ->
+        WeatherDetailsPanel(
+            visible = detailsOpen,
+            data = data,
+            cityName = cityName,
+            onDismiss = { detailsOpen = false }
+        )
+    }
 }
 
-/**
- * Main weather content layout showing all weather information.
- */
 @Composable
 private fun WeatherContent(
     data: WeatherData,
@@ -143,7 +147,6 @@ private fun WeatherContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        // City name - small and elegant
         Text(
             text = cityName.uppercase(),
             color = secondaryTextColor,
@@ -156,7 +159,6 @@ private fun WeatherContent(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Main info: Emoji and Temperature in a Row
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -178,7 +180,6 @@ private fun WeatherContent(
             )
         }
 
-        // Description
         Text(
             text = data.description,
             color = textColor,
@@ -190,7 +191,6 @@ private fun WeatherContent(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Humidity and wind speed row - more compact
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
@@ -219,9 +219,6 @@ private fun WeatherContent(
     }
 }
 
-/**
- * Loading shimmer effect displayed while weather data is being fetched.
- */
 @Composable
 private fun WeatherShimmer(textColor: Color) {
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer")
@@ -246,79 +243,26 @@ private fun WeatherShimmer(textColor: Color) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
     ) {
-        // City name placeholder
-        Box(
-            modifier = Modifier
-                .width(50.dp)
-                .height(12.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(shimmerBrush)
-        )
-
+        Box(modifier = Modifier.width(50.dp).height(12.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Emoji & Temp Row placeholder
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(shimmerBrush)
-            )
+            Box(modifier = Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(shimmerBrush))
             Spacer(modifier = Modifier.width(12.dp))
-            Box(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBrush)
-            )
+            Box(modifier = Modifier.width(40.dp).height(32.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
         }
-
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Description placeholder
-        Box(
-            modifier = Modifier
-                .width(100.dp)
-                .height(14.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(shimmerBrush)
-        )
-
+        Box(modifier = Modifier.width(100.dp).height(14.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
         Spacer(modifier = Modifier.height(8.dp))
-
-        // Bottom row placeholder
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(40.dp)
-                    .height(11.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBrush)
-            )
+        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+            Box(modifier = Modifier.width(40.dp).height(11.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
             Spacer(modifier = Modifier.width(16.dp))
-            Box(
-                modifier = Modifier
-                    .width(60.dp)
-                    .height(11.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBrush)
-            )
+            Box(modifier = Modifier.width(60.dp).height(11.dp).clip(RoundedCornerShape(4.dp)).background(shimmerBrush))
         }
     }
 }
 
-/**
- * Error state with retry option.
- */
 @Composable
 private fun WeatherError(
     textColor: Color,
@@ -326,51 +270,23 @@ private fun WeatherError(
     onRetry: () -> Unit,
 ) {
     val secondaryTextColor = textColor.copy(alpha = 0.7f)
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
     ) {
-        Text(
-            text = "⚠️",
-            fontSize = 36.sp,
-            textAlign = TextAlign.Center,
-        )
-
+        Text(text = "⚠️", fontSize = 36.sp, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = strings.weatherNotAvailable,
-            color = textColor,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-        )
-
+        Text(text = strings.weatherNotAvailable, color = textColor, fontSize = 15.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = strings.weatherCheckConnection,
-            color = secondaryTextColor,
-            fontSize = 13.sp,
-            textAlign = TextAlign.Center,
-        )
-
+        Text(text = strings.weatherCheckConnection, color = secondaryTextColor, fontSize = 13.sp, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(16.dp))
-
         Text(
             text = strings.weatherRetry,
             color = textColor,
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.White.copy(alpha = 0.15f))
-                .clickable { onRetry() }
-                .padding(horizontal = 24.dp, vertical = 10.dp),
+            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.15f)).clickable { onRetry() }.padding(horizontal = 24.dp, vertical = 10.dp),
         )
     }
 }

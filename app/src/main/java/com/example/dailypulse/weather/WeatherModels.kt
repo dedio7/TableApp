@@ -1,7 +1,7 @@
 package com.example.dailypulse.weather
 
 /**
- * Data class representing current weather conditions.
+ * Data class representing current weather conditions and forecasts.
  */
 data class WeatherData(
     val temperature: Double,
@@ -11,7 +11,30 @@ data class WeatherData(
     val feelsLike: Double,
     val description: String,
     val iconEmoji: String,
-    val isDay: Boolean
+    val isDay: Boolean,
+    val hourly: List<HourlyForecast> = emptyList(),
+    val daily: List<DailyForecast> = emptyList()
+)
+
+/**
+ * Forecast for a specific hour.
+ */
+data class HourlyForecast(
+    val time: String, // format "HH:mm"
+    val temperature: Double,
+    val weatherCode: Int,
+    val iconEmoji: String
+)
+
+/**
+ * Forecast for a specific day.
+ */
+data class DailyForecast(
+    val date: String, // format "dd/MM" or "EEE"
+    val maxTemp: Double,
+    val minTemp: Double,
+    val weatherCode: Int,
+    val iconEmoji: String
 )
 
 /**
