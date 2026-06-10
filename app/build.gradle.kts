@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tabletapp"
+    namespace = "com.example.dailypulse"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.tabletapp"
+        applicationId = "com.example.dailypulse"
         minSdk = 23
         targetSdk = 34
         versionCode = 1
