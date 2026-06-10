@@ -5,10 +5,10 @@ plugins {
 }
 
 android {
-    namespace = "com.example.dailypulse"
+    namespace = "com.dedio.dailypulse"
     compileSdk = 36
     defaultConfig {
-        applicationId = "com.example.dailypulse"
+        applicationId = "com.dedio.dailypulse"
         minSdk = 23
         targetSdk = 34
         versionCode = 1
@@ -17,7 +17,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
