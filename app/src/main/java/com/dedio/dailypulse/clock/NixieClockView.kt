@@ -29,7 +29,8 @@ import java.util.Calendar
 fun NixieClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    showSeconds: Boolean = true
+    showSeconds: Boolean = true,
+    isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -65,10 +66,10 @@ fun NixieClock(
         val colonW = cw * 0.045f
         val spacing = cw * 0.022f
         val totalMainW = cw - colonW - spacing * 4
-        val tubeW = totalMainW / 4f
-        val tubeH = (ch * 0.62f).coerceAtMost(tubeW * 1.85f)
+        val tubeW = (totalMainW / 4f).coerceAtMost(ch * 0.35f)
+        val tubeH = (ch * (if (isFullScreen) 0.58f else 0.48f)).coerceAtMost(tubeW * 1.85f)
         val cornerR = tubeW * 0.18f
-        val startY = if (showSeconds) ch * 0.18f else (ch - tubeH) / 2f
+        val startY = if (showSeconds) (if (isFullScreen) ch * 0.10f else ch * 0.18f) else (ch - tubeH) / 2f
         val startX = (cw - (tubeW * 4 + colonW + spacing * 4)) / 2f
 
         val digits = listOf(

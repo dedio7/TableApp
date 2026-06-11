@@ -5,21 +5,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -32,6 +29,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 
+/**
+ * A minimalist and stylish battery widget.
+ * Matches the glassmorphism aesthetic of the app with clean lines and subtle indicators.
+ */
 @Composable
 fun BatteryWidget(
     modifier: Modifier = Modifier,
@@ -40,8 +41,8 @@ fun BatteryWidget(
     val context = LocalContext.current
     val strings = LocalStrings.current
 
-    val batteryLevel = remember { mutableFloatStateOf(100f) }
-    val isCharging = remember { mutableStateOf(false) }
+    var batteryLevel by remember { mutableFloatStateOf(100f) }
+    var isCharging by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
         val receiver = object : BroadcastReceiver() {
@@ -53,126 +54,122 @@ fun BatteryWidget(
                 val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
 
                 if (level >= 0 && scale > 0) {
-                    batteryLevel.floatValue = (level.toFloat() / scale.toFloat()) * 100f
+                    batteryLevel = (level.toFloat() / scale.toFloat()) * 100f
                 }
 
-                isCharging.value = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                         status == BatteryManager.BATTERY_STATUS_FULL ||
                         plugged == BatteryManager.BATTERY_PLUGGED_AC ||
                         plugged == BatteryManager.BATTERY_PLUGGED_USB ||
                         plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS
             }
         }
-
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         context.registerReceiver(receiver, filter)
-
-        onDispose {
-            context.unregisterReceiver(receiver)
-        }
+        onDispose { context.unregisterReceiver(receiver) }
     }
 
-    val levelPercent = batteryLevel.floatValue
-    val charging = isCharging.value
+    val levelPercent = batteryLevel
+    val charging = isCharging
 
-    val fillColor = when {
-        levelPercent > 50f -> Color(0xFF4CAF50)
-        levelPercent > 20f -> Color(0xFFFFC107)
-        else -> Color(0xFFF44336)
+    // Minimalist colors
+    val statusColor = when {
+        charging -> Color(0xFF00E676) // Subtle Emerald
+        levelPercent > 20f -> textColor.copy(alpha = 0.9f) // Clean White
+        else -> Color(0xFFFF5252) // Soft Red
     }
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
+    val animatedColor by animateColorAsState(targetValue = statusColor, animationSpec = tween(800), label = "color")
+
+    // Very subtle breathing for charging
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val subtleAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    Box(
+        modifier = modifier
+            .height(38.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.Black.copy(alpha = 0.25f))
+            .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        // Battery icon drawn with Canvas
-        Canvas(modifier = Modifier.size(width = 44.dp, height = 22.dp)) {
-            val canvasWidth = size.width
-            val canvasHeight = size.height
-
-            val bodyLeft = 0f
-            val bodyTop = 0f
-            val tipWidth = canvasWidth * 0.08f
-            val bodyWidth = canvasWidth - tipWidth - 2f
-            val bodyHeight = canvasHeight
-            val cornerRadius = 3.dp.toPx()
-
-            // Battery body outline
-            drawRoundRect(
-                color = textColor.copy(alpha = 0.8f),
-                topLeft = Offset(bodyLeft, bodyTop),
-                size = Size(bodyWidth, bodyHeight),
-                cornerRadius = CornerRadius(cornerRadius, cornerRadius),
-                style = Stroke(width = 1.5.dp.toPx())
-            )
-
-            // Battery tip (positive terminal)
-            val tipHeight = bodyHeight * 0.4f
-            val tipLeft = bodyLeft + bodyWidth
-            val tipTop = (bodyHeight - tipHeight) / 2f
-            drawRoundRect(
-                color = textColor.copy(alpha = 0.8f),
-                topLeft = Offset(tipLeft, tipTop),
-                size = Size(tipWidth, tipHeight),
-                cornerRadius = CornerRadius(1.dp.toPx(), 1.dp.toPx())
-            )
-
-            // Fill level
-            val strokeWidth = 1.5.dp.toPx()
-            val fillPadding = strokeWidth + 1.5.dp.toPx()
-            val maxFillWidth = bodyWidth - fillPadding * 2f
-            val fillWidth = maxFillWidth * (levelPercent / 100f).coerceIn(0f, 1f)
-            val fillHeight = bodyHeight - fillPadding * 2f
-
-            if (fillWidth > 0f) {
-                drawRoundRect(
-                    color = fillColor,
-                    topLeft = Offset(bodyLeft + fillPadding, bodyTop + fillPadding),
-                    size = Size(fillWidth, fillHeight),
-                    cornerRadius = CornerRadius(1.5.dp.toPx(), 1.5.dp.toPx())
-                )
-            }
-
-            // Lightning bolt overlay when charging
-            if (charging) {
-                val boltPath = Path().apply {
-                    val cx = bodyLeft + bodyWidth / 2f
-                    val cy = bodyHeight / 2f
-                    val boltW = bodyWidth * 0.22f
-                    val boltH = bodyHeight * 0.7f
-
-                    moveTo(cx + boltW * 0.1f, cy - boltH / 2f)
-                    lineTo(cx - boltW * 0.5f, cy + boltH * 0.05f)
-                    lineTo(cx - boltW * 0.05f, cy + boltH * 0.05f)
-                    lineTo(cx - boltW * 0.1f, cy + boltH / 2f)
-                    lineTo(cx + boltW * 0.5f, cy - boltH * 0.05f)
-                    lineTo(cx + boltW * 0.05f, cy - boltH * 0.05f)
-                    close()
-                }
-                drawPath(
-                    path = boltPath,
-                    color = Color.White
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(6.dp))
-
-        // Text info
-        Column(
-            verticalArrangement = Arrangement.Center
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(
-                text = "${levelPercent.toInt()}%",
-                color = textColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = if (charging) strings.chargingLabel else strings.batteryLabel,
-                color = textColor.copy(alpha = 0.7f),
-                fontSize = 10.sp
-            )
+            // Horizontal Battery - Ultra Thin & Clean
+            Canvas(modifier = Modifier.size(width = 28.dp, height = 14.dp)) {
+                val sw = 1.dp.toPx()
+                val bodyW = size.width - 3.dp.toPx()
+                val bodyH = size.height
+                val corner = 2.dp.toPx()
+
+                // Outline
+                drawRoundRect(
+                    color = textColor.copy(alpha = 0.3f),
+                    size = Size(bodyW, bodyH),
+                    cornerRadius = CornerRadius(corner),
+                    style = Stroke(width = sw)
+                )
+
+                // Tip
+                drawRoundRect(
+                    color = textColor.copy(alpha = 0.3f),
+                    topLeft = Offset(bodyW + 1.dp.toPx(), bodyH * 0.3f),
+                    size = Size(2.dp.toPx(), bodyH * 0.4f),
+                    cornerRadius = CornerRadius(1.dp.toPx())
+                )
+
+                // Fill
+                val padding = sw + 1.5.dp.toPx()
+                val fillW = (bodyW - padding * 2) * (levelPercent / 100f)
+                if (fillW > 0) {
+                    drawRoundRect(
+                        color = if (charging) animatedColor.copy(alpha = subtleAlpha) else animatedColor,
+                        topLeft = Offset(padding, padding),
+                        size = Size(fillW, bodyH - padding * 2),
+                        cornerRadius = CornerRadius(1.dp.toPx())
+                    )
+                }
+            }
+
+            // Typography - Matching the DateWidget style
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${levelPercent.toInt()}%",
+                    color = textColor.copy(alpha = 0.9f),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = (-0.5).sp
+                )
+                
+                Spacer(modifier = Modifier.width(6.dp))
+                
+                Text(
+                    text = "•",
+                    color = textColor.copy(alpha = 0.2f),
+                    fontSize = 12.sp
+                )
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = (if (charging) strings.chargingLabel else strings.batteryLabel).uppercase(),
+                    color = if (charging) animatedColor.copy(alpha = subtleAlpha) else textColor.copy(alpha = 0.4f),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
         }
     }
 }

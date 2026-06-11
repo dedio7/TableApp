@@ -24,7 +24,8 @@ import kotlin.math.sin
 fun AnalogClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    showSeconds: Boolean = true
+    showSeconds: Boolean = true,
+    isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -58,7 +59,7 @@ fun AnalogClock(
     Canvas(modifier = modifier.fillMaxSize()) {
         val cx = size.width / 2f
         val cy = size.height / 2f
-        val radius = minOf(cx, cy) * 0.88f
+        val radius = minOf(cx, cy) * (if (isFullScreen) 0.95f else 0.88f)
 
         // ── Clock face ──────────────────────────────────────────────────────
         drawCircle(color = faceColor, radius = radius, center = Offset(cx, cy))

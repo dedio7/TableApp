@@ -14,7 +14,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun EnhancedBinaryClock(
     modifier: Modifier = Modifier,
-    config: ClockConfig = ClockConfig()
+    config: ClockConfig = ClockConfig(),
+    isFullScreen: Boolean = false,
 ) {
     var columnsData by remember { mutableStateOf(ClockLogic.getColumns(config.mode, config.showSeconds)) }
     var selectedColumnIndex by remember { mutableIntStateOf(-1) }
@@ -47,7 +48,7 @@ fun EnhancedBinaryClock(
         // Ridotta sensibilmente la dimensione dei dot (da 0.1f a 0.065f)
         // Aggiunto un limite minimo di 4px per evitare che scompaiano
         val dotSizePx = ((width - colSpacingPx * (columnCount + 2)) / columnCount)
-            .coerceAtMost(height * 0.065f)
+            .coerceAtMost(height * (if (isFullScreen) 0.11f else 0.065f))
             .coerceAtLeast(4f)
             
         val dotGapPx = dotSizePx * 0.35f

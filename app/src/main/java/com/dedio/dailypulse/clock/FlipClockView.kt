@@ -32,7 +32,11 @@ import java.util.Calendar
  * with subtle shadow/gradient effects and a blinking colon separator.
  */
 @Composable
-fun FlipClock(modifier: Modifier = Modifier, textColor: Color = Color.White) {
+fun FlipClock(
+    modifier: Modifier = Modifier,
+    textColor: Color = Color.White,
+    isFullScreen: Boolean = false,
+) {
     val currentHour = remember { mutableIntStateOf(0) }
     val currentMinute = remember { mutableIntStateOf(0) }
     val currentSecond = remember { mutableIntStateOf(0) }
@@ -76,8 +80,8 @@ fun FlipClock(modifier: Modifier = Modifier, textColor: Color = Color.White) {
         val colonWidth = canvasWidth * 0.06f
         val totalSpacing = canvasWidth * 0.03f * 5 // spacing between elements
         val availableWidth = canvasWidth - colonWidth - totalSpacing - canvasWidth * 0.1f
-        val panelWidth = availableWidth / totalDigits
-        val panelHeight = (canvasHeight * 0.55f).coerceAtMost(panelWidth * 1.6f)
+        val panelWidth = (availableWidth / totalDigits).coerceAtMost(canvasHeight * 0.32f)
+        val panelHeight = (canvasHeight * (if (isFullScreen) 0.58f else 0.45f)).coerceAtMost(panelWidth * 1.6f)
         val cornerRad = panelWidth * 0.08f
         val spacing = canvasWidth * 0.03f
 

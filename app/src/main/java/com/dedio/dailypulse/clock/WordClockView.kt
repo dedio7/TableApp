@@ -1,8 +1,6 @@
 package com.dedio.dailypulse.clock
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -11,11 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -25,7 +19,8 @@ import java.util.Calendar
 fun WordClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    language: String = "IT"
+    language: String = "IT",
+    isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -35,47 +30,50 @@ fun WordClock(
             val cal = Calendar.getInstance()
             hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
             minute.intValue = cal.get(Calendar.MINUTE)
-            delay(5_000L)
+            delay(1000L) 
         }
     }
 
     if (language == "EN") {
-        EnglishWordClock(modifier, textColor, hour.intValue, minute.intValue)
+        EnglishWordClock(modifier, textColor, hour.intValue, minute.intValue, isFullScreen)
     } else {
-        ItalianWordClock(modifier, textColor, hour.intValue, minute.intValue)
+        ItalianWordClock(modifier, textColor, hour.intValue, minute.intValue, isFullScreen)
     }
 }
 
 @Composable
-private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int) {
-    val dimColor = textColor.copy(alpha = 0.12f)
-    val accentColor = Color(0xFFE8722A)
-
+private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isFullScreen: Boolean) {
     val m5 = (m / 5) * 5
     val remainder = m % 5
     val displayHour = if (m5 >= 35) (h + 1) % 24 else h
     val h12 = displayHour % 12
 
     val lit = mutableSetOf<String>()
+    lit += "SONO"; lit += "LE"
+    
     if (h12 == 1) {
+        lit.remove("SONO"); lit.remove("LE")
         lit += "È"; lit += "L'UNA"
+    } else if (h12 == 0) {
+        lit += "DODICI"
     } else {
-        lit += "SONO"; lit += "LE"
         lit += italianHourWord(h12)
     }
 
-    when (m5) {
-        5 -> { lit += "E"; lit += "CINQUE_MIN" }
-        10 -> { lit += "E"; lit += "DIECI_MIN" }
-        15 -> { lit += "E"; lit += "UN"; lit += "QUARTO" }
-        20 -> { lit += "E"; lit += "VENTI" }
-        25 -> { lit += "E"; lit += "VENTICINQUE" }
-        30 -> { lit += "E"; lit += "MEZZA" }
-        35 -> { lit += "MENO"; lit += "VENTICINQUE" }
-        40 -> { lit += "MENO"; lit += "VENTI" }
-        45 -> { lit += "MENO"; lit += "UN"; lit += "QUARTO" }
-        50 -> { lit += "MENO"; lit += "DIECI_MIN" }
-        55 -> { lit += "MENO"; lit += "CINQUE_MIN" }
+    if (m5 > 0) {
+        when (m5) {
+            5 -> { lit += "E"; lit += "CINQUE_MIN" }
+            10 -> { lit += "E"; lit += "DIECI_MIN" }
+            15 -> { lit += "E"; lit += "UN"; lit += "QUARTO" }
+            20 -> { lit += "E"; lit += "VENTI" }
+            25 -> { lit += "E"; lit += "VENTICINQUE" }
+            30 -> { lit += "E"; lit += "MEZZA" }
+            35 -> { lit += "MENO"; lit += "VENTICINQUE" }
+            40 -> { lit += "MENO"; lit += "VENTI" }
+            45 -> { lit += "MENO"; lit += "UN"; lit += "QUARTO" }
+            50 -> { lit += "MENO"; lit += "DIECI_MIN" }
+            55 -> { lit += "MENO"; lit += "CINQUE_MIN" }
+        }
     }
 
     val grid: List<List<Pair<String, String>>> = listOf(
@@ -89,14 +87,11 @@ private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("VENTICINQUE" to "VENTICINQUE", "CINQUE" to "CINQUE_MIN", "DIECI" to "DIECI_MIN")
     )
 
-    WordClockGrid(modifier, textColor, dimColor, accentColor, grid, lit, remainder)
+    WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
 }
 
 @Composable
-private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int) {
-    val dimColor = textColor.copy(alpha = 0.12f)
-    val accentColor = Color(0xFFE8722A)
-
+private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isFullScreen: Boolean) {
     val m5 = (m / 5) * 5
     val remainder = m % 5
     val displayHour = if (m5 > 30) (h + 1) % 24 else h
@@ -132,44 +127,61 @@ private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("O'CLOCK" to "OCLOCK")
     )
 
-    WordClockGrid(modifier, textColor, dimColor, accentColor, grid, lit, remainder)
+    WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
 }
 
 @Composable
 private fun WordClockGrid(
     modifier: Modifier,
     textColor: Color,
-    dimColor: Color,
-    accentColor: Color,
     grid: List<List<Pair<String, String>>>,
     lit: Set<String>,
-    remainder: Int
+    remainder: Int,
+    isFullScreen: Boolean,
 ) {
-    Box(
+    // Optimized for Tablet (Wide and Spacious)
+    val scale = if (isFullScreen) 1.5f else 1.15f
+    val dimColor = textColor.copy(alpha = 0.12f)
+    val accentColor = Color(0xFFE8722A)
+
+    Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
-        contentAlignment = Alignment.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val annotated = buildAnnotatedString {
-            for ((rowIdx, row) in grid.withIndex()) {
-                for ((wordIdx, pair) in row.withIndex()) {
+        grid.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                row.forEach { pair ->
                     val (display, id) = pair
                     val isLit = id in lit
-                    withStyle(SpanStyle(color = if (isLit) textColor else dimColor, fontWeight = if (isLit) FontWeight.Bold else FontWeight.Light, fontSize = 22.sp, letterSpacing = 1.5.sp)) {
-                        append(display)
-                    }
-                    if (wordIdx < row.lastIndex) append("  ")
-                }
-                if (rowIdx < grid.lastIndex) append("\n")
-            }
-            if (remainder > 0) {
-                append("\n")
-                for (i in 1..4) {
-                    withStyle(SpanStyle(color = if (i <= remainder) accentColor else dimColor, fontSize = 12.sp)) { append("●") }
-                    if (i < 4) append(" ")
+                    Text(
+                        text = display,
+                        color = if (isLit) textColor else dimColor,
+                        fontWeight = if (isLit) FontWeight.Bold else FontWeight.Light,
+                        fontSize = (19 * scale).sp,
+                        letterSpacing = (2.0 * scale).sp,
+                        modifier = Modifier.padding(horizontal = (10 * scale).dp, vertical = (4 * scale).dp)
+                    )
                 }
             }
         }
-        Text(text = annotated, textAlign = TextAlign.Center, lineHeight = 32.sp)
+        
+        Spacer(modifier = Modifier.height((24 * scale).dp))
+        
+        // Precision dots - Larger and centered
+        Row(horizontalArrangement = Arrangement.spacedBy((12 * scale).dp)) {
+            for (i in 1..4) {
+                Text(
+                    text = "●",
+                    color = if (i <= remainder) accentColor else dimColor,
+                    fontSize = (12 * scale).sp
+                )
+            }
+        }
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.dedio.dailypulse.theme.DailyPulseTheme
+import com.dedio.dailypulse.ui.main.MainScreen
 
 /**
  * Service that allows DailyPulse to be used as an Android Daydream (Screensaver).
@@ -51,7 +52,7 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        MainNavigation()
+                        MainScreen()
                     }
                 }
             }
@@ -67,12 +68,14 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
 
     override fun onDreamingStarted() {
         super.onDreamingStarted()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
     override fun onDreamingStopped() {
         super.onDreamingStopped()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     }
 
     override fun onDetachedFromWindow() {

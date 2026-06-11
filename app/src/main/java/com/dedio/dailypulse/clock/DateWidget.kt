@@ -1,8 +1,10 @@
 package com.dedio.dailypulse.clock
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,12 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import java.util.Calendar
-import java.util.Locale
 
 private val GIORNI_IT = listOf(
     "Domenica", "Lunedì", "Martedì", "Mercoledì",
@@ -29,12 +29,7 @@ private val MESI_IT = listOf(
 )
 
 /**
- * Displays the current date in a clean, elegant layout.
- * Shows day of week, day number and month/year.
- *
- * @param modifier   Layout modifier.
- * @param textColor  Primary text color.
- * @param dateFormat "IT" for Italian format, "EN" for English format.
+ * Displays the current date in a single compact line.
  */
 @Composable
 fun DateWidget(
@@ -47,15 +42,15 @@ fun DateWidget(
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(60_000L) // refresh every minute
+            delay(60_000L)
             tick.longValue = System.currentTimeMillis()
         }
     }
 
     val cal = Calendar.getInstance()
-    val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1        // 0=Sun
+    val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1
     val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
-    val month = cal.get(Calendar.MONTH)                       // 0=Jan
+    val month = cal.get(Calendar.MONTH)
     val year = cal.get(Calendar.YEAR)
 
     val dayName: String
@@ -72,30 +67,38 @@ fun DateWidget(
         dateLine = "$dayOfMonth ${MESI_IT[month]} $year"
     }
 
-    val baseSize = if (isFullScreen) 1.8f else 1f
+    // More compact scales for Tablet
+    val scale = if (isFullScreen) 1.4f else 1.0f
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        // Day of week — small, spaced
         Text(
             text = dayName.uppercase(),
-            color = textColor.copy(alpha = 0.55f),
-            fontSize = (11 * baseSize).sp,
-            fontWeight = FontWeight.Medium,
-            letterSpacing = (3 * baseSize).sp,
-            textAlign = TextAlign.Center
+            color = textColor.copy(alpha = 0.6f),
+            fontSize = (12 * scale).sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (2 * scale).sp
         )
-        Spacer(modifier = Modifier.height((2 * baseSize).dp))
-        // Date line — more prominent
+        
+        Spacer(modifier = Modifier.width((12 * scale).dp))
+        
+        Text(
+            text = "•",
+            color = textColor.copy(alpha = 0.3f),
+            fontSize = (14 * scale).sp
+        )
+
+        Spacer(modifier = Modifier.width((12 * scale).dp))
+
         Text(
             text = dateLine,
-            color = textColor.copy(alpha = 0.85f),
-            fontSize = (15 * baseSize).sp,
+            color = textColor.copy(alpha = 0.9f),
+            fontSize = (14 * scale).sp,
             fontWeight = FontWeight.Light,
-            letterSpacing = (0.5 * baseSize).sp,
-            textAlign = TextAlign.Center
+            letterSpacing = (0.5 * scale).sp
         )
     }
 }

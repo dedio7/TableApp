@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -35,8 +36,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private val AccentBlue = Color(0xFF4FC3F7)
-private val PanelBg = Color(0xF0101626)
-private val SurfaceBg = Color(0xFF1A2240)
+private val PanelBg = Color(0xFF101626) // Fully opaque
+private val SurfaceBg = Color(0xFF1E294A) // Slightly lighter for contrast
 private val TextPrimary = Color(0xFFEEEEEE)
 private val TextSecondary = Color(0xFF90A4AE)
 private val DividerColor = Color(0xFF263254)
@@ -307,8 +308,22 @@ private fun ColorPicker(colors: List<Pair<String, Color>>, selectedColor: Color,
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 rowColors.forEach { (_, color) ->
                     val isSelected = selectedColor.toArgb() == color.toArgb()
-                    Box(modifier = Modifier.size(if (isSelected) 40.dp else 36.dp).clip(CircleShape).background(color).border(if (isSelected) 3.dp else 1.dp, if (isSelected) Color.White else Color.White.copy(alpha = 0.3f), CircleShape).clickable { onColorSelected(color) }, contentAlignment = Alignment.Center) {
-                        if (isSelected) { Text("✓", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
+                    Box(
+                        modifier = Modifier
+                            .size(if (isSelected) 42.dp else 36.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                if (isSelected) 3.dp else 1.5.dp,
+                                if (isSelected) Color.White else Color.White.copy(alpha = 0.5f),
+                                CircleShape
+                            )
+                            .clickable { onColorSelected(color) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSelected) {
+                            Text("✓", color = if (color.luminance() > 0.5f) Color.Black else Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

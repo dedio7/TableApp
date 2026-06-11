@@ -22,14 +22,15 @@ fun ClockDisplay(
     showSeconds: Boolean = true,
     binaryMode: String = "BINARY",
     binaryTheme: String = "DEFAULT",
-    language: String = "IT"
+    language: String = "IT",
+    isFullScreen: Boolean = false,
 ) {
     when (clockType) {
-        ClockType.FLIP      -> FlipClock(modifier = modifier, textColor = textColor)
-        ClockType.DIGITAL   -> DigitalClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds)
-        ClockType.ANALOG    -> AnalogClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds)
-        ClockType.NIXIE     -> NixieClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds)
-        ClockType.PIXEL     -> PixelClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds)
+        ClockType.FLIP      -> FlipClock(modifier = modifier, textColor = textColor, isFullScreen = isFullScreen)
+        ClockType.DIGITAL   -> DigitalClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
+        ClockType.ANALOG    -> AnalogClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
+        ClockType.NIXIE     -> NixieClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
+        ClockType.PIXEL     -> PixelClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
         ClockType.BINARY    -> {
             val mode = if (binaryMode == "BCD") ClockMode.BCD else ClockMode.BINARY
             val theme = if (binaryTheme == "ACCENT") {
@@ -42,9 +43,10 @@ fun ClockDisplay(
             }
             EnhancedBinaryClock(
                 modifier = modifier,
-                config = ClockConfig(mode = mode, showSeconds = showSeconds, theme = theme)
+                config = ClockConfig(mode = mode, showSeconds = showSeconds, theme = theme),
+                isFullScreen = isFullScreen
             )
         }
-        ClockType.WORD_CLOCK -> WordClock(modifier = modifier, textColor = textColor, language = language)
+        ClockType.WORD_CLOCK -> WordClock(modifier = modifier, textColor = textColor, language = language, isFullScreen = isFullScreen)
     }
 }

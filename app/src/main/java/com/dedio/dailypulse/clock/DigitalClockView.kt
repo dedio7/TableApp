@@ -25,7 +25,8 @@ import java.util.Calendar
 fun DigitalClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    showSeconds: Boolean = true
+    showSeconds: Boolean = true,
+    isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -56,9 +57,8 @@ fun DigitalClock(
         val colonW = cw * 0.05f
         val spacing = cw * 0.025f
         val totalMainW = cw - colonW - spacing * 4
-        val digitW = totalMainW / 4f
-        // Riduzione della dimensione: da 0.60f a 0.50f e rapporto digitW ridotto
-        val digitH = (ch * 0.50f).coerceAtMost(digitW * 1.5f)
+        val digitW = (totalMainW / 4f).coerceAtMost(ch * 0.35f)
+        val digitH = (ch * (if (isFullScreen) 0.55f else 0.42f)).coerceAtMost(digitW * 1.5f)
         val startY = if (showSeconds) (ch - digitH * 1.6f) / 2f else (ch - digitH) / 2f
         val startX = (cw - (digitW * 4 + colonW + spacing * 4)) / 2f
 

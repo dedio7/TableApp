@@ -24,7 +24,8 @@ import java.util.Calendar
 fun PixelClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    showSeconds: Boolean = true
+    showSeconds: Boolean = true,
+    isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -47,19 +48,17 @@ fun PixelClock(
         val cw = size.width
         val ch = size.height
 
-        // Each digit is 3 cols × 5 rows of dots
         // Layout: 4 main digits + 2-dot colon + optional 2 second digits
         val colonDots = 2  // width in dot-columns
         val spacingDots = 1
         val totalDotCols = 3 * 4 + colonDots + spacingDots * 5
         
-        // Ulteriore riduzione della dimensione dei punti per farlo stare meglio nello schermo
-        val dotSize = (cw / (totalDotCols + 8f)).coerceAtMost(ch / 13f)
+        val dotSize = (cw / (totalDotCols + (if (isFullScreen) 10f else 12f))).coerceAtMost(ch / (if (isFullScreen) 14f else 15f))
         val gap = dotSize * 0.35f
         val cellSize = dotSize + gap
 
         val gridH = 5 * cellSize
-        val startY = if (showSeconds) (ch - gridH * 2.2f) / 2f else (ch - gridH) / 2f
+        val startY = if (showSeconds) (ch - gridH * 1.6f) / 2f else (ch - gridH) / 2f
         val totalW = totalDotCols * cellSize
         val startX = (cw - totalW) / 2f
 

@@ -9,6 +9,8 @@ import android.os.BatteryManager
 import android.view.WindowManager
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -258,7 +261,7 @@ fun MainScreen(
                         .fillMaxWidth()
                         .fillMaxHeight()
                         .padding(
-                            top = 44.dp,
+                            top = 64.dp,
                             bottom = if (newsEnabled) 60.dp else 16.dp,
                             start = 16.dp,
                             end = 16.dp
@@ -272,21 +275,29 @@ fun MainScreen(
                             .weight(if (anyWidgetEnabled) 2f else 1f)
                             .fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+                        verticalArrangement = Arrangement.Top,
                     ) {
-                        // Date widget above the clock
-                        DateWidget(
-                            modifier = Modifier.fillMaxWidth(),
-                            textColor = clockColor,
-                            dateFormat = dateFormat,
-                            isFullScreen = !anyWidgetEnabled,
-                        )
+                        // Date widget above the clock - centered and clear of icons
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 70.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DateWidget(
+                                modifier = Modifier.wrapContentWidth(),
+                                textColor = clockColor,
+                                dateFormat = dateFormat,
+                                isFullScreen = !anyWidgetEnabled,
+                            )
+                        }
 
                         // Clock — takes remaining vertical space
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
+                                .padding(bottom = if (!anyWidgetEnabled) 16.dp else 0.dp)
                                 .pointerInput(Unit) {
                                     var totalDrag = 0f
                                     detectHorizontalDragGestures(
@@ -323,7 +334,8 @@ fun MainScreen(
                                 showSeconds = showSeconds,
                                 binaryMode = binaryModeName,
                                 binaryTheme = binaryThemeName,
-                                language = appLanguage
+                                language = appLanguage,
+                                isFullScreen = !anyWidgetEnabled,
                             )
                         }
                     }
@@ -334,16 +346,17 @@ fun MainScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
+                                .verticalScroll(rememberScrollState())
                                 .padding(vertical = 4.dp), // Add vertical breathing room
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(
                                 12.dp, // Reduced spacing for better fit
-                                Alignment.CenterVertically
+                                Alignment.Top // Align to top for better visibility in scroll
                             )
                         ) {
                             if (weatherEnabled) {
                                 WeatherWidget(
-                                    modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
+                                    modifier = Modifier.fillMaxWidth(),
                                     latitude = weatherLat,
                                     longitude = weatherLon,
                                     cityName = weatherCity
