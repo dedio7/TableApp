@@ -30,8 +30,8 @@ data class CalendarEvent(
 @Composable
 fun CalendarWidget(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val state = rememberCalendarEvents()
     val strings = LocalStrings.current
+    val state = rememberCalendarEvents()
 
     if (!state.hasPermission) {
         Box(

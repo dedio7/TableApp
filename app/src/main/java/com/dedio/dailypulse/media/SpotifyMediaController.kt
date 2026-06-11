@@ -61,11 +61,20 @@ fun rememberMediaController(): MediaInfo {
         hasPermission = hasPermission
     )) }
 
-    LaunchedEffect(hasPermission) {
-        mediaInfo = mediaInfo.copy(hasPermission = hasPermission)
+    LaunchedEffect(hasPermission, strings) {
+        // Update static strings immediately when language changes if no music is playing
+        if (!mediaInfo.isPlaying) {
+            mediaInfo = mediaInfo.copy(
+                hasPermission = hasPermission,
+                title = strings.spotifyNoTrack,
+                artist = if (mediaInfo.artist.contains("Spotify")) strings.spotifyWaiting else strings.spotifyForcePlay
+            )
+        } else {
+            mediaInfo = mediaInfo.copy(hasPermission = hasPermission)
+        }
     }
 
-    DisposableEffect(context, hasPermission) {
+    DisposableEffect(context, hasPermission, strings) {
         if (!hasPermission) return@DisposableEffect onDispose {}
 
         val sessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager

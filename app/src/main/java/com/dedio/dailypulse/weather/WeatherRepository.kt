@@ -32,9 +32,10 @@ class WeatherRepository {
      *
      * @param latitude Geographic latitude
      * @param longitude Geographic longitude
+     * @param language "IT" or "EN"
      * @return WeatherData if successful, null on failure
      */
-    suspend fun fetchWeather(latitude: Double, longitude: Double): WeatherData? {
+    suspend fun fetchWeather(latitude: Double, longitude: Double, language: String = "IT"): WeatherData? {
         return withContext(Dispatchers.IO) {
             try {
                 val urlString = buildString {
@@ -54,7 +55,7 @@ class WeatherRepository {
                     return@withContext null
                 }
 
-                parseWeatherResponse(responseBody)
+                parseWeatherResponse(responseBody, language)
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching weather data", e)
                 null
@@ -65,15 +66,16 @@ class WeatherRepository {
     /**
      * Searches for cities matching the given query string.
      */
-    suspend fun searchCity(query: String): List<WeatherLocation> {
+    suspend fun searchCity(query: String, language: String = "IT"): List<WeatherLocation> {
         return withContext(Dispatchers.IO) {
             try {
                 val encodedQuery = URLEncoder.encode(query, "UTF-8")
+                val langCode = if (language == "EN") "en" else "it"
                 val urlString = buildString {
                     append(GEOCODING_BASE_URL)
                     append("?name=").append(encodedQuery)
                     append("&count=5")
-                    append("&language=it")
+                    append("&language=").append(langCode)
                 }
 
                 val responseBody = performGetRequest(urlString)
@@ -124,7 +126,7 @@ class WeatherRepository {
         }
     }
 
-    private fun parseWeatherResponse(jsonString: String): WeatherData? {
+    private fun parseWeatherResponse(jsonString: String, language: String): WeatherData? {
         return try {
             val json = JSONObject(jsonString)
             
@@ -136,7 +138,7 @@ class WeatherRepository {
             val windSpeed = current.getDouble("wind_speed_10m")
             val feelsLike = current.getDouble("apparent_temperature")
             val isDay = current.getInt("is_day") == 1
-            val (description, iconEmoji) = getWeatherDescription(weatherCode, isDay)
+            val (description, iconEmoji) = getWeatherDescription(weatherCode, isDay, language)
 
             // 2. Hourly Forecast (Next 24 hours starting from now)
             val hourly = json.getJSONObject("hourly")
@@ -159,7 +161,7 @@ class WeatherRepository {
                 val rawTime = hTimes.getString(i)
                 val hourStr = rawTime.substringAfter('T')
                 val hCode = hCodes.getInt(i)
-                val (_, hEmoji) = getWeatherDescription(hCode, true) // Use day icon for hourly simplicity
+                val (_, hEmoji) = getWeatherDescription(hCode, true, language)
                 
                 hourlyForecasts.add(HourlyForecast(
                     time = hourStr,
@@ -177,16 +179,17 @@ class WeatherRepository {
             val dCodes = daily.getJSONArray("weather_code")
             
             val dailyForecasts = mutableListOf<DailyForecast>()
-            val dayFormat = SimpleDateFormat("EEE", Locale.getDefault())
+            val locale = if (language == "EN") Locale.ENGLISH else Locale.ITALIAN
+            val dayFormat = SimpleDateFormat("EEE", locale)
             val apiFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
             for (i in 0 until dTimes.length()) {
                 val dateStr = dTimes.getString(i)
                 val date = apiFormat.parse(dateStr)
-                val displayDate = if (i == 0) "Oggi" else dayFormat.format(date!!).replaceFirstChar { it.uppercase() }
+                val displayDate = if (i == 0) (if (language == "EN") "Today" else "Oggi") else dayFormat.format(date!!).replaceFirstChar { it.uppercase() }
                 
                 val dCode = dCodes.getInt(i)
-                val (_, dEmoji) = getWeatherDescription(dCode, true)
+                val (_, dEmoji) = getWeatherDescription(dCode, true, language)
 
                 dailyForecasts.add(DailyForecast(
                     date = displayDate,

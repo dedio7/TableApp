@@ -54,7 +54,10 @@ data class Strings(
     val spotifyEnableAccess: String,
     val spotifyForcePlay: String,
     val spotifyNoTrack: String,
-    val calendarPermissionRequest: String
+    val calendarPermissionRequest: String,
+    val close: String,
+    val recentNews: String,
+    val readFullArticle: String
 )
 
 val ItalianStrings = Strings(
@@ -107,7 +110,10 @@ val ItalianStrings = Strings(
     spotifyEnableAccess = "Tocca qui per abilitare l'accesso alle notifiche (necessario per Spotify)",
     spotifyForcePlay = "Tocca Play per avviare Spotify",
     spotifyNoTrack = "Nessun brano",
-    calendarPermissionRequest = "Tocca qui per mostrare i tuoi impegni di Google Calendar"
+    calendarPermissionRequest = "Tocca qui per mostrare i tuoi impegni di Google Calendar",
+    close = "Chiudi",
+    recentNews = "Notizie Recenti",
+    readFullArticle = "Leggi Articolo Completo"
 )
 
 val EnglishStrings = Strings(
@@ -160,7 +166,10 @@ val EnglishStrings = Strings(
     spotifyEnableAccess = "Tap here to enable notification access (required for Spotify)",
     spotifyForcePlay = "Tap Play to start Spotify",
     spotifyNoTrack = "No track playing",
-    calendarPermissionRequest = "Tap here to show your Google Calendar appointments"
+    calendarPermissionRequest = "Tap here to show your Google Calendar appointments",
+    close = "Close",
+    recentNews = "Recent News",
+    readFullArticle = "Read Full Article"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }

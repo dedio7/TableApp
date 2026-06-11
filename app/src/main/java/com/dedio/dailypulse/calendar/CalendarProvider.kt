@@ -41,7 +41,7 @@ fun rememberCalendarEvents(): CalendarState {
 
     var state by remember { mutableStateOf(CalendarState(hasPermission = hasPermission)) }
 
-    LaunchedEffect(hasPermission) {
+    LaunchedEffect(hasPermission, strings) {
         if (hasPermission) {
             state = CalendarState(events = fetchCalendarEvents(context, strings.noEventsToday, strings.todayLabel), hasPermission = true)
         } else {

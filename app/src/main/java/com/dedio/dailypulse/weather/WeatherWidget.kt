@@ -57,9 +57,11 @@ fun WeatherWidget(
     latitude: Double = 41.9028,
     longitude: Double = 12.4964,
     cityName: String = "Roma",
+    language: String = "IT"
 ) {
     val repository = remember { WeatherRepository() }
     val strings = LocalStrings.current
+    
     var weatherData by remember { mutableStateOf<WeatherData?>(null) }
     var isLoading by remember { mutableStateOf(value = true) }
     var hasError by remember { mutableStateOf(value = false) }
@@ -68,8 +70,8 @@ fun WeatherWidget(
 
     val coroutineScope = rememberCoroutineScope()
 
-    // Re-fetch when coordinates change
-    LaunchedEffect(latitude, longitude) {
+    // Re-fetch when coordinates OR language changes
+    LaunchedEffect(latitude, longitude, language) {
         refreshTrigger = System.currentTimeMillis()
     }
 
@@ -78,7 +80,7 @@ fun WeatherWidget(
         isLoading = true
         hasError = false
 
-        val result = repository.fetchWeather(latitude, longitude)
+        val result = repository.fetchWeather(latitude, longitude, language)
         if (result != null) {
             weatherData = result
             hasError = false

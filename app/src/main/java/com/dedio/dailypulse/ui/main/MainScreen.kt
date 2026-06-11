@@ -359,7 +359,8 @@ fun MainScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     latitude = weatherLat,
                                     longitude = weatherLon,
-                                    cityName = weatherCity
+                                    cityName = weatherCity,
+                                    language = appLanguage
                                 )
                             }
 
