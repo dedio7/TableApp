@@ -87,6 +87,8 @@ fun SettingsPanel(
     val binaryTheme by appSettings.binaryClockTheme.collectAsStateWithLifecycle(initialValue = "DEFAULT")
     val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
     val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
     val enabledNewsSources by appSettings.newsSources.collectAsStateWithLifecycle(initialValue = emptySet())
     val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
     val weatherEnabled by appSettings.weatherEnabled.collectAsStateWithLifecycle(initialValue = true)
@@ -266,6 +268,8 @@ fun SettingsPanel(
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingSwitch(label = strings.nightShiftLabel, checked = nightShiftEnabled, onCheckedChange = { scope.launch { appSettings.setNightShiftEnabled(it) } })
                 SettingSwitch(label = strings.antiBurnInLabel, checked = antiBurnInEnabled, onCheckedChange = { scope.launch { appSettings.setAntiBurnInEnabled(it) } })
+                SettingSwitch(label = strings.inspirationEnabledLabel, checked = inspirationEnabled, onCheckedChange = { scope.launch { appSettings.setInspirationEnabled(it) } })
+                SettingSwitch(label = strings.sunriseModeLabel, checked = sunriseModeEnabled, onCheckedChange = { scope.launch { appSettings.setSunriseModeEnabled(it) } })
                 Spacer(modifier = Modifier.height(12.dp))
                 SettingLabel(label = strings.dateFormatLabel)
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

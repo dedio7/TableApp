@@ -60,10 +60,12 @@ import com.dedio.dailypulse.calendar.CalendarWidget
 import com.dedio.dailypulse.clock.ClockDisplay
 import com.dedio.dailypulse.clock.ClockType
 import com.dedio.dailypulse.clock.DateWidget
+import com.dedio.dailypulse.inspiration.InspirationWidget
 import com.dedio.dailypulse.media.MediaWidget
 import com.dedio.dailypulse.news.NewsTicker
 import com.dedio.dailypulse.settings.AppSettings
 import com.dedio.dailypulse.settings.SettingsPanel
+import com.dedio.dailypulse.sunrise.SunriseManager
 import com.dedio.dailypulse.ui.i18n.ProvideLocalization
 import com.dedio.dailypulse.weather.WeatherWidget
 import kotlinx.coroutines.delay
@@ -146,13 +148,28 @@ fun MainScreen(
     val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
     val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
     val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
+    
+    val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
 
-    val config = remember(bgPrimary, bgSecondary, bgUseGradient) {
-        BackgroundConfig(
-            primaryColor = Color(bgPrimary.toInt()),
-            secondaryColor = Color(bgSecondary.toInt()),
-            useGradient = bgUseGradient,
-        )
+    val sunriseManager = remember { SunriseManager(context) }
+    val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
+
+    val config = remember(bgPrimary, bgSecondary, bgUseGradient, sunriseProgress) {
+        if (sunriseProgress > 0.05f) {
+            val sunriseColors = SunriseManager.getSunriseColors(sunriseProgress)
+            BackgroundConfig(
+                primaryColor = sunriseColors.first,
+                secondaryColor = sunriseColors.second,
+                useGradient = true
+            )
+        } else {
+            BackgroundConfig(
+                primaryColor = Color(bgPrimary.toInt()),
+                secondaryColor = Color(bgSecondary.toInt()),
+                useGradient = bgUseGradient,
+            )
+        }
     }
 
     val clockType = remember(clockTypeName) {
@@ -337,6 +354,11 @@ fun MainScreen(
                                 language = appLanguage,
                                 isFullScreen = !anyWidgetEnabled,
                             )
+                        }
+
+                        // ── Inspirational Quote ───────────────────────────────────────
+                        if (inspirationEnabled) {
+                            InspirationWidget(textColor = clockColor)
                         }
                     }
 

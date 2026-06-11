@@ -57,7 +57,10 @@ data class Strings(
     val calendarPermissionRequest: String,
     val close: String,
     val recentNews: String,
-    val readFullArticle: String
+    val readFullArticle: String,
+    val inspirationEnabledLabel: String,
+    val sunriseModeLabel: String,
+    val quoteOfTheDay: String
 )
 
 val ItalianStrings = Strings(
@@ -113,7 +116,10 @@ val ItalianStrings = Strings(
     calendarPermissionRequest = "Tocca qui per mostrare i tuoi impegni di Google Calendar",
     close = "Chiudi",
     recentNews = "Notizie Recenti",
-    readFullArticle = "Leggi Articolo Completo"
+    readFullArticle = "Leggi Articolo Completo",
+    inspirationEnabledLabel = "Abilita Citazione del Giorno",
+    sunriseModeLabel = "Modalità Sunrise (Sveglia)",
+    quoteOfTheDay = "Citazione del Giorno"
 )
 
 val EnglishStrings = Strings(
@@ -169,7 +175,10 @@ val EnglishStrings = Strings(
     calendarPermissionRequest = "Tap here to show your Google Calendar appointments",
     close = "Close",
     recentNews = "Recent News",
-    readFullArticle = "Read Full Article"
+    readFullArticle = "Read Full Article",
+    inspirationEnabledLabel = "Enable Daily Inspiration",
+    sunriseModeLabel = "Sunrise Mode (Alarm)",
+    quoteOfTheDay = "Daily Inspiration"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }

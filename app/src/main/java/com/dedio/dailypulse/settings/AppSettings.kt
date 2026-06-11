@@ -32,6 +32,9 @@ class AppSettings(private val context: Context) {
         val MEDIA_ENABLED = booleanPreferencesKey("media_enabled")
         val CALENDAR_ENABLED = booleanPreferencesKey("calendar_enabled")
 
+        val INSPIRATION_ENABLED = booleanPreferencesKey("inspiration_enabled")
+        val SUNRISE_MODE_ENABLED = booleanPreferencesKey("sunrise_mode_enabled")
+
         val BG_PRIMARY_COLOR = longPreferencesKey("bg_primary_color")
         val BG_SECONDARY_COLOR = longPreferencesKey("bg_secondary_color")
         val BG_USE_GRADIENT = booleanPreferencesKey("bg_use_gradient")
@@ -85,6 +88,12 @@ class AppSettings(private val context: Context) {
 
     val calendarEnabled: Flow<Boolean> = context.dataStore.data.map { it[CALENDAR_ENABLED] ?: true }
     suspend fun setCalendarEnabled(enabled: Boolean) { context.dataStore.edit { it[CALENDAR_ENABLED] = enabled } }
+
+    val inspirationEnabled: Flow<Boolean> = context.dataStore.data.map { it[INSPIRATION_ENABLED] ?: false }
+    suspend fun setInspirationEnabled(enabled: Boolean) { context.dataStore.edit { it[INSPIRATION_ENABLED] = enabled } }
+
+    val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
+    suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }
 
     val bgPrimaryColor: Flow<Long> = context.dataStore.data.map { it[BG_PRIMARY_COLOR] ?: 0xFF0D0D0DL }
     val bgSecondaryColor: Flow<Long> = context.dataStore.data.map { it[BG_SECONDARY_COLOR] ?: 0xFF1A1A2EL }
