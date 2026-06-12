@@ -21,9 +21,7 @@ import java.util.Calendar
 
 /**
  * Nixie tube style clock.
- *
- * Each digit sits inside a dark rounded "tube" with an amber/orange glow effect
- * simulated by layered circles. The colon is rendered as two glowing dots.
+ * Optimized to reduce object allocations during drawing.
  */
 @Composable
 fun NixieClock(
@@ -50,7 +48,7 @@ fun NixieClock(
 
     val showColon = (tick.longValue / 500L) % 2 == 0L
 
-    // Nixie amber color — warm bright orange
+    // Nixie colors
     val nixieAmber = Color(0xFFFF8C00)
     val nixieGlow1 = nixieAmber.copy(alpha = 0.35f)
     val nixieGlow2 = nixieAmber.copy(alpha = 0.12f)
@@ -58,6 +56,22 @@ fun NixieClock(
     val tubeColor = Color(0xFF0A0A14)
     val tubeRim = Color(0xFF252540)
     val secAmber = nixieAmber.copy(alpha = 0.65f)
+
+    // Pre-allocated Paint objects
+    val textPaint = remember {
+        Paint().apply {
+            typeface = Typeface.create("serif", Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+    }
+    val glowPaint = remember {
+        Paint().apply {
+            typeface = Typeface.create("serif", Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+    }
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val cw = size.width
@@ -79,22 +93,6 @@ fun NixieClock(
             minute.intValue / 10,
             minute.intValue % 10
         )
-
-        val textPaint = Paint().apply {
-            color = nixieAmber.toArgb()
-            textSize = tubeH * 0.72f
-            typeface = Typeface.create("serif", Typeface.BOLD)
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
-
-        val glowPaint = Paint().apply {
-            color = nixieGlow1.toArgb()
-            textSize = tubeH * 0.82f
-            typeface = Typeface.create("serif", Typeface.BOLD)
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
 
         var xPos = startX
 
@@ -133,28 +131,28 @@ fun NixieClock(
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
                 )
 
-                // Glow layers (simulate bloom around digit)
+                // Glow layers
                 val cx = xPos + tubeW / 2f
                 val ty = startY + tubeH * 0.75f
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint.apply {
-                    color = nixieGlow3.toArgb()
-                    textSize = tubeH * 0.90f
-                })
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint.apply {
-                    color = nixieGlow2.toArgb()
-                    textSize = tubeH * 0.80f
-                })
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint.apply {
-                    color = nixieAmber.copy(alpha = 0.55f).toArgb()
-                    textSize = tubeH * 0.74f
-                })
-                // Sharp digit on top
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint.apply {
-                    color = nixieAmber.toArgb()
-                    textSize = tubeH * 0.72f
-                })
+                
+                // Draw with cached paints
+                glowPaint.color = nixieGlow3.toArgb()
+                glowPaint.textSize = tubeH * 0.90f
+                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint)
+                
+                glowPaint.color = nixieGlow2.toArgb()
+                glowPaint.textSize = tubeH * 0.80f
+                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint)
+                
+                textPaint.color = nixieAmber.copy(alpha = 0.55f).toArgb()
+                textPaint.textSize = tubeH * 0.74f
+                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint)
+                
+                textPaint.color = nixieAmber.toArgb()
+                textPaint.textSize = tubeH * 0.72f
+                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint)
 
-                // Tube reflection (top highlight)
+                // Tube reflection
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.025f),
                     topLeft = Offset(xPos + tubeW * 0.1f, startY + tubeH * 0.03f),
@@ -166,7 +164,7 @@ fun NixieClock(
             }
         }
 
-        // Seconds — small below main display
+        // Seconds
         if (showSeconds) {
             val s0 = second.intValue / 10
             val s1 = second.intValue % 10
@@ -176,13 +174,8 @@ fun NixieClock(
             val secY = startY + tubeH + tubeH * 0.10f
             val secX = (cw - secTubeW * 2 - spacing) / 2f
 
-            val secPaint = Paint().apply {
-                color = secAmber.toArgb()
-                textSize = secTubeH * 0.72f
-                typeface = Typeface.create("serif", Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                isAntiAlias = true
-            }
+            textPaint.color = secAmber.toArgb()
+            textPaint.textSize = secTubeH * 0.72f
 
             for ((i, d) in listOf(s0, s1).withIndex()) {
                 val sx = secX + i * (secTubeW + spacing)
@@ -190,7 +183,7 @@ fun NixieClock(
                 drawRoundRect(tubeRim, Offset(sx, secY), Size(secTubeW, secTubeH), CornerRadius(secCorner),
                     style = androidx.compose.ui.graphics.drawscope.Stroke(1f))
                 drawContext.canvas.nativeCanvas.drawText(
-                    d.toString(), sx + secTubeW / 2f, secY + secTubeH * 0.76f, secPaint
+                    d.toString(), sx + secTubeW / 2f, secY + secTubeH * 0.76f, textPaint
                 )
             }
         }

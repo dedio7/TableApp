@@ -218,6 +218,47 @@ private fun WeatherContent(
                 )
             }
         }
+
+        // --- Compact Forecast Section ---
+        if (data.daily.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(textColor.copy(alpha = 0.1f))
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // Show next 3 days (skipping Today if it's the first element)
+                val forecastDays = data.daily.drop(1).take(3)
+                forecastDays.forEach { day ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = day.date,
+                            color = secondaryTextColor,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = day.iconEmoji,
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                        Text(
+                            text = "${day.maxTemp.roundToInt()}°",
+                            color = textColor,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

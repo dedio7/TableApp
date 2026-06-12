@@ -1,5 +1,10 @@
 package com.dedio.dailypulse
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import android.service.dreams.DreamService
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +37,12 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            updateScreenBrightness(intent)
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         savedStateRegistryController.performRestore(null)
@@ -44,6 +55,11 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         // Configure DreamService
         isInteractive = true
         isFullscreen = true
+        
+        // Initial check for brightness
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val currentStatus = registerReceiver(batteryReceiver, filter)
+        updateScreenBrightness(currentStatus)
 
         val composeView = ComposeView(this).apply {
             setContent {
@@ -66,6 +82,20 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         setContentView(composeView)
     }
 
+    private fun updateScreenBrightness(intent: Intent?) {
+        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
+        
+        val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                (status == BatteryManager.BATTERY_STATUS_FULL) ||
+                (plugged == BatteryManager.BATTERY_PLUGGED_AC) ||
+                (plugged == BatteryManager.BATTERY_PLUGGED_USB) ||
+                (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS)
+
+        // Keep screen bright if charging, allow dimming if on battery
+        isScreenBright = isCharging
+    }
+
     override fun onDreamingStarted() {
         super.onDreamingStarted()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
@@ -80,6 +110,11 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        try {
+            unregisterReceiver(batteryReceiver)
+        } catch (e: Exception) {
+            // Receiver might not be registered
+        }
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     }
 

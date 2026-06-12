@@ -1,17 +1,13 @@
 package com.dedio.dailypulse.weather
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 import kotlin.math.roundToInt
 
@@ -35,10 +33,11 @@ fun WeatherDetailsPanel(
 ) {
     val strings = LocalStrings.current
 
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn() + slideInVertically { it / 2 },
-        exit = fadeOut() + slideOutVertically { it / 2 }
+    if (!visible) return
+
+    Popup(
+        onDismissRequest = onDismiss,
+        properties = PopupProperties(focusable = true)
     ) {
         Box(
             modifier = Modifier
@@ -121,11 +120,13 @@ fun WeatherDetailsPanel(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(data.daily) { day ->
+                    data.daily.forEach { day ->
                         DailyItem(day)
                     }
                 }
@@ -143,7 +144,7 @@ fun WeatherDetailsPanel(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Chiudi",
+                        text = strings.close,
                         color = Color.White,
                         fontWeight = FontWeight.SemiBold
                     )

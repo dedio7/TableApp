@@ -9,33 +9,16 @@ import android.os.BatteryManager
 import android.view.WindowManager
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +36,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dedio.dailypulse.background.AmbientBackground
 import com.dedio.dailypulse.background.BackgroundConfig
 import com.dedio.dailypulse.battery.BatteryWidget
@@ -68,9 +52,6 @@ import com.dedio.dailypulse.settings.SettingsPanel
 import com.dedio.dailypulse.sunrise.SunriseManager
 import com.dedio.dailypulse.ui.i18n.ProvideLocalization
 import com.dedio.dailypulse.weather.WeatherWidget
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun MainScreen(
@@ -78,9 +59,34 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
-    val scope = rememberCoroutineScope()
+    val viewModel: MainScreenViewModel = viewModel { MainScreenViewModel(appSettings) }
 
     // --- Screen On Logic ---
+    LaunchedEffect(Unit) {
+        val activity = context as? Activity
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        
+        // Initial check
+        val statusIntent = context.registerReceiver(null, intentFilter)
+        statusIntent?.let { intent ->
+            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+            val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                    (status == BatteryManager.BATTERY_STATUS_FULL) ||
+                    (plugged == BatteryManager.BATTERY_PLUGGED_AC) ||
+                    (plugged == BatteryManager.BATTERY_PLUGGED_USB) ||
+                    (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS)
+            
+            activity?.window?.let { window ->
+                if (isCharging) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        }
+    }
+
     DisposableEffect(context) {
         val activity = context as? Activity
         val receiver = object : BroadcastReceiver() {
@@ -109,48 +115,46 @@ fun MainScreen(
         
         onDispose {
             context.unregisterReceiver(receiver)
-            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            // We don't necessarily want to clear it on dispose if the app is still visible, 
+            // but for a Service (DreamService) it might be different.
         }
     }
 
-    // ── Background settings ───────────────────────────────────────────────────
-    val bgPrimary by appSettings.bgPrimaryColor.collectAsStateWithLifecycle(initialValue = 0xFF0D0D0DL)
-    val bgSecondary by appSettings.bgSecondaryColor.collectAsStateWithLifecycle(initialValue = 0xFF1A1A2EL)
-    val bgUseGradient by appSettings.bgUseGradient.collectAsStateWithLifecycle(initialValue = false)
+    // ── Settings ──────────────────────────────────────────────────────────
+    val bgPrimary by viewModel.bgPrimary.collectAsStateWithLifecycle()
+    val bgSecondary by viewModel.bgSecondary.collectAsStateWithLifecycle()
+    val bgUseGradient by viewModel.bgUseGradient.collectAsStateWithLifecycle()
 
-    // ── Clock settings ────────────────────────────────────────────────────────
-    val clockTypeName by appSettings.clockType.collectAsStateWithLifecycle(initialValue = "FLIP")
-    val clockColorLong by appSettings.clockColor.collectAsStateWithLifecycle(initialValue = 0xFFEEEEEEE)
-    val showSeconds by appSettings.showSeconds.collectAsStateWithLifecycle(initialValue = true)
-    val binaryModeName by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
-    val binaryThemeName by appSettings.binaryClockTheme.collectAsStateWithLifecycle(initialValue = "DEFAULT")
+    val clockTypeName by viewModel.clockTypeName.collectAsStateWithLifecycle()
+    val clockColorLong by viewModel.clockColorLong.collectAsStateWithLifecycle()
+    val showSeconds by viewModel.showSeconds.collectAsStateWithLifecycle()
+    val binaryModeName by viewModel.binaryModeName.collectAsStateWithLifecycle()
+    val binaryThemeName by viewModel.binaryThemeName.collectAsStateWithLifecycle()
 
-    // ── News settings ─────────────────────────────────────────────────────────
-    val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val newsRefreshMinutes by appSettings.newsRefreshMinutes.collectAsStateWithLifecycle(initialValue = 30)
-    val newsSources by appSettings.newsSources.collectAsStateWithLifecycle(initialValue = emptySet())
+    val newsEnabled by viewModel.newsEnabled.collectAsStateWithLifecycle()
+    val newsRefreshMinutes by viewModel.newsRefreshMinutes.collectAsStateWithLifecycle()
+    val newsSources by viewModel.newsSources.collectAsStateWithLifecycle()
 
-    // ── Weather settings ──────────────────────────────────────────────────────
-    val weatherEnabled by appSettings.weatherEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val weatherLat by appSettings.weatherLatitude.collectAsStateWithLifecycle(initialValue = 41.9028)
-    val weatherLon by appSettings.weatherLongitude.collectAsStateWithLifecycle(initialValue = 12.4964)
-    val weatherCity by appSettings.weatherCity.collectAsStateWithLifecycle(initialValue = "Roma")
+    val weatherEnabled by viewModel.weatherEnabled.collectAsStateWithLifecycle()
+    val weatherLat by viewModel.weatherLat.collectAsStateWithLifecycle()
+    val weatherLon by viewModel.weatherLon.collectAsStateWithLifecycle()
+    val weatherCity by viewModel.weatherCity.collectAsStateWithLifecycle()
 
-    // ── Widget visibility ─────────────────────────────────────────────────────
-    val batteryEnabled by appSettings.batteryEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val mediaEnabled by appSettings.mediaEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val calendarEnabled by appSettings.calendarEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val batteryEnabled by viewModel.batteryEnabled.collectAsStateWithLifecycle()
+    val mediaEnabled by viewModel.mediaEnabled.collectAsStateWithLifecycle()
+    val calendarEnabled by viewModel.calendarEnabled.collectAsStateWithLifecycle()
+
+    val dateFormat by viewModel.dateFormat.collectAsStateWithLifecycle()
+    val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
+    val antiBurnInEnabled by viewModel.antiBurnInEnabled.collectAsStateWithLifecycle()
+    
+    val inspirationEnabled by viewModel.inspirationEnabled.collectAsStateWithLifecycle()
+    val sunriseModeEnabled by viewModel.sunriseModeEnabled.collectAsStateWithLifecycle()
+
+    val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
+    val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
 
     val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled
-
-    // ── Date format ───────────────────────────────────────────────────────────
-    val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
-    val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
-    val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
-    
-    val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
 
     val sunriseManager = remember { SunriseManager(context) }
     val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
@@ -161,7 +165,7 @@ fun MainScreen(
             BackgroundConfig(
                 primaryColor = sunriseColors.first,
                 secondaryColor = sunriseColors.second,
-                useGradient = true
+                useGradient = true,
             )
         } else {
             BackgroundConfig(
@@ -177,7 +181,6 @@ fun MainScreen(
     }
     val clockColor = Color(clockColorLong.toInt())
 
-    // Settings panel & news refresh state
     var settingsOpen by remember { mutableStateOf(value = false) }
     var newsRefreshTrigger by remember { mutableIntStateOf(0) }
     val gearRotation by animateFloatAsState(
@@ -186,30 +189,6 @@ fun MainScreen(
         label = "gearRotation",
     )
     
-    // --- Burn-in Protection State ---
-    var burnInOffset by remember { mutableStateOf(Offset.Zero) }
-    LaunchedEffect(antiBurnInEnabled) {
-        if (antiBurnInEnabled) {
-            while (true) {
-                delay(1.minutes) // Shift every minute
-                burnInOffset = Offset(
-                    x = (-3..3).random().toFloat(),
-                    y = (-3..3).random().toFloat()
-                )
-            }
-        } else {
-            burnInOffset = Offset.Zero
-        }
-    }
-
-    // --- Night Shift State ---
-    val isNightTime = remember {
-        val calendar = java.util.Calendar.getInstance()
-        val hour = calendar[java.util.Calendar.HOUR_OF_DAY]
-        hour in 22..23 || hour in 0..6
-    }
-    val applyNightShift = nightShiftEnabled && isNightTime
-
     val textMeasurer = rememberTextMeasurer()
 
     ProvideLocalization(appLanguage) {
@@ -231,7 +210,7 @@ fun MainScreen(
                         } else Modifier
                     )
             ) {
-                // 1. Battery widget — Top-left (Moved from top-right to prevent overlap)
+                // 1. Battery widget
                 if (batteryEnabled) {
                     Box(
                         modifier = Modifier
@@ -242,7 +221,7 @@ fun MainScreen(
                     }
                 }
 
-                // 2. Settings gear button — top-right corner
+                // 2. Settings gear button
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -259,20 +238,20 @@ fun MainScreen(
                         val style = TextStyle(
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White // Colore bianco pieno per risalto
+                            color = Color.White
                         )
                         val measured = textMeasurer.measure(AnnotatedString("⚙"), style)
                         drawText(
                             textLayoutResult = measured,
                             topLeft = Offset(
-                                size.width / 2f - measured.size.width / 2f,
-                                size.height / 2f - measured.size.height / 2f
+                                (size.width / 2f) - (measured.size.width / 2f),
+                                (size.height / 2f) - (measured.size.height / 2f)
                             )
                         )
                     }
                 }
 
-                // 3. Main content — Clock column (left) + Weather column (right)
+                // 3. Main content
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -286,7 +265,6 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // ── Left: Clock + Date ────────────────────────────────────────
                     Column(
                         modifier = Modifier
                             .weight(if (anyWidgetEnabled) 2f else 1f)
@@ -294,7 +272,6 @@ fun MainScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top,
                     ) {
-                        // Date widget above the clock - centered and clear of icons
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -304,12 +281,10 @@ fun MainScreen(
                             DateWidget(
                                 modifier = Modifier.wrapContentWidth(),
                                 textColor = clockColor,
-                                dateFormat = dateFormat,
                                 isFullScreen = !anyWidgetEnabled,
                             )
                         }
 
-                        // Clock — takes remaining vertical space
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -321,7 +296,6 @@ fun MainScreen(
                                         onDragEnd = {
                                             if (kotlin.math.abs(totalDrag) > 60f) {
                                                 val allTypes = ClockType.entries
-                                                // Find current index based on the TYPE NAME to avoid reference issues
                                                 val currentIndex = allTypes.indexOfFirst { it.name == clockTypeName }
                                                 if (currentIndex != -1) {
                                                     val nextIndex = if (totalDrag < 0) {
@@ -329,18 +303,15 @@ fun MainScreen(
                                                     } else {
                                                         (currentIndex - 1 + allTypes.size) % allTypes.size
                                                     }
-                                                    scope.launch {
-                                                        appSettings.setClockType(allTypes[nextIndex].name)
-                                                    }
+                                                    viewModel.setClockType(allTypes[nextIndex].name)
                                                 }
                                             }
                                             totalDrag = 0f
-                                        },
-                                        onHorizontalDrag = { change, dragAmount ->
-                                            change.consume()
-                                            totalDrag += dragAmount
                                         }
-                                    )
+                                    ) { change, dragAmount ->
+                                        change.consume()
+                                        totalDrag += dragAmount
+                                    }
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -356,24 +327,22 @@ fun MainScreen(
                             )
                         }
 
-                        // ── Inspirational Quote ───────────────────────────────────────
                         if (inspirationEnabled) {
                             InspirationWidget(textColor = clockColor)
                         }
                     }
 
-                    // ── Right: Weather + Calendar + Media ─────────────────────────
                     if (anyWidgetEnabled) {
                         Column(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .verticalScroll(rememberScrollState())
-                                .padding(vertical = 4.dp), // Add vertical breathing room
+                                .padding(vertical = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(
-                                12.dp, // Reduced spacing for better fit
-                                Alignment.Top // Align to top for better visibility in scroll
+                                12.dp,
+                                Alignment.Top
                             )
                         ) {
                             if (weatherEnabled) {
@@ -397,7 +366,6 @@ fun MainScreen(
                     }
                 }
 
-                // 4. News Ticker — pinned to bottom
                 if (newsEnabled) {
                     Box(
                         modifier = Modifier
@@ -415,7 +383,6 @@ fun MainScreen(
                 }
             }
 
-            // 5. Settings overlay (on top of everything)
             SettingsPanel(
                 visible = settingsOpen,
                 onDismiss = { settingsOpen = false }
@@ -423,13 +390,12 @@ fun MainScreen(
                 newsRefreshTrigger++
             }
 
-            // 6. Night Shift Overlay
             if (applyNightShift) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFE8722A).copy(alpha = 0.15f)) // Warm amber overlay
-                        .background(Color.Black.copy(alpha = 0.10f)) // Additional dimming
+                        .background(Color(0xFFE8722A).copy(alpha = 0.15f))
+                        .background(Color.Black.copy(alpha = 0.10f))
                 )
             }
         }

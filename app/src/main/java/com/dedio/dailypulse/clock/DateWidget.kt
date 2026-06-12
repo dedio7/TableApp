@@ -16,52 +16,65 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.dedio.dailypulse.ui.i18n.LocalStrings
 import kotlinx.coroutines.delay
 import java.util.Calendar
 
+import kotlin.time.Duration.Companion.seconds
+
 private val GIORNI_IT = listOf(
     "Domenica", "Lunedì", "Martedì", "Mercoledì",
-    "Giovedì", "Venerdì", "Sabato"
+    "Giovedì", "Venerdì", "Sabato",
 )
 private val MESI_IT = listOf(
     "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
     "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
 )
 
+private val DAYS_EN = listOf(
+    "Sunday", "Monday", "Tuesday", "Wednesday",
+    "Thursday", "Friday", "Saturday"
+)
+private val MONTHS_EN = listOf(
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+)
+
 /**
  * Displays the current date in a single compact line.
+ * Automatically localizes based on the application language.
  */
 @Composable
 fun DateWidget(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    dateFormat: String = "IT",
     isFullScreen: Boolean = false,
 ) {
     val tick = remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val strings = LocalStrings.current
+    
+    // Determine language from strings (simple check)
+    val isEnglish = strings.settingsTitle == "Settings"
 
     LaunchedEffect(Unit) {
         while (true) {
-            delay(60_000L)
+            delay(60.seconds)
             tick.longValue = System.currentTimeMillis()
         }
     }
 
     val cal = Calendar.getInstance()
-    val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1
-    val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
-    val month = cal.get(Calendar.MONTH)
-    val year = cal.get(Calendar.YEAR)
+    val dayOfWeek = cal[Calendar.DAY_OF_WEEK] - 1
+    val dayOfMonth = cal[Calendar.DAY_OF_MONTH]
+    val month = cal[Calendar.MONTH]
+    val year = cal[Calendar.YEAR]
 
     val dayName: String
     val dateLine: String
 
-    if (dateFormat == "EN") {
-        val days = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-        val months = listOf("January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December")
-        dayName = days[dayOfWeek]
-        dateLine = "${months[month]} $dayOfMonth, $year"
+    if (isEnglish) {
+        dayName = DAYS_EN[dayOfWeek]
+        dateLine = "${MONTHS_EN[month]} $dayOfMonth, $year"
     } else {
         dayName = GIORNI_IT[dayOfWeek]
         dateLine = "$dayOfMonth ${MESI_IT[month]} $year"
