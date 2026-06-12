@@ -133,13 +133,13 @@ fun SettingsPanel(
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "⚙  ${strings.settingsTitle}", color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text(text = strings.settingsTitle, color = TextPrimary, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     IconButton(onClick = onDismiss) { Text("✕", color = TextSecondary, fontSize = 20.sp) }
                 }
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "🕐  ${strings.clockSection}")
+                SectionHeader(title = strings.clockSection)
                 SettingLabel(label = strings.clockTypeLabel)
                 ClockTypeSelector(selected = clockType, onSelect = { scope.launch { appSettings.setClockType(it) } })
                 Spacer(modifier = Modifier.height(12.dp))
@@ -179,7 +179,7 @@ fun SettingsPanel(
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "🎨  ${strings.backgroundSection}")
+                SectionHeader(title = strings.backgroundSection)
                 SettingLabel(label = strings.primaryColorLabel)
                 ColorPicker(colors = PRESET_COLORS, selectedColor = Color(bgPrimary.toInt()), onColorSelected = { scope.launch { appSettings.setBackgroundColors(it.toArgb().toLong() and 0xFFFFFFFFL, bgSecondary, bgUseGradient) } })
                 Spacer(modifier = Modifier.height(12.dp))
@@ -194,7 +194,7 @@ fun SettingsPanel(
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "🧩  Widget")
+                SectionHeader(title = "Widget")
                 SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } })
                 SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } })
                 SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } })
@@ -203,7 +203,7 @@ fun SettingsPanel(
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "📰  ${strings.newsSection}")
+                SectionHeader(title = strings.newsSection)
                 SettingSwitch(label = strings.newsEnabledLabel, checked = newsEnabled, onCheckedChange = { scope.launch { appSettings.setNewsEnabled(it) } })
                 if (newsEnabled) {
                     Spacer(modifier = Modifier.height(12.dp))
@@ -237,7 +237,7 @@ fun SettingsPanel(
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "🌤  ${strings.weatherSection}")
+                SectionHeader(title = strings.weatherSection)
                 SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } })
                 if (weatherEnabled) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -255,7 +255,7 @@ fun SettingsPanel(
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SectionHeader(title = "🌍  ${strings.generalSection}")
+                SectionHeader(title = strings.generalSection)
                 SettingLabel(label = strings.languageLabel)
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     listOf("IT" to "Italiano 🇮🇹", "EN" to "English 🇬🇧").forEach { (code, label) ->
