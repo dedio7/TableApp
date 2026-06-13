@@ -39,21 +39,26 @@ fun WeatherDetailsPanel(
         onDismissRequest = onDismiss,
         properties = PopupProperties(focusable = true)
     ) {
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.75f))
                 .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
+            val isSmallHeight = maxHeight < 500.dp
+            val panelPadding = if (isSmallHeight) 16.dp else 24.dp
+            val sectionSpacing = if (isSmallHeight) 12.dp else 24.dp
+
             Column(
                 modifier = Modifier
-                    .width(500.dp)
-                    .fillMaxHeight(0.85f)
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth(0.9f)
+                    .fillMaxHeight(0.9f)
                     .clip(RoundedCornerShape(28.dp))
                     .background(Color(0xFF1A1A2E))
                     .clickable(enabled = false) { } // Prevent clicks through to background
-                    .padding(24.dp)
+                    .padding(panelPadding)
             ) {
                 // Header
                 Row(
@@ -65,73 +70,73 @@ fun WeatherDetailsPanel(
                         Text(
                             text = cityName,
                             color = Color.White,
-                            fontSize = 22.sp,
+                            fontSize = if (isSmallHeight) 18.sp else 22.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = data.description,
                             color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 14.sp
+                            fontSize = if (isSmallHeight) 12.sp else 14.sp
                         )
                     }
                     
                     Text(
                         text = "${data.temperature.roundToInt()}°",
                         color = Color.White,
-                        fontSize = 42.sp,
+                        fontSize = if (isSmallHeight) 32.sp else 42.sp,
                         fontWeight = FontWeight.Light
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(sectionSpacing))
 
                 // Hourly Forecast
                 Text(
                     text = strings.weatherHourly.uppercase(),
                     color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
                 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 16.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
                     items(data.hourly) { hour ->
-                        HourlyItem(hour)
+                        HourlyItem(hour, isSmallHeight)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(sectionSpacing))
                 HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(sectionSpacing))
 
                 // Daily Forecast
                 Text(
                     text = strings.weatherDaily.uppercase(),
                     color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(if (isSmallHeight) 6.dp else 8.dp)
                 ) {
                     data.daily.forEach { day ->
-                        DailyItem(day)
+                        DailyItem(day, isSmallHeight)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(if (isSmallHeight) 8.dp else 16.dp))
 
                 // Close Button
                 Box(
@@ -140,13 +145,14 @@ fun WeatherDetailsPanel(
                         .clip(RoundedCornerShape(14.dp))
                         .background(Color.White.copy(alpha = 0.1f))
                         .clickable { onDismiss() }
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = if (isSmallHeight) 10.dp else 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = strings.close,
                         color = Color.White,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = if (isSmallHeight) 13.sp else 14.sp
                     )
                 }
             }
@@ -155,54 +161,54 @@ fun WeatherDetailsPanel(
 }
 
 @Composable
-private fun HourlyItem(hour: HourlyForecast) {
+private fun HourlyItem(hour: HourlyForecast, isSmall: Boolean) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.05f))
-            .padding(vertical = 12.dp, horizontal = 12.dp)
+            .padding(vertical = if (isSmall) 8.dp else 12.dp, horizontal = if (isSmall) 10.dp else 12.dp)
     ) {
         Text(
             text = hour.time,
             color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp
+            fontSize = if (isSmall) 11.sp else 12.sp
         )
         Text(
             text = hour.iconEmoji,
-            fontSize = 24.sp,
+            fontSize = if (isSmall) 20.sp else 24.sp,
             modifier = Modifier.padding(vertical = 4.dp)
         )
         Text(
             text = "${hour.temperature.roundToInt()}°",
             color = Color.White,
-            fontSize = 16.sp,
+            fontSize = if (isSmall) 14.sp else 16.sp,
             fontWeight = FontWeight.Medium
         )
     }
 }
 
 @Composable
-private fun DailyItem(day: DailyForecast) {
+private fun DailyItem(day: DailyForecast, isSmall: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White.copy(alpha = 0.03f))
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 16.dp, vertical = if (isSmall) 8.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = day.date,
             color = Color.White,
-            fontSize = 15.sp,
+            fontSize = if (isSmall) 13.sp else 15.sp,
             modifier = Modifier.weight(1f)
         )
         
         Text(
             text = day.iconEmoji,
-            fontSize = 20.sp,
+            fontSize = if (isSmall) 18.sp else 20.sp,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
@@ -214,14 +220,14 @@ private fun DailyItem(day: DailyForecast) {
             Text(
                 text = "${day.maxTemp.roundToInt()}°",
                 color = Color.White,
-                fontSize = 15.sp,
+                fontSize = if (isSmall) 13.sp else 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "${day.minTemp.roundToInt()}°",
                 color = Color.White.copy(alpha = 0.5f),
-                fontSize = 15.sp
+                fontSize = if (isSmall) 13.sp else 15.sp
             )
         }
     }

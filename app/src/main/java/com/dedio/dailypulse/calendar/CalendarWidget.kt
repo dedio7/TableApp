@@ -21,9 +21,12 @@ import androidx.core.app.ActivityCompat
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 
 data class CalendarEvent(
+    val id: Long = -1,
     val title: String,
     val time: String,
-    val color: Color = Color(0xFF4FC3F7)
+    val color: Color = Color(0xFF4FC3F7),
+    val startTime: Long = 0,
+    val endTime: Long = 0
 )
 
 @Composable

@@ -193,7 +193,7 @@ fun MainScreen(
 
     ProvideLocalization(appLanguage) {
         AmbientBackground(config = config, modifier = Modifier.fillMaxSize()) {
-            Box(
+            BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
                     .then(
@@ -210,6 +210,11 @@ fun MainScreen(
                         } else Modifier
                     )
             ) {
+                val screenHeight = maxHeight
+                val isSmallHeight = screenHeight < 550.dp
+                val contentTopPadding = if (isSmallHeight) 48.dp else 64.dp
+                val verticalSpacing = if (isSmallHeight) 8.dp else 32.dp
+
                 // 1. Battery widget
                 if (batteryEnabled) {
                     Box(
@@ -257,17 +262,17 @@ fun MainScreen(
                         .fillMaxWidth()
                         .fillMaxHeight()
                         .padding(
-                            top = 64.dp,
-                            bottom = if (newsEnabled) 60.dp else 16.dp,
+                            top = contentTopPadding,
+                            bottom = if (newsEnabled) 56.dp else 16.dp,
                             start = 16.dp,
                             end = 16.dp
                         ),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(verticalSpacing),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
                         modifier = Modifier
-                            .weight(if (anyWidgetEnabled) 2f else 1f)
+                            .weight(if (anyWidgetEnabled) 2.2f else 1f)
                             .fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Top,
@@ -275,12 +280,13 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 70.dp, vertical = 8.dp),
+                                .padding(horizontal = 40.dp, vertical = if (isSmallHeight) 4.dp else 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             DateWidget(
                                 modifier = Modifier.wrapContentWidth(),
                                 textColor = clockColor,
+                                dateFormat = dateFormat,
                                 isFullScreen = !anyWidgetEnabled,
                             )
                         }
@@ -289,7 +295,7 @@ fun MainScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth()
-                                .padding(bottom = if (!anyWidgetEnabled) 16.dp else 0.dp)
+                                .padding(bottom = if (!anyWidgetEnabled) 12.dp else 0.dp)
                                 .pointerInput(Unit) {
                                     var totalDrag = 0f
                                     detectHorizontalDragGestures(
