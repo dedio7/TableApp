@@ -2,13 +2,11 @@ package com.dedio.dailypulse.clock
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -139,13 +137,18 @@ private fun WordClockGrid(
     remainder: Int,
     isFullScreen: Boolean,
 ) {
-    // Optimized for Tablet (Wide and Spacious)
-    val scale = if (isFullScreen) 1.5f else 1.15f
+    val configuration = LocalConfiguration.current
+    val isPortrait = configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
+
+    // Blower scales for portrait to fit words horizontally
+    val baseScale = if (isFullScreen) 1.5f else 1.15f
+    val scale = if (isPortrait) baseScale * 0.75f else baseScale
+    
     val dimColor = textColor.copy(alpha = 0.12f)
     val accentColor = Color(0xFFE8722A)
 
     Column(
-        modifier = modifier.fillMaxSize().padding(16.dp),
+        modifier = modifier.fillMaxSize().padding(if (isPortrait) 8.dp else 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -163,17 +166,20 @@ private fun WordClockGrid(
                         color = if (isLit) textColor else dimColor,
                         fontWeight = if (isLit) FontWeight.Bold else FontWeight.Light,
                         fontSize = (19 * scale).sp,
-                        letterSpacing = (2.0 * scale).sp,
-                        modifier = Modifier.padding(horizontal = (10 * scale).dp, vertical = (4 * scale).dp)
+                        letterSpacing = (if (isPortrait) 1.0 * scale else 2.0 * scale).sp,
+                        modifier = Modifier.padding(
+                            horizontal = (if (isPortrait) 6 * scale else 10 * scale).dp, 
+                            vertical = (if (isPortrait) 3 * scale else 4 * scale).dp
+                        )
                     )
                 }
             }
         }
         
-        Spacer(modifier = Modifier.height((24 * scale).dp))
+        Spacer(modifier = Modifier.height((if (isPortrait) 16 * scale else 24 * scale).dp))
         
-        // Precision dots - Larger and centered
-        Row(horizontalArrangement = Arrangement.spacedBy((12 * scale).dp)) {
+        // Precision dots
+        Row(horizontalArrangement = Arrangement.spacedBy((if (isPortrait) 8 * scale else 12 * scale).dp)) {
             for (i in 1..4) {
                 Text(
                     text = "●",
