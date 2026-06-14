@@ -35,6 +35,8 @@ class AppSettings(private val context: Context) {
         val INSPIRATION_ENABLED = booleanPreferencesKey("inspiration_enabled")
         val SUNRISE_MODE_ENABLED = booleanPreferencesKey("sunrise_mode_enabled")
 
+        val LAST_WEATHER_JSON = stringPreferencesKey("last_weather_json")
+
         val BG_PRIMARY_COLOR = longPreferencesKey("bg_primary_color")
         val BG_SECONDARY_COLOR = longPreferencesKey("bg_secondary_color")
         val BG_USE_GRADIENT = booleanPreferencesKey("bg_use_gradient")
@@ -94,6 +96,9 @@ class AppSettings(private val context: Context) {
 
     val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
     suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }
+
+    val lastWeatherJson: Flow<String?> = context.dataStore.data.map { it[LAST_WEATHER_JSON] }
+    suspend fun setLastWeatherJson(json: String) { context.dataStore.edit { it[LAST_WEATHER_JSON] = json } }
 
     val bgPrimaryColor: Flow<Long> = context.dataStore.data.map { it[BG_PRIMARY_COLOR] ?: 0xFF0D0D0DL }
     val bgSecondaryColor: Flow<Long> = context.dataStore.data.map { it[BG_SECONDARY_COLOR] ?: 0xFF1A1A2EL }

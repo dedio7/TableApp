@@ -8,15 +8,19 @@
 - **PO**: Feature Validation
 
 ## Current Tasks
-- [x] **[Dev] Google Calendar Sync Fix**
-- [x] **[UX] Adaptive "Liquid" Layout**
-- [x] **[QA] Bug Fixes & UX Audit**
-    - [x] Date Format fixed
-    - [x] Word Clock logic fixed
-    - [x] Idle Mode (Zen) perfected
-- [ ] **[PO] Privacy Policy Draft**
-    - [ ] Create a comprehensive policy for Location and Calendar data
 - [ ] **[UX] Adaptive Icon Design**
-    - [ ] Plan minimalist icon assets
+    - [ ] Create foreground and background XML vectors
+    - [ ] Update `ic_launcher` and `ic_launcher_round`
+- [ ] **[PM/PO] Privacy Policy**
+    - [ ] Draft text covering GPS and Calendar data
+    - [ ] Provide instructions for online hosting
+- [ ] **[Dev] Weather Offline Cache**
+    - [ ] Implement local storage for the last successful weather fetch
+    - [ ] Update UI to show "Last updated" status when offline
+- [ ] **[Dev] Google Tasks Integration (Planning)**
+    - [ ] Research Google Tasks API for Android
+- [ ] **[QA] Regression Testing**
+    - [ ] Verify 360-degree rotation on Nexus 7 again
+    - [ ] Test new icons on different launchers
 - [ ] **[Dev] Final Release Bundle (.aab)**
-    - [ ] Signing key generation instructions
+    - [ ] Generate production signing key

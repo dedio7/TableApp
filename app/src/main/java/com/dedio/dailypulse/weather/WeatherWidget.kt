@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 import com.dedio.dailypulse.ui.i18n.Strings
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.minutes
@@ -57,13 +58,16 @@ fun WeatherWidget(
     latitude: Double = 41.9028,
     longitude: Double = 12.4964,
     cityName: String = "Roma",
-    language: String = "IT"
+    language: String = "IT",
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val appSettings = remember { com.dedio.dailypulse.settings.AppSettings(context) }
     val repository = remember { WeatherRepository() }
     val strings = LocalStrings.current
     
     var weatherData by remember { mutableStateOf<WeatherData?>(null) }
     var isLoading by remember { mutableStateOf(value = true) }
+    var isOffline by remember { mutableStateOf(value = false) }
     var hasError by remember { mutableStateOf(value = false) }
     var refreshTrigger by remember { mutableLongStateOf(0L) }
     var detailsOpen by remember { mutableStateOf(false) }
@@ -80,12 +84,23 @@ fun WeatherWidget(
         isLoading = true
         hasError = false
 
-        val result = repository.fetchWeather(latitude, longitude, language)
+        val (result, rawJson) = repository.fetchWeather(latitude, longitude, language)
         if (result != null) {
             weatherData = result
             hasError = false
+            isOffline = false
+            // Save to persistent cache
+            rawJson?.let { appSettings.setLastWeatherJson(it) }
         } else {
-            hasError = true
+            // Try to load from cache
+            val cachedJson = appSettings.lastWeatherJson.firstOrNull()
+            if (cachedJson != null) {
+                weatherData = repository.parseCachedWeather(cachedJson, language)
+                isOffline = true
+                hasError = false
+            } else {
+                hasError = true
+            }
         }
         isLoading = false
 
@@ -104,7 +119,7 @@ fun WeatherWidget(
             .padding(12.dp)
     ) {
         when {
-            isLoading -> WeatherShimmer(textColor = textColor)
+            isLoading && weatherData == null -> WeatherShimmer(textColor = textColor)
             hasError -> {
                 WeatherError(
                     textColor = textColor,
@@ -117,12 +132,24 @@ fun WeatherWidget(
                 )
             }
             weatherData != null -> {
-                WeatherContent(
-                    data = weatherData!!,
-                    cityName = cityName,
-                    textColor = textColor,
-                    secondaryTextColor = secondaryTextColor
-                )
+                Box {
+                    WeatherContent(
+                        data = weatherData!!,
+                        cityName = cityName,
+                        textColor = textColor,
+                        secondaryTextColor = secondaryTextColor
+                    )
+                    
+                    if (isOffline) {
+                        Text(
+                            text = "OFFLINE",
+                            color = Color.Red.copy(alpha = 0.5f),
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.TopEnd)
+                        )
+                    }
+                }
             }
         }
     }

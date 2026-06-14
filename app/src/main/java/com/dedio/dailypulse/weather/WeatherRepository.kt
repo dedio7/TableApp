@@ -35,7 +35,7 @@ class WeatherRepository {
      * @param language "IT" or "EN"
      * @return WeatherData if successful, null on failure
      */
-    suspend fun fetchWeather(latitude: Double, longitude: Double, language: String = "IT"): WeatherData? {
+    suspend fun fetchWeather(latitude: Double, longitude: Double, language: String = "IT"): Pair<WeatherData?, String?> {
         return withContext(Dispatchers.IO) {
             try {
                 val urlString = buildString {
@@ -52,15 +52,19 @@ class WeatherRepository {
                 val responseBody = performGetRequest(urlString)
                 if (responseBody == null) {
                     Log.e(TAG, "Empty response from weather API")
-                    return@withContext null
+                    return@withContext null to null
                 }
 
-                parseWeatherResponse(responseBody, language)
+                parseWeatherResponse(responseBody, language) to responseBody
             } catch (e: Exception) {
                 Log.e(TAG, "Error fetching weather data", e)
-                null
+                null to null
             }
         }
+    }
+
+    fun parseCachedWeather(jsonString: String, language: String = "IT"): WeatherData? {
+        return parseWeatherResponse(jsonString, language)
     }
 
     /**
