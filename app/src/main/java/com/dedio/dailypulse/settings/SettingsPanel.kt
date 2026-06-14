@@ -89,17 +89,14 @@ fun SettingsPanel(
 
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
-    var isSearching by remember { mutableStateOf(false) }
     val searchResults = remember { mutableStateListOf<WeatherLocation>() }
 
     LaunchedEffect(cityQuery) {
         if (cityQuery.length >= 2) {
             delay(600)
-            isSearching = true
             val results = weatherRepo.searchCity(cityQuery, appLanguage)
             searchResults.clear()
             searchResults.addAll(results)
-            isSearching = false
         } else {
             searchResults.clear()
         }
@@ -129,8 +126,7 @@ fun SettingsPanel(
                 }
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
                 
-                // 1. Daydream Helper (Setup Link)
-                SectionHeader(title = "SETUP")
+                SectionHeader(title = strings.setupSection.uppercase())
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,7 +142,7 @@ fun SettingsPanel(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Imposta come Screensaver",
+                        text = strings.setupScreensaver,
                         color = AccentBlue,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -189,7 +185,7 @@ fun SettingsPanel(
                 SectionHeader(title = "WIDGET")
                 SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } })
                 SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } })
-                SettingSwitch(label = "Timer Rapido", checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
+                SettingSwitch(label = strings.timerEnabledLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
                 SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } })
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -205,6 +201,10 @@ fun SettingsPanel(
                                 Text(text = source.name, color = if (isSelected) AccentBlue else TextPrimary, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
                             }
                         }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(RoundedCornerShape(12.dp)).background(AccentBlue.copy(alpha = 0.15f)).border(1.dp, AccentBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).clickable { onNewsRefresh(); onDismiss() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                        Text(text = strings.newsRefreshButton.uppercase(), color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Black)
                     }
                 }
 
@@ -248,9 +248,9 @@ fun SettingsPanel(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingSwitch(label = strings.nightShiftLabel, checked = nightShiftEnabled, onCheckedChange = { scope.launch { appSettings.setNightShiftEnabled(it) } })
-                SettingSwitch(label = "Protezione Burn-in", checked = antiBurnInEnabled, onCheckedChange = { scope.launch { appSettings.setAntiBurnInEnabled(it) } })
-                SettingSwitch(label = "Citazione del Giorno", checked = inspirationEnabled, onCheckedChange = { scope.launch { appSettings.setInspirationEnabled(it) } })
-                SettingSwitch(label = "Sunrise Mode", checked = sunriseModeEnabled, onCheckedChange = { scope.launch { appSettings.setSunriseModeEnabled(it) } })
+                SettingSwitch(label = strings.antiBurnInLabel, checked = antiBurnInEnabled, onCheckedChange = { scope.launch { appSettings.setAntiBurnInEnabled(it) } })
+                SettingSwitch(label = strings.inspirationEnabledLabel, checked = inspirationEnabled, onCheckedChange = { scope.launch { appSettings.setInspirationEnabled(it) } })
+                SettingSwitch(label = strings.sunriseModeLabel, checked = sunriseModeEnabled, onCheckedChange = { scope.launch { appSettings.setSunriseModeEnabled(it) } })
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

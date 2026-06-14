@@ -40,6 +40,7 @@ data class Strings(
     val batteryEnabledLabel: String,
     val mediaEnabledLabel: String,
     val calendarEnabledLabel: String,
+    val timerEnabledLabel: String,
     val generalSection: String,
     val nightShiftLabel: String,
     val antiBurnInLabel: String,
@@ -65,7 +66,9 @@ data class Strings(
     val readFullArticle: String,
     val inspirationEnabledLabel: String,
     val sunriseModeLabel: String,
-    val quoteOfTheDay: String
+    val quoteOfTheDay: String,
+    val setupSection: String,
+    val setupScreensaver: String
 )
 
 val ItalianStrings = Strings(
@@ -104,6 +107,7 @@ val ItalianStrings = Strings(
     batteryEnabledLabel = "Abilita Batteria",
     mediaEnabledLabel = "Abilita Media Player",
     calendarEnabledLabel = "Abilita Calendario",
+    timerEnabledLabel = "Abilita Timer Rapido",
     generalSection = "Generale",
     nightShiftLabel = "Night Shift (Luce Blu)",
     antiBurnInLabel = "Protezione Anti Burn-in",
@@ -129,7 +133,9 @@ val ItalianStrings = Strings(
     readFullArticle = "Leggi Articolo Completo",
     inspirationEnabledLabel = "Abilita Citazione del Giorno",
     sunriseModeLabel = "Modalità Sunrise (Sveglia)",
-    quoteOfTheDay = "Citazione del Giorno"
+    quoteOfTheDay = "Citazione del Giorno",
+    setupSection = "Setup",
+    setupScreensaver = "Imposta come Screensaver"
 )
 
 val EnglishStrings = Strings(
@@ -168,6 +174,7 @@ val EnglishStrings = Strings(
     batteryEnabledLabel = "Enable Battery",
     mediaEnabledLabel = "Enable Media Player",
     calendarEnabledLabel = "Enable Calendar",
+    timerEnabledLabel = "Enable Quick Timer",
     generalSection = "General",
     nightShiftLabel = "Night Shift (Blue Light Filter)",
     antiBurnInLabel = "Anti Burn-in Protection",
@@ -193,7 +200,9 @@ val EnglishStrings = Strings(
     readFullArticle = "Read Full Article",
     inspirationEnabledLabel = "Enable Daily Inspiration",
     sunriseModeLabel = "Sunrise Mode (Alarm)",
-    quoteOfTheDay = "Daily Inspiration"
+    quoteOfTheDay = "Daily Inspiration",
+    setupSection = "Setup",
+    setupScreensaver = "Set as Screensaver"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }

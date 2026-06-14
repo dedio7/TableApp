@@ -122,7 +122,10 @@ fun MainScreen(
 
     val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled
 
-    val config = remember(atmosphere, mediaInfo.isPlaying) {
+    val sunriseManager = remember { SunriseManager(context) }
+    val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
+
+    val config = remember(atmosphere, mediaInfo.isPlaying, sunriseProgress) {
         BackgroundConfig(atmosphere = atmosphere, isMusicPlaying = mediaInfo.isPlaying)
     }
 
@@ -141,13 +144,10 @@ fun MainScreen(
                 modifier = modifier
                     .fillMaxSize()
                     .pointerInput(Unit) {
-                        // Efficient touch detection to avoid main thread choke
                         awaitPointerEventScope {
                             while (true) {
                                 val event = awaitPointerEvent()
-                                if (event.changes.any { it.pressed }) {
-                                    lastInteraction = System.currentTimeMillis()
-                                }
+                                if (event.changes.any { it.pressed }) { lastInteraction = System.currentTimeMillis() }
                             }
                         }
                     }
@@ -170,17 +170,17 @@ fun MainScreen(
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp) // More padding for mobile status bars
+                        .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
                         .alpha(controlsAlpha)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(if (isSmallHeight || isPortrait) 40.dp else 46.dp)
+                            .size(if (isSmallHeight || isPortrait) 44.dp else 52.dp)
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.08f))
-                            .clickable(enabled = !isIdle) { 
+                            .clickable {
                                 lastInteraction = System.currentTimeMillis()
-                                settingsOpen = !settingsOpen 
+                                if (!isIdle) settingsOpen = !settingsOpen 
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -201,7 +201,6 @@ fun MainScreen(
 
                 // 2. Main content
                 if (isPortrait) {
-                    // --- PORTRAIT MOBILE LAYOUT ---
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -211,14 +210,9 @@ fun MainScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         DateWidget(textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
-                        
                         Spacer(modifier = Modifier.height(24.dp))
-
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp) // Large fixed height for clock on mobile
-                                .pointerInput(Unit) {
+                            modifier = Modifier.fillMaxWidth().height(300.dp).pointerInput(Unit) {
                                     var totalDrag = 0f
                                     detectHorizontalDragGestures(onDragEnd = {
                                         if (kotlin.math.abs(totalDrag) > 60f) {
@@ -238,18 +232,9 @@ fun MainScreen(
                                 ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                             }
                         }
-
-                        if (inspirationEnabled) {
-                            InspirationWidget(textColor = clockColor)
-                            Spacer(modifier = Modifier.height(32.dp))
-                        }
-
+                        if (inspirationEnabled) { InspirationWidget(textColor = clockColor); Spacer(modifier = Modifier.height(32.dp)) }
                         if (anyWidgetEnabled) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
+                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
                                 if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
                                 if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
@@ -258,31 +243,16 @@ fun MainScreen(
                         }
                     }
                 } else {
-                    // --- LANDSCAPE TABLET LAYOUT ---
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .padding(
-                                top = if (isSmallHeight) 48.dp else 64.dp,
-                                bottom = if (newsEnabled) 60.dp else 16.dp,
-                                start = 24.dp,
-                                end = 24.dp
-                            ),
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = if (isSmallHeight) 48.dp else 64.dp, bottom = if (newsEnabled) 60.dp else 16.dp, start = 24.dp, end = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 32.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(
-                            modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                        ) {
+                        Column(modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                 DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
                             }
-
                             Spacer(modifier = Modifier.height(if (isSmallHeight) 8.dp else 16.dp))
-
                             Box(
                                 modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
                                     var totalDrag = 0f
@@ -304,18 +274,10 @@ fun MainScreen(
                                     ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                                 }
                             }
-
-                            if (inspirationEnabled) {
-                                InspirationWidget(textColor = clockColor)
-                            }
+                            if (inspirationEnabled) InspirationWidget(textColor = clockColor)
                         }
-
                         if (anyWidgetEnabled) {
-                            Column(
-                                modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
-                            ) {
+                            Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)) {
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
                                 if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
                                 if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
