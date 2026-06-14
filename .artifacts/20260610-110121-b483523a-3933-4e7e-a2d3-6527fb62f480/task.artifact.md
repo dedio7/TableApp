@@ -9,15 +9,14 @@
 
 ## Current Tasks
 - [x] **[Dev] Google Calendar Sync Fix**
-    - [x] Update `CalendarProvider.kt` to target `com.google` accounts
-    - [x] Ensure sync trigger after event creation/modification
 - [x] **[UX] Adaptive "Liquid" Layout**
-    - [x] Refactor `MainScreen.kt` for Nexus 7 (Small Tablet Landscape)
-    - [x] Centering fix for `DateWidget`
-- [x] **[QA] Bug Fixes**
-    - [x] Fix Date Format toggle (Data binding issue)
-    - [x] Fix Word Clock minutes logic (Grid-based approach)
-- [ ] **[PM] Play Store Final Steps**
-    - [ ] Adaptive Icon creation
-    - [ ] Privacy Policy generation
-    - [ ] Release Bundle signing (.aab)
+- [x] **[QA] Bug Fixes & UX Audit**
+    - [x] Date Format fixed
+    - [x] Word Clock logic fixed
+    - [x] Idle Mode (Zen) perfected
+- [ ] **[PO] Privacy Policy Draft**
+    - [ ] Create a comprehensive policy for Location and Calendar data
+- [ ] **[UX] Adaptive Icon Design**
+    - [ ] Plan minimalist icon assets
+- [ ] **[Dev] Final Release Bundle (.aab)**
+    - [ ] Signing key generation instructions

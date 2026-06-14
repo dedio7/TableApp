@@ -1,5 +1,6 @@
 package com.dedio.dailypulse
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,9 @@ import com.dedio.dailypulse.theme.DailyPulseTheme
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    
+    // Force Landscape but allow 180-degree flip based on sensor
+    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
 
     enableEdgeToEdge()
     setContent {
