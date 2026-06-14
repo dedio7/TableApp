@@ -31,21 +31,19 @@ class AppSettings(private val context: Context) {
         val BATTERY_ENABLED = booleanPreferencesKey("battery_enabled")
         val MEDIA_ENABLED = booleanPreferencesKey("media_enabled")
         val CALENDAR_ENABLED = booleanPreferencesKey("calendar_enabled")
+        val TIMER_ENABLED = booleanPreferencesKey("timer_enabled")
 
+        val ATMOSPHERE_NAME = stringPreferencesKey("atmosphere_name")
+
+        val DATE_FORMAT = stringPreferencesKey("date_format")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val NIGHT_SHIFT_ENABLED = booleanPreferencesKey("night_shift_enabled")
+        val ANTI_BURN_IN_ENABLED = booleanPreferencesKey("anti_burn_in_enabled")
+        
         val INSPIRATION_ENABLED = booleanPreferencesKey("inspiration_enabled")
         val SUNRISE_MODE_ENABLED = booleanPreferencesKey("sunrise_mode_enabled")
 
         val LAST_WEATHER_JSON = stringPreferencesKey("last_weather_json")
-
-        val BG_PRIMARY_COLOR = longPreferencesKey("bg_primary_color")
-        val BG_SECONDARY_COLOR = longPreferencesKey("bg_secondary_color")
-        val BG_USE_GRADIENT = booleanPreferencesKey("bg_use_gradient")
-
-        val DATE_FORMAT = stringPreferencesKey("date_format")
-        val APP_LANGUAGE = stringPreferencesKey("app_language") // "IT" or "EN"
-        val BRIGHTNESS = intPreferencesKey("brightness")
-        val NIGHT_SHIFT_ENABLED = booleanPreferencesKey("night_shift_enabled")
-        val ANTI_BURN_IN_ENABLED = booleanPreferencesKey("anti_burn_in_enabled")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -91,21 +89,11 @@ class AppSettings(private val context: Context) {
     val calendarEnabled: Flow<Boolean> = context.dataStore.data.map { it[CALENDAR_ENABLED] ?: true }
     suspend fun setCalendarEnabled(enabled: Boolean) { context.dataStore.edit { it[CALENDAR_ENABLED] = enabled } }
 
-    val inspirationEnabled: Flow<Boolean> = context.dataStore.data.map { it[INSPIRATION_ENABLED] ?: false }
-    suspend fun setInspirationEnabled(enabled: Boolean) { context.dataStore.edit { it[INSPIRATION_ENABLED] = enabled } }
+    val timerEnabled: Flow<Boolean> = context.dataStore.data.map { it[TIMER_ENABLED] ?: true }
+    suspend fun setTimerEnabled(enabled: Boolean) { context.dataStore.edit { it[TIMER_ENABLED] = enabled } }
 
-    val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
-    suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }
-
-    val lastWeatherJson: Flow<String?> = context.dataStore.data.map { it[LAST_WEATHER_JSON] }
-    suspend fun setLastWeatherJson(json: String) { context.dataStore.edit { it[LAST_WEATHER_JSON] = json } }
-
-    val bgPrimaryColor: Flow<Long> = context.dataStore.data.map { it[BG_PRIMARY_COLOR] ?: 0xFF0D0D0DL }
-    val bgSecondaryColor: Flow<Long> = context.dataStore.data.map { it[BG_SECONDARY_COLOR] ?: 0xFF1A1A2EL }
-    val bgUseGradient: Flow<Boolean> = context.dataStore.data.map { it[BG_USE_GRADIENT] ?: false }
-    suspend fun setBackgroundColors(p: Long, s: Long, g: Boolean) {
-        context.dataStore.edit { it[BG_PRIMARY_COLOR] = p; it[BG_SECONDARY_COLOR] = s; it[BG_USE_GRADIENT] = g }
-    }
+    val atmosphereName: Flow<String> = context.dataStore.data.map { it[ATMOSPHERE_NAME] ?: "DEEP_SPACE" }
+    suspend fun setAtmosphereName(name: String) { context.dataStore.edit { it[ATMOSPHERE_NAME] = name } }
 
     val dateFormat: Flow<String> = context.dataStore.data.map { it[DATE_FORMAT] ?: "IT" }
     suspend fun setDateFormat(f: String) { context.dataStore.edit { it[DATE_FORMAT] = f } }
@@ -118,4 +106,13 @@ class AppSettings(private val context: Context) {
 
     val antiBurnInEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANTI_BURN_IN_ENABLED] ?: true }
     suspend fun setAntiBurnInEnabled(e: Boolean) { context.dataStore.edit { it[ANTI_BURN_IN_ENABLED] = e } }
+    
+    val inspirationEnabled: Flow<Boolean> = context.dataStore.data.map { it[INSPIRATION_ENABLED] ?: false }
+    suspend fun setInspirationEnabled(enabled: Boolean) { context.dataStore.edit { it[INSPIRATION_ENABLED] = enabled } }
+
+    val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
+    suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }
+
+    val lastWeatherJson: Flow<String?> = context.dataStore.data.map { it[LAST_WEATHER_JSON] }
+    suspend fun setLastWeatherJson(json: String) { context.dataStore.edit { it[LAST_WEATHER_JSON] = json } }
 }

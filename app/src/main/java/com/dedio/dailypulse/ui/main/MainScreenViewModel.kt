@@ -3,6 +3,7 @@ package com.dedio.dailypulse.ui.main
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dedio.dailypulse.background.Atmosphere
 import com.dedio.dailypulse.settings.AppSettings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -13,19 +14,16 @@ import kotlin.time.Duration.Companion.minutes
 class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
 
     // --- Settings StateFlows ---
-    val bgPrimary = appSettings.bgPrimaryColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFF0D0D0DL)
-    val bgSecondary = appSettings.bgSecondaryColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFF1A1A2EL)
-    val bgUseGradient = appSettings.bgUseGradient.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        initialValue = false
-    )
+    val atmosphereName = appSettings.atmosphereName.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "DEEP_SPACE")
+    
+    val atmosphere = atmosphereName.map { name ->
+        try { Atmosphere.valueOf(name) } catch (_: Exception) { Atmosphere.DEEP_SPACE }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Atmosphere.DEEP_SPACE)
 
     val clockTypeName = appSettings.clockType.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FLIP")
     val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEEE)
     val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val binaryModeName = appSettings.binaryClockMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "BINARY")
-    val binaryThemeName = appSettings.binaryClockTheme.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "DEFAULT")
 
     val newsEnabled = appSettings.newsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val newsRefreshMinutes = appSettings.newsRefreshMinutes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 30)
@@ -39,10 +37,10 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
     val batteryEnabled = appSettings.batteryEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val mediaEnabled = appSettings.mediaEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val calendarEnabled = appSettings.calendarEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val timerEnabled = appSettings.timerEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val dateFormat = appSettings.dateFormat.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
     val appLanguage = appSettings.appLanguage.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
-    val nightShiftEnabled = appSettings.nightShiftEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val antiBurnInEnabled = appSettings.antiBurnInEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     
     val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
@@ -54,7 +52,7 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            antiBurnInEnabled.collectLatest { enabled ->
+            appSettings.antiBurnInEnabled.collectLatest { enabled ->
                 if (enabled) {
                     while (true) {
                         delay(1.minutes)
@@ -80,7 +78,7 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val applyNightShift = combine(nightShiftEnabled, isNightTime) { enabled, night ->
+    val applyNightShift = combine(appSettings.nightShiftEnabled, isNightTime) { enabled, night ->
         enabled && night
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 

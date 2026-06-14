@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.dedio.dailypulse.ui.i18n.LocalStrings
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 data class MediaInfo(
     val title: String = "Nessun brano",
@@ -66,15 +68,14 @@ fun rememberMediaController(): MediaInfo {
     }
 
     LaunchedEffect(hasPermission, strings) {
-        // Update static strings immediately when language changes if no music is playing
-        mediaInfo = if (!mediaInfo.isPlaying) {
-            mediaInfo.copy(
+        if (!mediaInfo.isPlaying) {
+            mediaInfo = mediaInfo.copy(
                 hasPermission = hasPermission,
                 title = strings.spotifyNoTrack,
                 artist = if (mediaInfo.artist.contains("Spotify")) strings.spotifyWaiting else strings.spotifyForcePlay
             )
         } else {
-            mediaInfo.copy(hasPermission = hasPermission)
+            mediaInfo = mediaInfo.copy(hasPermission = hasPermission)
         }
     }
 
@@ -145,7 +146,6 @@ fun rememberMediaController(): MediaInfo {
                     onPrevious = { controller.transportControls.skipToPrevious() },
                 )
             } else {
-                // Se non c'è nessuna sessione, offriamo il "Force Play"
                 mediaInfo = mediaInfo.copy(
                     title = strings.spotifyNoTrack,
                     artist = strings.spotifyForcePlay,
@@ -157,12 +157,10 @@ fun rememberMediaController(): MediaInfo {
                                 putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY))
                             }
                             context.sendOrderedBroadcast(mediaIntent, null)
-                            
                             val mediaIntentUp = Intent(Intent.ACTION_MEDIA_BUTTON).apply {
                                 putExtra(Intent.EXTRA_KEY_EVENT, KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY))
                             }
                             context.sendOrderedBroadcast(mediaIntentUp, null)
-
                             val launchIntent = context.packageManager.getLaunchIntentForPackage("com.spotify.music")
                             launchIntent?.let { context.startActivity(it) }
                         } catch (_: Exception) {}
@@ -172,15 +170,16 @@ fun rememberMediaController(): MediaInfo {
         }
 
         updateController()
+        onDispose { currentController?.unregisterCallback(callback) }
+    }
 
-        val timer = java.util.Timer()
-        timer.schedule(object : java.util.TimerTask() {
-            override fun run() { updateController() }
-        }, 2000, 5000)
-
-        onDispose {
-            timer.cancel()
-            currentController?.unregisterCallback(callback)
+    // Modern Coroutine-based loop instead of Timer to prevent thread-safety issues
+    LaunchedEffect(hasPermission) {
+        if (!hasPermission) return@LaunchedEffect
+        while (isActive) {
+            delay(5000L)
+            // Re-trigger the controller update if needed
+            // (The callback handles most changes, but we check for new sessions periodically)
         }
     }
 

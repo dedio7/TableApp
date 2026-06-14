@@ -1,17 +1,11 @@
 package com.dedio.dailypulse.background
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -19,112 +13,97 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Configuration for the ambient background appearance.
+ * Defines a generative atmosphere with its core color palette.
  */
+enum class Atmosphere(val displayName: String, val colors: List<Color>) {
+    DEEP_SPACE("Deep Space", listOf(Color(0xFF020617), Color(0xFF0F172A), Color(0xFF1E1B4B))),
+    MORNING_MIST("Morning Mist", listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0), Color(0xFFBFDBFE))),
+    GOLDEN_HOUR("Golden Hour", listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFF92400E))),
+    NORDIC_AURORA("Nordic Aurora", listOf(Color(0xFF064E3B), Color(0xFF0F172A), Color(0xFF4C1D95))),
+    MIDNIGHT_SILK("Midnight Silk", listOf(Color(0xFF0D0D0D), Color(0xFF1A1A1A), Color(0xFF262626))),
+    OCEAN_DEPTHS("Ocean Depths", listOf(Color(0xFF082F49), Color(0xFF075985), Color(0xFF0C4A6E)))
+}
+
 data class BackgroundConfig(
-    val primaryColor: Color,
-    val secondaryColor: Color? = null,
-    val useGradient: Boolean = false
+    val atmosphere: Atmosphere = Atmosphere.DEEP_SPACE,
+    val isMusicPlaying: Boolean = false
 )
 
-/**
- * Preset dark colors for the screensaver background.
- */
-val PRESET_COLORS: List<Pair<String, Color>> = listOf(
-    "Nero" to Color(0xFF0D0D0D),
-    "Blu Notte" to Color(0xFF0D1B2A),
-    "Verde Scuro" to Color(0xFF1B2D1B),
-    "Rosso Scuro" to Color(0xFF2D1B1B),
-    "Viola" to Color(0xFF1B1B2D),
-    "Grigio Antracite" to Color(0xFF1A1A2E),
-    "Blu Oceano" to Color(0xFF16213E),
-    "Verde Smeraldo" to Color(0xFF0A2E36),
-    "Bordeaux" to Color(0xFF2D0A0A),
-    "Ambra" to Color(0xFF2D2A0A)
-)
-
-/**
- * Full-screen ambient background that wraps content.
- *
- * Supports solid color or animated gradient fills with a subtle
- * shimmer/pulse effect to make the background feel alive.
- */
 @Composable
 fun AmbientBackground(
     config: BackgroundConfig,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "ambientBg")
-
-    // Slowly rotating gradient angle (full cycle over 20 seconds)
-    val gradientAngle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
+    val infiniteTransition = rememberInfiniteTransition(label = "silkFlow")
+    
+    // Music Pulse - Slow and gentle to avoid UI choke on old devices
+    val musicPulse by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (config.isMusicPlaying) 1.08f else 1f, // Reduced amplitude
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 20000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "gradientAngle"
-    )
-
-    // Subtle brightness pulse (cycles every 8 seconds)
-    val brightnessPulse by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 8000, easing = LinearEasing),
+            animation = tween(if (config.isMusicPlaying) 1200 else 4000, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "brightnessPulse"
+        label = "musicPulse"
     )
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .drawBehind {
-                if (config.useGradient && config.secondaryColor != null) {
-                    // Animated diagonal gradient
-                    val angleRad = Math.toRadians(gradientAngle.toDouble())
-                    val centerX = size.width / 2f
-                    val centerY = size.height / 2f
-                    val radius = maxOf(size.width, size.height) / 2f
+    val phase1 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(50000, easing = LinearEasing), RepeatMode.Restart),
+        label = "p1"
+    )
+    val phase2 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(45000, easing = LinearEasing), RepeatMode.Restart),
+        label = "p2"
+    )
 
-                    val startX = centerX + radius * cos(angleRad).toFloat()
-                    val startY = centerY + radius * sin(angleRad).toFloat()
-                    val endX = centerX - radius * cos(angleRad).toFloat()
-                    val endY = centerY - radius * sin(angleRad).toFloat()
+    val colors = config.atmosphere.colors
+    
+    Box(modifier = modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            
+            // 1. Base
+            drawRect(colors[0])
 
-                    // Apply subtle brightness modulation to colors
-                    val pulsedPrimary = modulateBrightness(config.primaryColor, brightnessPulse)
-                    val pulsedSecondary = modulateBrightness(config.secondaryColor, brightnessPulse)
+            // 2. Layer 1 - Simplified for performance
+            val angle1 = Math.toRadians(phase1.toDouble())
+            val center1 = Offset(
+                x = (w * 0.5f) + (w * 0.15f * cos(angle1)).toFloat(),
+                y = (h * 0.5f) + (h * 0.15f * sin(angle1)).toFloat()
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    0.0f to colors[1].copy(alpha = 0.5f * musicPulse),
+                    1.0f to Color.Transparent,
+                    center = center1,
+                    radius = w * 0.9f
+                ),
+                center = center1,
+                radius = w * 0.9f
+            )
 
-                    val brush = Brush.linearGradient(
-                        colors = listOf(pulsedPrimary, pulsedSecondary),
-                        start = Offset(startX, startY),
-                        end = Offset(endX, endY)
-                    )
-                    drawRect(brush = brush)
-                } else {
-                    // Solid color with subtle brightness pulse
-                    val pulsedColor = modulateBrightness(config.primaryColor, brightnessPulse)
-                    drawRect(color = pulsedColor)
-                }
-            }
-    ) {
+            // 3. Layer 2
+            val angle2 = Math.toRadians(phase2.toDouble() + 180.0)
+            val center2 = Offset(
+                x = (w * 0.5f) + (w * 0.2f * cos(angle2)).toFloat(),
+                y = (h * 0.5f) + (h * 0.2f * sin(angle2)).toFloat()
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    0.0f to colors[2].copy(alpha = 0.3f),
+                    1.0f to Color.Transparent,
+                    center = center2,
+                    radius = w * 0.8f
+                ),
+                center = center2,
+                radius = w * 0.8f
+            )
+        }
+        
         content()
     }
-}
-
-/**
- * Modulates the brightness of a color by a given factor.
- * Factor > 1 brightens, factor < 1 darkens. Alpha is preserved.
- */
-private fun modulateBrightness(color: Color, factor: Float): Color {
-    return Color(
-        red = (color.red * factor).coerceIn(0f, 1f),
-        green = (color.green * factor).coerceIn(0f, 1f),
-        blue = (color.blue * factor).coerceIn(0f, 1f),
-        alpha = color.alpha
-    )
 }

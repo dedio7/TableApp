@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -17,31 +18,32 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.dedio.dailypulse.ui.i18n.LocalStrings
+import com.dedio.dailypulse.clock.ClockType
 
 /**
- * A minimalist and stylish battery widget.
- * Optimized for efficiency and clean code.
+ * An adaptive and stylish battery widget.
+ * Changes icon style based on the active clock to ensure visual coherence.
  */
 @Composable
 fun BatteryWidget(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
+    clockType: ClockType = ClockType.FLIP,
+    accentColor: Color = Color.White // New parameter to match background
 ) {
     val context = LocalContext.current
-    val strings = LocalStrings.current
 
     var batteryLevel by remember { mutableFloatStateOf(100f) }
-    var isCharging by remember { mutableStateOf(value = false) }
+    var isCharging by remember { mutableStateOf(false) }
 
     fun updateBatteryState(intent: Intent?) {
         if (intent == null) return
@@ -69,44 +71,26 @@ fun BatteryWidget(
         }
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val stickyIntent = context.registerReceiver(receiver, filter)
-        
-        // Handle initial state immediately
         updateBatteryState(stickyIntent)
-        
         onDispose { 
-            try {
-                context.unregisterReceiver(receiver)
-            } catch (_: Exception) {
-                // Ignore if already unregistered
-            }
+            try { context.unregisterReceiver(receiver) } catch (_: Exception) { }
         }
     }
 
     val levelPercent = batteryLevel
     val charging = isCharging
 
+    // Dynamic color logic: derive status color from background accent or level
     val statusColor = when {
-        charging -> Color(0xFF00E676)
-        levelPercent > 20f -> textColor.copy(alpha = 0.9f)
-        else -> Color(0xFFFF5252)
+        charging -> {
+            // If charging, use a very bright/white version of the accent color for a 'glow' effect
+            accentColor.copy(alpha = 0.9f)
+        }
+        levelPercent > 20f -> textColor.copy(alpha = 0.8f)
+        else -> Color(0xFFFF5252) // Keep critical red for safety
     }
 
-    val animatedColor by animateColorAsState(
-        targetValue = statusColor,
-        animationSpec = tween(800),
-        label = "color",
-    )
-
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val subtleAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
+    val animatedColor by animateColorAsState(targetValue = statusColor, animationSpec = tween(800), label = "color")
 
     Box(
         modifier = modifier
@@ -117,42 +101,23 @@ fun BatteryWidget(
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Canvas(modifier = Modifier.size(width = 28.dp, height = 14.dp)) {
-                val sw = 1.dp.toPx()
-                val bodyW = size.width - 3.dp.toPx()
-                val bodyH = size.height
-                val corner = 2.dp.toPx()
-
-                drawRoundRect(
-                    color = textColor.copy(alpha = 0.3f),
-                    size = Size(bodyW, bodyH),
-                    cornerRadius = CornerRadius(corner),
-                    style = Stroke(width = sw)
-                )
-                drawRoundRect(
-                    color = textColor.copy(alpha = 0.3f),
-                    topLeft = Offset(bodyW + 1.dp.toPx(), bodyH * 0.3f),
-                    size = Size(2.dp.toPx(), bodyH * 0.4f),
-                    cornerRadius = CornerRadius(1.dp.toPx())
-                )
-
-                val padding = sw + 1.5.dp.toPx()
-                val fillW = (bodyW - padding * 2) * (levelPercent / 100f)
-                if (fillW > 0) {
-                    drawRoundRect(
-                        color = if (charging) animatedColor.copy(alpha = subtleAlpha) else animatedColor,
-                        topLeft = Offset(padding, padding),
-                        size = Size(fillW, bodyH - padding * 2),
-                        cornerRadius = CornerRadius(1.dp.toPx())
-                    )
+        Crossfade(targetState = clockType, label = "batteryStyle", animationSpec = tween(500)) { type ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                when (type) {
+                    ClockType.DIGITAL, ClockType.PIXEL, ClockType.BINARY -> {
+                        TechBatteryIcon(levelPercent, animatedColor)
+                    }
+                    ClockType.ANALOG, ClockType.NIXIE -> {
+                        VintageBatteryIcon(levelPercent, animatedColor, charging)
+                    }
+                    else -> {
+                        MinimalBatteryIcon(levelPercent, animatedColor)
+                    }
                 }
-            }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "${levelPercent.toInt()}%",
                     color = textColor.copy(alpha = 0.9f),
@@ -160,17 +125,64 @@ fun BatteryWidget(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = (-0.5).sp
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = "•", color = textColor.copy(alpha = 0.2f), fontSize = 12.sp)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = (if (charging) strings.chargingLabel else strings.batteryLabel).uppercase(),
-                    color = if (charging) animatedColor.copy(alpha = subtleAlpha) else textColor.copy(alpha = 0.4f),
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
             }
+        }
+    }
+}
+
+@Composable
+private fun TechBatteryIcon(level: Float, color: Color) {
+    Canvas(modifier = Modifier.size(width = 22.dp, height = 10.dp)) {
+        val segments = 4
+        val gap = 2.dp.toPx()
+        val segW = (size.width - (segments - 1) * gap) / segments
+        
+        for (i in 0 until segments) {
+            val isFilled = (level / 100f) > (i.toFloat() / segments)
+            drawRect(
+                color = if (isFilled) color else color.copy(alpha = 0.15f),
+                topLeft = Offset(i * (segW + gap), 0f),
+                size = Size(segW, size.height)
+            )
+        }
+    }
+}
+
+@Composable
+private fun VintageBatteryIcon(level: Float, color: Color, charging: Boolean) {
+    Canvas(modifier = Modifier.size(18.dp)) {
+        val sw = 1.5.dp.toPx()
+        val r = size.minDimension / 2
+        drawCircle(color = color.copy(alpha = 0.1f), radius = r, style = Stroke(width = sw))
+        val angle = (level / 100f) * 360f - 90f
+        val rad = Math.toRadians(angle.toDouble())
+        val dotR = 2.5.dp.toPx()
+        drawCircle(
+            color = color,
+            radius = dotR,
+            center = Offset(
+                (size.width / 2) + (r * Math.cos(rad)).toFloat(),
+                (size.height / 2) + (r * Math.sin(rad)).toFloat()
+            )
+        )
+        if (charging) {
+            drawCircle(color = color.copy(alpha = 0.3f), radius = dotR * 1.8f, center = center)
+        }
+    }
+}
+
+@Composable
+private fun MinimalBatteryIcon(level: Float, color: Color) {
+    Box(modifier = Modifier.size(width = 16.dp, height = 12.dp), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val h = size.height * (level / 100f)
+            drawLine(
+                color = color,
+                start = Offset(size.width / 2, size.height),
+                end = Offset(size.width / 2, size.height - h),
+                strokeWidth = 2.5.dp.toPx(),
+                cap = StrokeCap.Round
+            )
         }
     }
 }
