@@ -164,17 +164,18 @@ fun MainScreen(
             ) {
                 val screenHeight = maxHeight
                 val isSmallHeight = screenHeight < 500.dp
+                val isPortrait = maxWidth < maxHeight
 
                 // 1. Unified Energy Ring & Settings (Top-Right)
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 10.dp, end = 12.dp)
+                        .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp) // More padding for mobile status bars
                         .alpha(controlsAlpha)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(if (isSmallHeight) 38.dp else 46.dp)
+                            .size(if (isSmallHeight || isPortrait) 40.dp else 46.dp)
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.08f))
                             .clickable(enabled = !isIdle) { 
@@ -194,50 +195,43 @@ fun MainScreen(
                                 drawArc(color = (if (batteryInfo.isCharging) Color.White else ringColor).copy(alpha = 0.2f), startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw * 2.5f, cap = StrokeCap.Round))
                             }
                         }
-                        Text("⚙", color = Color.White.copy(alpha = 0.9f), fontSize = if (isSmallHeight) 18.sp else 22.sp, modifier = Modifier.rotate(gearRotation))
+                        Text("⚙", color = Color.White.copy(alpha = 0.9f), fontSize = if (isSmallHeight || isPortrait) 18.sp else 22.sp, modifier = Modifier.rotate(gearRotation))
                     }
                 }
 
                 // 2. Main content
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .padding(
-                            top = if (isSmallHeight) 48.dp else 64.dp,
-                            bottom = if (newsEnabled) 60.dp else 16.dp,
-                            start = 24.dp,
-                            end = 24.dp
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 32.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                if (isPortrait) {
+                    // --- PORTRAIT MOBILE LAYOUT ---
                     Column(
-                        modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 20.dp)
+                            .padding(top = 80.dp, bottom = if (newsEnabled) 80.dp else 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-                            DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
-                        }
-
-                        Spacer(modifier = Modifier.height(if (isSmallHeight) 8.dp else 16.dp))
+                        DateWidget(textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
 
                         Box(
-                            modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
-                                var totalDrag = 0f
-                                detectHorizontalDragGestures(onDragEnd = {
-                                    if (kotlin.math.abs(totalDrag) > 60f) {
-                                        val allTypes = ClockType.entries
-                                        val currentIndex = allTypes.indexOfFirst { it.name == clockTypeName }
-                                        if (currentIndex != -1) {
-                                            val nextIndex = if (totalDrag < 0) (currentIndex + 1) % allTypes.size else (currentIndex - 1 + allTypes.size) % allTypes.size
-                                            viewModel.setClockType(allTypes[nextIndex].name)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp) // Large fixed height for clock on mobile
+                                .pointerInput(Unit) {
+                                    var totalDrag = 0f
+                                    detectHorizontalDragGestures(onDragEnd = {
+                                        if (kotlin.math.abs(totalDrag) > 60f) {
+                                            val allTypes = ClockType.entries
+                                            val currentIndex = allTypes.indexOfFirst { it.name == clockTypeName }
+                                            if (currentIndex != -1) {
+                                                val nextIndex = if (totalDrag < 0) (currentIndex + 1) % allTypes.size else (currentIndex - 1 + allTypes.size) % allTypes.size
+                                                viewModel.setClockType(allTypes[nextIndex].name)
+                                            }
                                         }
-                                    }
-                                    totalDrag = 0f
-                                }) { change, dragAmount -> change.consume(); totalDrag += dragAmount; lastInteraction = System.currentTimeMillis() }
-                            },
+                                        totalDrag = 0f
+                                    }) { change, dragAmount -> change.consume(); totalDrag += dragAmount; lastInteraction = System.currentTimeMillis() }
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Crossfade(targetState = clockType, label = "clockFade", animationSpec = tween(500)) { targetType ->
@@ -247,26 +241,85 @@ fun MainScreen(
 
                         if (inspirationEnabled) {
                             InspirationWidget(textColor = clockColor)
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
+
+                        if (anyWidgetEnabled) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+                                if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
+                                if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
+                                if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
+                            }
                         }
                     }
-
-                    if (anyWidgetEnabled) {
+                } else {
+                    // --- LANDSCAPE TABLET LAYOUT ---
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .padding(
+                                top = if (isSmallHeight) 48.dp else 64.dp,
+                                bottom = if (newsEnabled) 60.dp else 16.dp,
+                                start = 24.dp,
+                                end = 24.dp
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 32.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Column(
-                            modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp),
+                            modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
+                            verticalArrangement = Arrangement.Center,
                         ) {
-                            if (weatherEnabled) {
-                                WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+                            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
+                                DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
                             }
-                            if (calendarEnabled) {
-                                CalendarWidget(modifier = Modifier.fillMaxWidth())
+
+                            Spacer(modifier = Modifier.height(if (isSmallHeight) 8.dp else 16.dp))
+
+                            Box(
+                                modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
+                                    var totalDrag = 0f
+                                    detectHorizontalDragGestures(onDragEnd = {
+                                        if (kotlin.math.abs(totalDrag) > 60f) {
+                                            val allTypes = ClockType.entries
+                                            val currentIndex = allTypes.indexOfFirst { it.name == clockTypeName }
+                                            if (currentIndex != -1) {
+                                                val nextIndex = if (totalDrag < 0) (currentIndex + 1) % allTypes.size else (currentIndex - 1 + allTypes.size) % allTypes.size
+                                                viewModel.setClockType(allTypes[nextIndex].name)
+                                            }
+                                        }
+                                        totalDrag = 0f
+                                    }) { change, dragAmount -> change.consume(); totalDrag += dragAmount; lastInteraction = System.currentTimeMillis() }
+                                },
+                            contentAlignment = Alignment.Center
+                            ) {
+                                Crossfade(targetState = clockType, label = "clockFade", animationSpec = tween(500)) { targetType ->
+                                    ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
+                                }
                             }
-                            if (mediaEnabled) {
-                                MediaWidget(modifier = Modifier.fillMaxWidth())
+
+                            if (inspirationEnabled) {
+                                InspirationWidget(textColor = clockColor)
                             }
-                            if (timerEnabled) {
-                                TimerWidget(modifier = Modifier.fillMaxWidth())
+                        }
+
+                        if (anyWidgetEnabled) {
+                            Column(
+                                modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
+                            ) {
+                                if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+                                if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
+                                if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
+                                if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
                             }
                         }
                     }

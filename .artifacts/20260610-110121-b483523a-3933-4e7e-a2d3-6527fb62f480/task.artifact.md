@@ -8,19 +8,15 @@
 - **PO**: Feature Validation
 
 ## Current Tasks
-- [ ] **[UX] Adaptive Icon Design**
-    - [ ] Create foreground and background XML vectors
-    - [ ] Update `ic_launcher` and `ic_launcher_round`
-- [ ] **[PM/PO] Privacy Policy**
-    - [ ] Draft text covering GPS and Calendar data
-    - [ ] Provide instructions for online hosting
-- [ ] **[Dev] Weather Offline Cache**
-    - [ ] Implement local storage for the last successful weather fetch
-    - [ ] Update UI to show "Last updated" status when offline
-- [ ] **[Dev] Google Tasks Integration (Planning)**
-    - [ ] Research Google Tasks API for Android
-- [ ] **[QA] Regression Testing**
-    - [ ] Verify 360-degree rotation on Nexus 7 again
-    - [ ] Test new icons on different launchers
+- [x] **[UX] Adaptive Icon Design**
+- [x] **[Dev] Weather Offline Cache**
+- [x] **[UX/Dev] Pulse 2.0 Features**
+    - [x] Music Reactive Backgrounds
+    - [x] Smart Timer Widget (Reordered & Toggleable)
+    - [x] Daydream Helper
+- [x] **[UX] Responsive Mobile Layout** (Portrait Stack)
+- [ ] **[PM/PO] Privacy Policy Finalization**
+    - [ ] Final review of the text
 - [ ] **[Dev] Final Release Bundle (.aab)**
-    - [ ] Generate production signing key
+    - [ ] Build configuration check
+    - [ ] Signing instructions for the user
