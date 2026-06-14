@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import java.util.Calendar
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun WordClock(
@@ -26,9 +27,9 @@ fun WordClock(
     LaunchedEffect(Unit) {
         while (true) {
             val cal = Calendar.getInstance()
-            hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            minute.intValue = cal.get(Calendar.MINUTE)
-            delay(1000L) 
+            hour.intValue = cal[Calendar.HOUR_OF_DAY]
+            minute.intValue = cal[Calendar.MINUTE]
+            delay(1.seconds) 
         }
     }
 
@@ -47,15 +48,11 @@ private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
     val h12 = displayHour % 12
 
     val lit = mutableSetOf<String>()
-    lit += "SONO"; lit += "LE"
     
-    if (h12 == 1) {
-        lit.remove("SONO"); lit.remove("LE")
-        lit += "È"; lit += "L'UNA"
-    } else if (h12 == 0) {
-        lit += "DODICI"
-    } else {
-        lit += italianHourWord(h12)
+    when (h12) {
+        1 -> { lit += "È"; lit += "L'UNA" }
+        0 -> { lit += "SONO"; lit += "LE"; lit += "DODICI" }
+        else -> { lit += "SONO"; lit += "LE"; lit += italianHourWord(h12) }
     }
 
     if (m5 > 0) {
@@ -82,7 +79,7 @@ private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("UNDICI" to "UNDICI", "DODICI" to "DODICI"),
         listOf("E" to "E", "MENO" to "MENO", "MEZZA" to "MEZZA"),
         listOf("UN" to "UN", "QUARTO" to "QUARTO", "VENTI" to "VENTI"),
-        listOf("VENTICINQUE" to "VENTICINQUE", "CINQUE" to "CINQUE_MIN", "DIECI" to "DIECI_MIN")
+        listOf("VENTICINQUE" to "VENTICINQUE", "CINQUE" to "CINQUE_MIN", "DIECI" to "DIECI_MIN"),
     )
 
     WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
@@ -122,7 +119,7 @@ private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("FOUR" to "FOUR", "FIVE" to "FIVE", "SIX" to "SIX"),
         listOf("SEVEN" to "SEVEN", "EIGHT" to "EIGHT", "NINE" to "NINE"),
         listOf("TEN" to "TEN", "ELEVEN" to "ELEVEN", "TWELVE" to "TWELVE"),
-        listOf("O'CLOCK" to "OCLOCK")
+        listOf("O'CLOCK" to "OCLOCK"),
     )
 
     WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
@@ -140,7 +137,6 @@ private fun WordClockGrid(
     val configuration = LocalConfiguration.current
     val isPortrait = configuration.orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT
 
-    // Blower scales for portrait to fit words horizontally
     val baseScale = if (isFullScreen) 1.5f else 1.15f
     val scale = if (isPortrait) baseScale * 0.75f else baseScale
     
@@ -176,10 +172,10 @@ private fun WordClockGrid(
             }
         }
         
-        Spacer(modifier = Modifier.height((if (isPortrait) 16 * scale else 24 * scale).dp))
+        Spacer(modifier = Modifier.height((24 * scale).dp))
         
         // Precision dots
-        Row(horizontalArrangement = Arrangement.spacedBy((if (isPortrait) 8 * scale else 12 * scale).dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy((12 * scale).dp)) {
             for (i in 1..4) {
                 Text(
                     text = "●",

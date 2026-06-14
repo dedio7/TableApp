@@ -25,7 +25,7 @@ data class MediaInfo(
     val hasPermission: Boolean = true,
     val onPlayPause: () -> Unit = {},
     val onNext: () -> Unit = {},
-    val onPrevious: () -> Unit = {}
+    val onPrevious: () -> Unit = {},
 )
 
 @Composable
@@ -38,7 +38,7 @@ fun rememberMediaController(): MediaInfo {
         return try {
             val listeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
             listeners?.contains(context.packageName) == true
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -55,22 +55,26 @@ fun rememberMediaController(): MediaInfo {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     
-    var mediaInfo by remember { mutableStateOf(MediaInfo(
-        title = strings.spotifyNoTrack,
-        artist = strings.spotifyWaiting,
-        hasPermission = hasPermission
-    )) }
+    var mediaInfo by remember { 
+        mutableStateOf(
+            MediaInfo(
+                title = strings.spotifyNoTrack,
+                artist = strings.spotifyWaiting,
+                hasPermission = hasPermission
+            )
+        )
+    }
 
     LaunchedEffect(hasPermission, strings) {
         // Update static strings immediately when language changes if no music is playing
-        if (!mediaInfo.isPlaying) {
-            mediaInfo = mediaInfo.copy(
+        mediaInfo = if (!mediaInfo.isPlaying) {
+            mediaInfo.copy(
                 hasPermission = hasPermission,
                 title = strings.spotifyNoTrack,
                 artist = if (mediaInfo.artist.contains("Spotify")) strings.spotifyWaiting else strings.spotifyForcePlay
             )
         } else {
-            mediaInfo = mediaInfo.copy(hasPermission = hasPermission)
+            mediaInfo.copy(hasPermission = hasPermission)
         }
     }
 
@@ -107,8 +111,8 @@ fun rememberMediaController(): MediaInfo {
             val componentName = ComponentName(context, SpotifyNotificationService::class.java)
             val controllers = try { 
                 sessionManager.getActiveSessions(componentName) 
-            } catch (e: SecurityException) {
-                try { sessionManager.getActiveSessions(null) } catch (e2: Exception) { emptyList() }
+            } catch (_: SecurityException) {
+                try { sessionManager.getActiveSessions(null) } catch (_: Exception) { emptyList() }
             }
 
             val controller = controllers.firstOrNull { it.packageName.contains("spotify") } 
@@ -138,7 +142,7 @@ fun rememberMediaController(): MediaInfo {
                         else controller.transportControls.play()
                     },
                     onNext = { controller.transportControls.skipToNext() },
-                    onPrevious = { controller.transportControls.skipToPrevious() }
+                    onPrevious = { controller.transportControls.skipToPrevious() },
                 )
             } else {
                 // Se non c'è nessuna sessione, offriamo il "Force Play"
@@ -160,10 +164,8 @@ fun rememberMediaController(): MediaInfo {
                             context.sendOrderedBroadcast(mediaIntentUp, null)
 
                             val launchIntent = context.packageManager.getLaunchIntentForPackage("com.spotify.music")
-                            if (launchIntent != null) {
-                                context.startActivity(launchIntent)
-                            }
-                        } catch (e: Exception) {}
+                            launchIntent?.let { context.startActivity(it) }
+                        } catch (_: Exception) {}
                     }
                 )
             }

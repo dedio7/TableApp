@@ -65,7 +65,7 @@ fun MainScreen(
     val viewModel: MainScreenViewModel = viewModel { MainScreenViewModel(appSettings) }
 
     // --- UX Idle Logic (Auto-hide controls) ---
-    var isIdle by remember { mutableStateOf(false) }
+    var isIdle by remember { mutableStateOf(value = false) }
     var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
     
     LaunchedEffect(lastInteraction) {
@@ -77,7 +77,7 @@ fun MainScreen(
     val controlsAlpha by animateFloatAsState(
         targetValue = if (isIdle) 0f else 1f,
         animationSpec = tween(1500),
-        label = "controlsFade"
+        label = "controlsFade",
     )
 
     // --- Screen On Logic ---
@@ -270,8 +270,11 @@ fun MainScreen(
                                                 val allTypes = ClockType.entries
                                                 val currentIndex = allTypes.indexOfFirst { it.name == clockTypeName }
                                                 if (currentIndex != -1) {
-                                                    val nextIndex = if (totalDrag < 0) (currentIndex + 1) % allTypes.size
-                                                    else (currentIndex - 1 + allTypes.size) % allTypes.size
+                                                    val nextIndex = if (totalDrag < 0) {
+                                                        (currentIndex + 1) % allTypes.size
+                                                    } else {
+                                                        (currentIndex - 1 + allTypes.size) % allTypes.size
+                                                    }
                                                     viewModel.setClockType(allTypes[nextIndex].name)
                                                 }
                                             }

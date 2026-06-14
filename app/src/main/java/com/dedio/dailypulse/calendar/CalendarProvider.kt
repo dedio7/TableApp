@@ -19,7 +19,7 @@ import java.util.*
 
 data class CalendarState(
     val events: List<CalendarEvent> = emptyList(),
-    val hasPermission: Boolean = true
+    val hasPermission: Boolean = true,
 )
 
 /**
@@ -28,7 +28,7 @@ data class CalendarState(
 @Composable
 fun rememberCalendarEvents(
     selectedDate: Calendar = Calendar.getInstance(),
-    refreshKey: Int = 0
+    refreshKey: Int = 0,
 ): CalendarState {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -53,25 +53,24 @@ fun rememberCalendarEvents(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var state by remember { mutableStateOf(CalendarState(hasPermission = hasPermission)) }
+    val state = remember { mutableStateOf(CalendarState(hasPermission = hasPermission)) }
 
-    // Re-fetch when permission, selected date, or the explicit refreshKey changes
     LaunchedEffect(hasPermission, strings, selectedDate, refreshKey) {
-        if (hasPermission) {
+        state.value = if (hasPermission) {
             val emptyTitle = if (isToday(selectedDate)) strings.noEventsToday else strings.noEventsLabel
-            state = CalendarState(events = fetchCalendarEvents(context, selectedDate, emptyTitle, strings.todayLabel), hasPermission = true)
+            CalendarState(events = fetchCalendarEvents(context, selectedDate, emptyTitle, strings.todayLabel), hasPermission = true)
         } else {
-            state = CalendarState(events = emptyList(), hasPermission = false)
+            CalendarState(events = emptyList(), hasPermission = false)
         }
     }
 
-    return state
+    return state.value
 }
 
 private fun isToday(date: Calendar): Boolean {
     val today = Calendar.getInstance()
-    return date.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-            date.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    return date[Calendar.YEAR] == today[Calendar.YEAR] &&
+            date[Calendar.DAY_OF_YEAR] == today[Calendar.DAY_OF_YEAR]
 }
 
 fun fetchCalendarEvents(context: Context, date: Calendar, emptyTitle: String, emptyTime: String): List<CalendarEvent> {
@@ -121,19 +120,21 @@ fun fetchCalendarEvents(context: Context, date: Calendar, emptyTitle: String, em
                 val colorInt = it.getInt(4)
                 
                 val cal = Calendar.getInstance().apply { timeInMillis = begin }
-                val timeStr = String.format("%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+                val timeStr = String.format(Locale.getDefault(), "%02d:%02d", cal[Calendar.HOUR_OF_DAY], cal[Calendar.MINUTE])
                 
-                result.add(CalendarEvent(
-                    id = id,
-                    title = title,
-                    time = timeStr,
-                    color = if (colorInt != 0) androidx.compose.ui.graphics.Color(colorInt) else androidx.compose.ui.graphics.Color(0xFF4FC3F7),
-                    startTime = begin,
-                    endTime = end
-                ))
+                result.add(
+                    CalendarEvent(
+                        id = id,
+                        title = title,
+                        time = timeStr,
+                        color = if (colorInt != 0) androidx.compose.ui.graphics.Color(colorInt) else androidx.compose.ui.graphics.Color(0xFF4FC3F7),
+                        startTime = begin,
+                        endTime = end
+                    )
+                )
             }
         }
-    } catch (e: SecurityException) { }
+    } catch (_: SecurityException) { }
 
     return if (result.isEmpty()) {
         listOf(CalendarEvent(title = emptyTitle, time = emptyTime, color = androidx.compose.ui.graphics.Color.Gray))
@@ -173,10 +174,10 @@ fun getDaysWithEvents(context: Context, month: Calendar): Set<Int> {
             while (it.moveToNext()) {
                 val begin = it.getLong(0)
                 val cal = Calendar.getInstance().apply { timeInMillis = begin }
-                daysWithEvents.add(cal.get(Calendar.DAY_OF_MONTH))
+                daysWithEvents.add(cal[Calendar.DAY_OF_MONTH])
             }
         }
-    } catch (e: Exception) { }
+    } catch (_: Exception) { }
     return daysWithEvents
 }
 
@@ -199,7 +200,7 @@ fun addCalendarEvent(context: Context, title: String, startTime: Long, endTime: 
             triggerSync(calendarInfo.accountName)
             true
         } else false
-    } catch (e: Exception) { false }
+    } catch (_: Exception) { false }
 }
 
 fun updateCalendarEvent(context: Context, eventId: Long, title: String, startTime: Long, endTime: Long): Boolean {
@@ -218,7 +219,7 @@ fun updateCalendarEvent(context: Context, eventId: Long, title: String, startTim
             calendarInfo?.let { triggerSync(it.accountName) }
             true
         } else false
-    } catch (e: Exception) { false }
+    } catch (_: Exception) { false }
 }
 
 fun deleteCalendarEvent(context: Context, eventId: Long): Boolean {
@@ -232,7 +233,7 @@ fun deleteCalendarEvent(context: Context, eventId: Long): Boolean {
             calendarInfo?.let { triggerSync(it.accountName) }
             true
         } else false
-    } catch (e: Exception) { false }
+    } catch (_: Exception) { false }
 }
 
 private data class CalendarInfo(val id: Long, val accountName: String)
@@ -271,7 +272,7 @@ private fun getGoogleCalendarInfo(context: Context): CalendarInfo? {
             }
             fallback
         }
-    } catch (e: Exception) { null }
+    } catch (_: Exception) { null }
 }
 
 private fun triggerSync(accountName: String) {

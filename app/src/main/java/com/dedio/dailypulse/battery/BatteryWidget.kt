@@ -30,18 +30,18 @@ import com.dedio.dailypulse.ui.i18n.LocalStrings
 
 /**
  * A minimalist and stylish battery widget.
- * Fixed to detect initial state immediately.
+ * Optimized for efficiency and clean code.
  */
 @Composable
 fun BatteryWidget(
     modifier: Modifier = Modifier,
-    textColor: Color = Color.White
+    textColor: Color = Color.White,
 ) {
     val context = LocalContext.current
     val strings = LocalStrings.current
 
     var batteryLevel by remember { mutableFloatStateOf(100f) }
-    var isCharging by remember { mutableStateOf(false) }
+    var isCharging by remember { mutableStateOf(value = false) }
 
     fun updateBatteryState(intent: Intent?) {
         if (intent == null) return
@@ -54,11 +54,11 @@ fun BatteryWidget(
             batteryLevel = (level.toFloat() / scale.toFloat()) * 100f
         }
 
-        isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+        isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL ||
                 plugged == BatteryManager.BATTERY_PLUGGED_AC ||
                 plugged == BatteryManager.BATTERY_PLUGGED_USB ||
-                plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS
+                plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS)
     }
 
     DisposableEffect(context) {
@@ -70,14 +70,14 @@ fun BatteryWidget(
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val stickyIntent = context.registerReceiver(receiver, filter)
         
-        // Handle initial state from sticky intent
+        // Handle initial state immediately
         updateBatteryState(stickyIntent)
         
         onDispose { 
             try {
                 context.unregisterReceiver(receiver)
-            } catch (e: Exception) {
-                // Ignore
+            } catch (_: Exception) {
+                // Ignore if already unregistered
             }
         }
     }
@@ -91,7 +91,11 @@ fun BatteryWidget(
         else -> Color(0xFFFF5252)
     }
 
-    val animatedColor by animateColorAsState(targetValue = statusColor, animationSpec = tween(800), label = "color")
+    val animatedColor by animateColorAsState(
+        targetValue = statusColor,
+        animationSpec = tween(800),
+        label = "color",
+    )
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val subtleAlpha by infiniteTransition.animateFloat(
@@ -123,20 +127,49 @@ fun BatteryWidget(
                 val bodyH = size.height
                 val corner = 2.dp.toPx()
 
-                drawRoundRect(color = textColor.copy(alpha = 0.3f), size = Size(bodyW, bodyH), cornerRadius = CornerRadius(corner), style = Stroke(width = sw))
-                drawRoundRect(color = textColor.copy(alpha = 0.3f), topLeft = Offset(bodyW + 1.dp.toPx(), bodyH * 0.3f), size = Size(2.dp.toPx(), bodyH * 0.4f), cornerRadius = CornerRadius(1.dp.toPx()))
+                drawRoundRect(
+                    color = textColor.copy(alpha = 0.3f),
+                    size = Size(bodyW, bodyH),
+                    cornerRadius = CornerRadius(corner),
+                    style = Stroke(width = sw)
+                )
+                drawRoundRect(
+                    color = textColor.copy(alpha = 0.3f),
+                    topLeft = Offset(bodyW + 1.dp.toPx(), bodyH * 0.3f),
+                    size = Size(2.dp.toPx(), bodyH * 0.4f),
+                    cornerRadius = CornerRadius(1.dp.toPx())
+                )
 
                 val padding = sw + 1.5.dp.toPx()
                 val fillW = (bodyW - padding * 2) * (levelPercent / 100f)
                 if (fillW > 0) {
-                    drawRoundRect(color = if (charging) animatedColor.copy(alpha = subtleAlpha) else animatedColor, topLeft = Offset(padding, padding), size = Size(fillW, bodyH - padding * 2), cornerRadius = CornerRadius(1.dp.toPx()))
+                    drawRoundRect(
+                        color = if (charging) animatedColor.copy(alpha = subtleAlpha) else animatedColor,
+                        topLeft = Offset(padding, padding),
+                        size = Size(fillW, bodyH - padding * 2),
+                        cornerRadius = CornerRadius(1.dp.toPx())
+                    )
                 }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "${levelPercent.toInt()}%", color = textColor.copy(alpha = 0.9f), fontSize = 15.sp, fontWeight = FontWeight.Medium, letterSpacing = (-0.5).sp)
-                Spacer(modifier = Modifier.width(6.dp)); Text(text = "•", color = textColor.copy(alpha = 0.2f), fontSize = 12.sp); Spacer(modifier = Modifier.width(6.dp))
-                Text(text = (if (charging) strings.chargingLabel else strings.batteryLabel).uppercase(), color = if (charging) animatedColor.copy(alpha = subtleAlpha) else textColor.copy(alpha = 0.4f), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text(
+                    text = "${levelPercent.toInt()}%",
+                    color = textColor.copy(alpha = 0.9f),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = (-0.5).sp
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "•", color = textColor.copy(alpha = 0.2f), fontSize = 12.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = (if (charging) strings.chargingLabel else strings.batteryLabel).uppercase(),
+                    color = if (charging) animatedColor.copy(alpha = subtleAlpha) else textColor.copy(alpha = 0.4f),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
             }
         }
     }
