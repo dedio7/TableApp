@@ -15,8 +15,8 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
-    // Balanced orientation: Landscape prioritized but allows full 360 rotation
-    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+    // Balanced orientation: Force sensor-based landscape for tablets like Nexus 7
+    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 
     enableEdgeToEdge()
     setContent {

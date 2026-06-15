@@ -26,12 +26,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dedio.dailypulse.background.AmbientBackground
@@ -142,14 +144,6 @@ fun MainScreen(
             BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                if (event.changes.any { it.pressed }) { lastInteraction = System.currentTimeMillis() }
-                            }
-                        }
-                    }
                     .then(
                         if (antiBurnInEnabled) {
                             Modifier.layout { measurable, constraints ->
@@ -161,6 +155,21 @@ fun MainScreen(
                         } else Modifier
                     )
             ) {
+                // Detect interaction to wake up UI - Moved to a separate transparent Box 
+                // to avoid intercepting clicks intended for sub-components
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    awaitPointerEvent(PointerEventPass.Initial)
+                                    lastInteraction = System.currentTimeMillis()
+                                }
+                            }
+                        }
+                )
+
                 val screenHeight = maxHeight
                 val isSmallHeight = screenHeight < 500.dp
                 val isPortrait = maxWidth < maxHeight
@@ -170,9 +179,10 @@ fun MainScreen(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
+                        .size(if (isSmallHeight || isPortrait) 64.dp else 72.dp) // Even larger hit area
                         .alpha(controlsAlpha)
-                        .size(if (isSmallHeight || isPortrait) 48.dp else 56.dp) // Large outer box
-                        .clickable { // Click on the outer box to ensure responsiveness
+                        .zIndex(10f) // Ensure it's on top of EVERYTHING
+                        .clickable { 
                             lastInteraction = System.currentTimeMillis()
                             settingsOpen = !settingsOpen 
                         },
@@ -180,7 +190,7 @@ fun MainScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(if (isSmallHeight || isPortrait) 40.dp else 46.dp)
+                            .size(if (isSmallHeight || isPortrait) 42.dp else 48.dp)
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.08f)),
                         contentAlignment = Alignment.Center
