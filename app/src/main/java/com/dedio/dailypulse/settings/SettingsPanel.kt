@@ -142,7 +142,7 @@ fun SettingsPanel(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = strings.setupScreensaver,
+                        text = strings.setupScreensaver.uppercase(),
                         color = AccentBlue,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -166,7 +166,7 @@ fun SettingsPanel(
 
                 if (clockType == "BINARY") {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "BINARY SETTINGS", color = AccentBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp))
+                    Text(text = strings.binarySettingsLabel.uppercase(), color = AccentBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp))
                     Spacer(modifier = Modifier.height(8.dp))
                     SettingLabel(label = strings.displayMode)
                     Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -182,10 +182,10 @@ fun SettingsPanel(
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
 
-                SectionHeader(title = "WIDGET")
+                SectionHeader(title = strings.widgetSection.uppercase())
                 SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } })
                 SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } })
-                SettingSwitch(label = strings.timerEnabledLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
+                SettingSwitch(label = strings.timerLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
                 SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } })
 
                 Spacer(modifier = Modifier.height(16.dp))

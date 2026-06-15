@@ -172,16 +172,18 @@ fun MainScreen(
                         .align(Alignment.TopEnd)
                         .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
                         .alpha(controlsAlpha)
+                        .size(if (isSmallHeight || isPortrait) 48.dp else 56.dp) // Large outer box
+                        .clickable { // Click on the outer box to ensure responsiveness
+                            lastInteraction = System.currentTimeMillis()
+                            settingsOpen = !settingsOpen 
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(if (isSmallHeight || isPortrait) 44.dp else 52.dp)
+                            .size(if (isSmallHeight || isPortrait) 40.dp else 46.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.08f))
-                            .clickable {
-                                lastInteraction = System.currentTimeMillis()
-                                if (!isIdle) settingsOpen = !settingsOpen 
-                            },
+                            .background(Color.White.copy(alpha = 0.08f)),
                         contentAlignment = Alignment.Center
                     ) {
                         if (batteryEnabled) {

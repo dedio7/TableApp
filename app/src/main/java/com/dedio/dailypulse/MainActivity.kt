@@ -15,8 +15,8 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
-    // Allow full 360-degree rotation (Landscape and Portrait)
-    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+    // Balanced orientation: Landscape prioritized but allows full 360 rotation
+    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
 
     enableEdgeToEdge()
     setContent {

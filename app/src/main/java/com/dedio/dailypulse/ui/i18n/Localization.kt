@@ -68,7 +68,12 @@ data class Strings(
     val sunriseModeLabel: String,
     val quoteOfTheDay: String,
     val setupSection: String,
-    val setupScreensaver: String
+    val setupScreensaver: String,
+    val widgetSection: String,
+    val timerLabel: String,
+    val burnInLabel: String,
+    val inspirationLabel: String,
+    val binarySettingsLabel: String
 )
 
 val ItalianStrings = Strings(
@@ -135,7 +140,12 @@ val ItalianStrings = Strings(
     sunriseModeLabel = "Modalità Sunrise (Sveglia)",
     quoteOfTheDay = "Citazione del Giorno",
     setupSection = "Setup",
-    setupScreensaver = "Imposta come Screensaver"
+    setupScreensaver = "Imposta come Screensaver",
+    widgetSection = "Widget",
+    timerLabel = "Timer Rapido",
+    burnInLabel = "Protezione Burn-in",
+    inspirationLabel = "Citazione del Giorno",
+    binarySettingsLabel = "Impostazioni Binario"
 )
 
 val EnglishStrings = Strings(
@@ -202,7 +212,12 @@ val EnglishStrings = Strings(
     sunriseModeLabel = "Sunrise Mode (Alarm)",
     quoteOfTheDay = "Daily Inspiration",
     setupSection = "Setup",
-    setupScreensaver = "Set as Screensaver"
+    setupScreensaver = "Set as Screensaver",
+    widgetSection = "Widgets",
+    timerLabel = "Quick Timer",
+    burnInLabel = "Burn-in Protection",
+    inspirationLabel = "Daily Inspiration",
+    binarySettingsLabel = "Binary Settings"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }
