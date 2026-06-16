@@ -30,14 +30,6 @@ fun ClockBit(
     val sizeDp = with(LocalDensity.current) { sizePx.toDp() }
 
     Canvas(modifier = Modifier.size(sizeDp)) {
-        if (isLit) {
-            drawCircle(
-                color = baseColor.copy(alpha = config.theme.glowAlpha),
-                radius = sizePx * 0.8f,
-                center = Offset(sizePx / 2f, sizePx / 2f)
-            )
-        }
-
         drawRoundRect(
             color = color,
             size = Size(sizePx, sizePx),

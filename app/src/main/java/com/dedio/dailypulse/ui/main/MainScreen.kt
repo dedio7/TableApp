@@ -101,6 +101,7 @@ fun MainScreen(
     val clockTypeName by viewModel.clockTypeName.collectAsStateWithLifecycle()
     val clockColorLong by viewModel.clockColorLong.collectAsStateWithLifecycle()
     val showSeconds by viewModel.showSeconds.collectAsStateWithLifecycle()
+    val neonModeEnabled by viewModel.neonModeEnabled.collectAsStateWithLifecycle()
     val binaryModeName by viewModel.binaryModeName.collectAsStateWithLifecycle()
     val newsEnabled by viewModel.newsEnabled.collectAsStateWithLifecycle()
     val newsRefreshMinutes by viewModel.newsRefreshMinutes.collectAsStateWithLifecycle()
@@ -120,6 +121,7 @@ fun MainScreen(
     val sunriseModeEnabled by viewModel.sunriseModeEnabled.collectAsStateWithLifecycle()
     val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
     val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
+    val nightBrightness by viewModel.nightBrightness.collectAsStateWithLifecycle()
 
     val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled
 
@@ -240,7 +242,7 @@ fun MainScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Crossfade(targetState = clockType, label = "clockFade", animationSpec = tween(500)) { targetType ->
-                                ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
+                                ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                             }
                         }
                         if (inspirationEnabled) { InspirationWidget(textColor = clockColor); Spacer(modifier = Modifier.height(32.dp)) }
@@ -282,7 +284,7 @@ fun MainScreen(
                             contentAlignment = Alignment.Center
                             ) {
                                 Crossfade(targetState = clockType, label = "clockFade", animationSpec = tween(500)) { targetType ->
-                                    ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
+                                    ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                                 }
                             }
                             if (inspirationEnabled) InspirationWidget(textColor = clockColor)
@@ -308,7 +310,7 @@ fun MainScreen(
             SettingsPanel(visible = settingsOpen, onDismiss = { settingsOpen = false }) { newsRefreshTrigger++ }
 
             if (applyNightShift) {
-                Box(modifier = Modifier.fillMaxSize().background(Color(0xFFE8722A).copy(alpha = 0.12f)).background(Color.Black.copy(alpha = 0.08f)))
+                Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 1f - nightBrightness.coerceIn(0f, 1f))))
             }
         }
     }

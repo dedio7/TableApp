@@ -20,23 +20,25 @@ fun ClockDisplay(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     showSeconds: Boolean = true,
+    isNeon: Boolean = false,
     binaryMode: String = "BINARY",
     binaryTheme: String = "DEFAULT",
     language: String = "IT",
     isFullScreen: Boolean = false,
 ) {
     when (clockType) {
-        ClockType.FLIP      -> FlipClock(modifier = modifier, textColor = textColor, isFullScreen = isFullScreen)
-        ClockType.DIGITAL   -> DigitalClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
-        ClockType.ANALOG    -> AnalogClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
-        ClockType.NIXIE     -> NixieClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
-        ClockType.PIXEL     -> PixelClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isFullScreen = isFullScreen)
+        ClockType.FLIP      -> FlipClock(modifier = modifier, textColor = textColor, isNeon = isNeon, isFullScreen = isFullScreen)
+        ClockType.DIGITAL   -> DigitalClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isNeon = isNeon, isFullScreen = isFullScreen)
+        ClockType.ANALOG    -> AnalogClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isNeon = isNeon, isFullScreen = isFullScreen)
+        ClockType.NIXIE     -> NixieClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isNeon = isNeon, isFullScreen = isFullScreen)
+        ClockType.PIXEL     -> PixelClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isNeon = isNeon, isFullScreen = isFullScreen)
         ClockType.BINARY    -> {
             val mode = if (binaryMode == "BCD") ClockMode.BCD else ClockMode.BINARY
-            val theme = if (binaryTheme == "ACCENT") {
+            val theme = if (binaryTheme == "ACCENT" || isNeon) {
                 BinaryClockTheme(
-                    litColor = Color(0xFF00E5FF),
-                    accentColor = Color(0xFFFF4081)
+                    litColor = if (isNeon) Color(0xFF00E5FF) else Color(0xFF00E5FF),
+                    accentColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFFF4081),
+                    glowAlpha = if (isNeon) 0.35f else 0.12f
                 )
             } else {
                 BinaryClockTheme(litColor = textColor)
@@ -47,6 +49,6 @@ fun ClockDisplay(
                 isFullScreen = isFullScreen
             )
         }
-        ClockType.WORD_CLOCK -> WordClock(modifier = modifier, textColor = textColor, language = language, isFullScreen = isFullScreen)
+        ClockType.WORD_CLOCK -> WordClock(modifier = modifier, textColor = textColor, language = language, isNeon = isNeon, isFullScreen = isFullScreen)
     }
 }

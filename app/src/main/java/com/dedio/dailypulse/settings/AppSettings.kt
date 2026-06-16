@@ -42,6 +42,11 @@ class AppSettings(private val context: Context) {
         
         val INSPIRATION_ENABLED = booleanPreferencesKey("inspiration_enabled")
         val SUNRISE_MODE_ENABLED = booleanPreferencesKey("sunrise_mode_enabled")
+        val NEON_MODE_ENABLED = booleanPreferencesKey("neon_mode_enabled")
+        
+        val NIGHT_MODE_START = intPreferencesKey("night_mode_start")
+        val NIGHT_MODE_END = intPreferencesKey("night_mode_end")
+        val NIGHT_MODE_BRIGHTNESS = floatPreferencesKey("night_mode_brightness")
 
         val LAST_WEATHER_JSON = stringPreferencesKey("last_weather_json")
     }
@@ -112,6 +117,18 @@ class AppSettings(private val context: Context) {
 
     val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
     suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }
+
+    val neonModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[NEON_MODE_ENABLED] ?: false }
+    suspend fun setNeonModeEnabled(enabled: Boolean) { context.dataStore.edit { it[NEON_MODE_ENABLED] = enabled } }
+
+    val nightModeStart: Flow<Int> = context.dataStore.data.map { it[NIGHT_MODE_START] ?: 22 }
+    suspend fun setNightModeStart(hour: Int) { context.dataStore.edit { it[NIGHT_MODE_START] = hour } }
+
+    val nightModeEnd: Flow<Int> = context.dataStore.data.map { it[NIGHT_MODE_END] ?: 7 }
+    suspend fun setNightModeEnd(hour: Int) { context.dataStore.edit { it[NIGHT_MODE_END] = hour } }
+
+    val nightModeBrightness: Flow<Float> = context.dataStore.data.map { it[NIGHT_MODE_BRIGHTNESS] ?: 0.3f }
+    suspend fun setNightModeBrightness(b: Float) { context.dataStore.edit { it[NIGHT_MODE_BRIGHTNESS] = b } }
 
     val lastWeatherJson: Flow<String?> = context.dataStore.data.map { it[LAST_WEATHER_JSON] }
     suspend fun setLastWeatherJson(json: String) { context.dataStore.edit { it[LAST_WEATHER_JSON] = json } }

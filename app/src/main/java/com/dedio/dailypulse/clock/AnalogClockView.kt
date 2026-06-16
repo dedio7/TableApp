@@ -25,6 +25,7 @@ fun AnalogClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     showSeconds: Boolean = true,
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
@@ -49,12 +50,12 @@ fun AnalogClock(
     val faceColor = Color(0xFF0D0D1A)
     val rimColor = textColor.copy(alpha = 0.15f)
     val tickColor = textColor.copy(alpha = 0.4f)
-    val majorTickColor = textColor.copy(alpha = 0.7f)
-    val hourHandColor = textColor
-    val minuteHandColor = textColor.copy(alpha = 0.9f)
-    val secondHandColor = Color(0xFFE8722A)
-    val centerDotColor = textColor
-    val accentOrange = Color(0xFFE8722A)
+    val majorTickColor = if (isNeon) Color(0xFF00E5FF) else textColor.copy(alpha = 0.7f)
+    val hourHandColor = if (isNeon) Color(0xFF00E5FF) else textColor
+    val minuteHandColor = if (isNeon) Color(0xFF00E5FF).copy(alpha = 0.85f) else textColor.copy(alpha = 0.9f)
+    val secondHandColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
+    val centerDotColor = if (isNeon) Color(0xFF00E5FF) else textColor
+    val accentOrange = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val cx = size.width / 2f
@@ -72,6 +73,7 @@ fun AnalogClock(
             val inner = if (isMajor) radius * 0.82f else radius * 0.90f
             val outer = radius * 0.97f
             val strokeW = if (isMajor) 2.5f else 1f
+            
             drawLine(
                 color = if (isMajor) majorTickColor else tickColor,
                 start = Offset(cx + inner * cos(angle).toFloat(), cy + inner * sin(angle).toFloat()),
@@ -83,22 +85,26 @@ fun AnalogClock(
         // ── Hour hand ───────────────────────────────────────────────────────
         val hourAngle = Math.toRadians((h % 12 + m / 60.0) * 30.0 - 90)
         val hourLen = radius * 0.52f
+        val hourW = radius * 0.055f
+        
         drawLine(
             color = hourHandColor,
             start = Offset(cx, cy),
             end = Offset(cx + hourLen * cos(hourAngle).toFloat(), cy + hourLen * sin(hourAngle).toFloat()),
-            strokeWidth = radius * 0.055f,
+            strokeWidth = hourW,
             cap = StrokeCap.Round
         )
 
         // ── Minute hand ─────────────────────────────────────────────────────
         val minAngle = Math.toRadians((m + s / 60.0) * 6.0 - 90)
         val minLen = radius * 0.76f
+        val minW = radius * 0.032f
+        
         drawLine(
             color = minuteHandColor,
             start = Offset(cx, cy),
             end = Offset(cx + minLen * cos(minAngle).toFloat(), cy + minLen * sin(minAngle).toFloat()),
-            strokeWidth = radius * 0.032f,
+            strokeWidth = minW,
             cap = StrokeCap.Round
         )
 
@@ -107,12 +113,14 @@ fun AnalogClock(
             val secAngle = Math.toRadians(s * 6.0 - 90)
             val secLen = radius * 0.82f
             val secTailLen = radius * 0.18f
+            val secW = radius * 0.018f
+            
             // Tail
             drawLine(
                 color = secondHandColor.copy(alpha = 0.6f),
                 start = Offset(cx, cy),
                 end = Offset(cx - secTailLen * cos(secAngle).toFloat(), cy - secTailLen * sin(secAngle).toFloat()),
-                strokeWidth = radius * 0.018f,
+                strokeWidth = secW,
                 cap = StrokeCap.Round
             )
             // Main
@@ -120,7 +128,7 @@ fun AnalogClock(
                 color = secondHandColor,
                 start = Offset(cx, cy),
                 end = Offset(cx + secLen * cos(secAngle).toFloat(), cy + secLen * sin(secAngle).toFloat()),
-                strokeWidth = radius * 0.018f,
+                strokeWidth = secW,
                 cap = StrokeCap.Round
             )
         }

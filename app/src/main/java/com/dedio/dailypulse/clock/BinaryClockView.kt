@@ -94,15 +94,6 @@ fun BinaryClock(
                 val isLit = (value shr bitIndex) and 1 == 1
                 val dotY = startY + bit * cellSize
 
-                // Outer glow for lit dots
-                if (isLit) {
-                    drawCircle(
-                        color = colColor.copy(alpha = 0.12f),
-                        radius = dotSize * 0.85f,
-                        center = Offset(cx, dotY + dotSize / 2f)
-                    )
-                }
-
                 drawRoundRect(
                     color = if (isLit) colColor else dimColor,
                     topLeft = Offset(cx - dotSize / 2f, dotY),

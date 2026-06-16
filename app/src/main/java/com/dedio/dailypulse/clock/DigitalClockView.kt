@@ -26,6 +26,7 @@ fun DigitalClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     showSeconds: Boolean = true,
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
@@ -45,9 +46,9 @@ fun DigitalClock(
     }
 
     val showColon = (tick.longValue / 500L) % 2 == 0L
-    val dimColor = textColor.copy(alpha = 0.06f)
-    val segColor = textColor
-    val accentColor = Color(0xFFE8722A)
+    val dimColor = if (isNeon) Color(0xFF00E5FF).copy(alpha = 0.03f) else textColor.copy(alpha = 0.06f)
+    val segColor = if (isNeon) Color(0xFF00E5FF) else textColor
+    val accentColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val cw = size.width
@@ -68,8 +69,8 @@ fun DigitalClock(
         val m1 = minute.intValue % 10
 
         // Draw the 4 main digits
-        drawSevenSegDigit(h0, startX, startY, digitW, digitH, segColor, dimColor)
-        drawSevenSegDigit(h1, startX + digitW + spacing, startY, digitW, digitH, segColor, dimColor)
+        drawSevenSegDigit(h0, startX, startY, digitW, digitH, segColor, dimColor, isNeon)
+        drawSevenSegDigit(h1, startX + digitW + spacing, startY, digitW, digitH, segColor, dimColor, isNeon)
 
         // Colon
         if (showColon) {
@@ -77,16 +78,14 @@ fun DigitalClock(
             val dotR = digitH * 0.06f
             val dot1Y = startY + digitH * 0.30f
             val dot2Y = startY + digitH * 0.70f
-            // Glow
-            drawCircle(accentColor.copy(alpha = 0.25f), dotR * 3f, Offset(cx, dot1Y))
-            drawCircle(accentColor.copy(alpha = 0.25f), dotR * 3f, Offset(cx, dot2Y))
+
             drawCircle(accentColor, dotR, Offset(cx, dot1Y))
             drawCircle(accentColor, dotR, Offset(cx, dot2Y))
         }
 
         val afterColonX = startX + digitW * 2 + spacing * 3 + colonW
-        drawSevenSegDigit(m0, afterColonX, startY, digitW, digitH, segColor, dimColor)
-        drawSevenSegDigit(m1, afterColonX + digitW + spacing, startY, digitW, digitH, segColor, dimColor)
+        drawSevenSegDigit(m0, afterColonX, startY, digitW, digitH, segColor, dimColor, isNeon)
+        drawSevenSegDigit(m1, afterColonX + digitW + spacing, startY, digitW, digitH, segColor, dimColor, isNeon)
 
         // Seconds — small, below
         if (showSeconds) {
@@ -96,8 +95,8 @@ fun DigitalClock(
             val secDigitH = digitH * 0.45f
             val secY = startY + digitH + digitH * 0.12f
             val secX = (cw - secDigitW * 2 - spacing) / 2f
-            drawSevenSegDigit(s0, secX, secY, secDigitW, secDigitH, accentColor.copy(alpha = 0.75f), dimColor)
-            drawSevenSegDigit(s1, secX + secDigitW + spacing, secY, secDigitW, secDigitH, accentColor.copy(alpha = 0.75f), dimColor)
+            drawSevenSegDigit(s0, secX, secY, secDigitW, secDigitH, accentColor.copy(alpha = 0.75f), dimColor, isNeon)
+            drawSevenSegDigit(s1, secX + secDigitW + spacing, secY, secDigitW, secDigitH, accentColor.copy(alpha = 0.75f), dimColor, isNeon)
         }
     }
 }
@@ -121,7 +120,8 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSevenSegDigit(
     x: Float, y: Float,
     w: Float, h: Float,
     onColor: Color,
-    offColor: Color
+    offColor: Color,
+    isNeon: Boolean = false
 ) {
     if (digit < 0 || digit > 9) return
     val pat = SEG[digit]

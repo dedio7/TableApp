@@ -69,6 +69,7 @@ fun SettingsPanel(
     val clockType by appSettings.clockType.collectAsStateWithLifecycle(initialValue = "FLIP")
     val clockColor by appSettings.clockColor.collectAsStateWithLifecycle(initialValue = 0xFFE8E8E8L)
     val showSeconds by appSettings.showSeconds.collectAsStateWithLifecycle(initialValue = true)
+    val neonModeEnabled by appSettings.neonModeEnabled.collectAsStateWithLifecycle(initialValue = false)
     val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
     val currentCity by appSettings.weatherCity.collectAsStateWithLifecycle(initialValue = "Roma")
     val binaryMode by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
@@ -80,6 +81,10 @@ fun SettingsPanel(
     val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
     val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
     val atmosphereName by appSettings.atmosphereName.collectAsStateWithLifecycle(initialValue = "DEEP_SPACE")
+    
+    val nightStart by appSettings.nightModeStart.collectAsStateWithLifecycle(initialValue = 22)
+    val nightEnd by appSettings.nightModeEnd.collectAsStateWithLifecycle(initialValue = 7)
+    val nightBrightness by appSettings.nightModeBrightness.collectAsStateWithLifecycle(initialValue = 0.3f)
 
     val weatherEnabled by appSettings.weatherEnabled.collectAsStateWithLifecycle(initialValue = true)
     val batteryEnabled by appSettings.batteryEnabled.collectAsStateWithLifecycle(initialValue = true)
@@ -108,8 +113,20 @@ fun SettingsPanel(
 
     AnimatedVisibility(
         visible = visible,
-        enter = slideInHorizontally(initialOffsetX = { it }, animationSpec = spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)),
-        exit = slideOutHorizontally(targetOffsetX = { it }, animationSpec = spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMedium))
+        enter = slideInHorizontally(
+            initialOffsetX = { it },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            )
+        ) + androidx.compose.animation.fadeIn(),
+        exit = slideOutHorizontally(
+            targetOffsetX = { it },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        ) + androidx.compose.animation.fadeOut()
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
             Column(
@@ -125,8 +142,9 @@ fun SettingsPanel(
                     IconButton(onClick = onDismiss) { Text("✕", color = TextSecondary, fontSize = 20.sp) }
                 }
                 HorizontalDivider(color = DividerColor, thickness = 1.dp)
-                
-                SectionHeader(title = strings.setupSection.uppercase())
+
+                // ─── 0. SETUP & SYSTEM (SISTEMA) - NOW AT TOP ───
+                SectionHeader(title = "SETUP")
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -149,84 +167,7 @@ fun SettingsPanel(
                     )
                 }
 
-                SectionHeader(title = strings.backgroundSection.uppercase())
-                AtmosphereGallery(selected = atmosphereName, onSelect = { scope.launch { appSettings.setAtmosphereName(it) } })
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                SectionHeader(title = strings.clockSection.uppercase())
-                SettingLabel(label = strings.clockTypeLabel)
-                ClockTypeSelector(selected = clockType, onSelect = { scope.launch { appSettings.setClockType(it) } })
-                Spacer(modifier = Modifier.height(12.dp))
-                SettingLabel(label = strings.clockColorLabel)
-                ColorPicker(colors = CLOCK_COLOR_PRESETS, selectedColor = Color(clockColor.toInt()), onColorSelected = { scope.launch { appSettings.setClockColor(it.toArgb().toLong() and 0xFFFFFFFFL) } })
-                Spacer(modifier = Modifier.height(12.dp))
-                SettingSwitch(label = strings.showSecondsLabel, checked = showSeconds, onCheckedChange = { scope.launch { appSettings.setShowSeconds(it) } })
-
-                if (clockType == "BINARY") {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = strings.binarySettingsLabel.uppercase(), color = AccentBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SettingLabel(label = strings.displayMode)
-                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("BINARY" to (if(appLanguage == "IT") "Binario" else "Binary"), "BCD" to "BCD").forEach { (code, label) ->
-                            val isSelected = binaryMode == code
-                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.5.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setBinaryClockMode(code) } }.padding(8.dp), contentAlignment = Alignment.Center) {
-                                Text(text = label, color = if (isSelected) AccentBlue else TextSecondary, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                            }
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                SectionHeader(title = strings.widgetSection.uppercase())
-                SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } })
-                SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } })
-                SettingSwitch(label = strings.timerLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
-                SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } })
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                SectionHeader(title = strings.newsSection.uppercase())
-                SettingSwitch(label = strings.newsEnabledLabel, checked = newsEnabled, onCheckedChange = { scope.launch { appSettings.setNewsEnabled(it) } })
-                if (newsEnabled) {
-                    FlowRow(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        DEFAULT_RSS_SOURCES.forEach { source ->
-                            val isSelected = source.name in enabledNewsSources
-                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { val current = enabledNewsSources.toMutableSet(); if (isSelected) current.remove(source.name) else current.add(source.name); appSettings.setNewsSources(current) } }.padding(horizontal = 10.dp, vertical = 6.dp)) {
-                                Text(text = source.name, color = if (isSelected) AccentBlue else TextPrimary, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(RoundedCornerShape(12.dp)).background(AccentBlue.copy(alpha = 0.15f)).border(1.dp, AccentBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).clickable { onNewsRefresh(); onDismiss() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                        Text(text = strings.newsRefreshButton.uppercase(), color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Black)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                SectionHeader(title = strings.weatherSection.uppercase())
-                SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } })
-                if (weatherEnabled) {
-                    SettingLabel(label = strings.weatherCurrentCity.format(currentCity))
-                    OutlinedTextField(value = cityQuery, onValueChange = { cityQuery = it }, placeholder = { Text(strings.weatherSearchPlaceholder, color = TextSecondary, fontSize = 14.sp) }, singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue, unfocusedBorderColor = DividerColor, cursorColor = AccentBlue), modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
-                    searchResults.forEach { loc ->
-                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 3.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceBg).border(1.dp, DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setWeatherLocation(loc.latitude, loc.longitude, loc.cityName); cityQuery = ""; searchResults.clear() } }.padding(12.dp)) {
-                            Text("•", color = AccentBlue, fontWeight = FontWeight.Bold); Spacer(Modifier.width(8.dp)); Text(text = loc.cityName, color = TextPrimary, fontSize = 14.sp)
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = DividerColor, thickness = 1.dp)
-
-                SectionHeader(title = strings.generalSection.uppercase())
+                Spacer(modifier = Modifier.height(8.dp))
                 SettingLabel(label = strings.languageLabel)
                 Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     listOf("IT" to "ITALIANO", "EN" to "ENGLISH").forEach { (code, label) ->
@@ -246,9 +187,104 @@ fun SettingsPanel(
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = DividerColor, thickness = 1.dp)
+
+                // ─── 1. DISPLAY (SCHERMO) ───
+                SectionHeader(title = strings.clockSection.uppercase())
+                SettingLabel(label = strings.clockTypeLabel)
+                ClockTypeSelector(selected = clockType, onSelect = { scope.launch { appSettings.setClockType(it) } })
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingLabel(label = strings.clockColorLabel)
+                ColorPicker(colors = CLOCK_COLOR_PRESETS, selectedColor = Color(clockColor.toInt()), onColorSelected = { scope.launch { appSettings.setClockColor(it.toArgb().toLong() and 0xFFFFFFFFL) } })
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingSwitch(label = strings.neonModeLabel, checked = neonModeEnabled, onCheckedChange = { scope.launch { appSettings.setNeonModeEnabled(it) } })
+                SettingSwitch(label = strings.showSecondsLabel, checked = showSeconds, onCheckedChange = { scope.launch { appSettings.setShowSeconds(it) } })
+
+                if (clockType == "BINARY") {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(text = strings.binarySettingsLabel.uppercase(), color = AccentBlue, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SettingLabel(label = strings.displayMode)
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("BINARY" to (if(appLanguage == "IT") "Binario" else "Binary"), "BCD" to "BCD").forEach { (code, label) ->
+                            val isSelected = binaryMode == code
+                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.5.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setBinaryClockMode(code) } }.padding(8.dp), contentAlignment = Alignment.Center) {
+                                Text(text = label, color = if (isSelected) AccentBlue else TextSecondary, fontSize = 12.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingLabel(label = strings.backgroundSection)
+                AtmosphereGallery(selected = atmosphereName, onSelect = { scope.launch { appSettings.setAtmosphereName(it) } })
+                
+                Spacer(modifier = Modifier.height(8.dp))
                 SettingSwitch(label = strings.nightShiftLabel, checked = nightShiftEnabled, onCheckedChange = { scope.launch { appSettings.setNightShiftEnabled(it) } })
+                if (nightShiftEnabled) {
+                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(strings.nightStartLabel, color = TextSecondary, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                            Slider(value = nightStart.toFloat(), onValueChange = { scope.launch { appSettings.setNightModeStart(it.toInt()) } }, valueRange = 0f..23f, steps = 23, modifier = Modifier.weight(2f))
+                            Text("$nightStart:00", color = TextPrimary, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(strings.nightEndLabel, color = TextSecondary, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                            Slider(value = nightEnd.toFloat(), onValueChange = { scope.launch { appSettings.setNightModeEnd(it.toInt()) } }, valueRange = 0f..23f, steps = 23, modifier = Modifier.weight(2f))
+                            Text("$nightEnd:00", color = TextPrimary, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp))
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(strings.nightBrightnessLabel, color = TextSecondary, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                            Slider(value = nightBrightness, onValueChange = { scope.launch { appSettings.setNightModeBrightness(it) } }, valueRange = 0.05f..0.8f, modifier = Modifier.weight(2f))
+                        }
+                    }
+                }
                 SettingSwitch(label = strings.antiBurnInLabel, checked = antiBurnInEnabled, onCheckedChange = { scope.launch { appSettings.setAntiBurnInEnabled(it) } })
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = DividerColor, thickness = 1.dp)
+
+                // ─── 2. WIDGETS ───
+                SectionHeader(title = strings.widgetSection.uppercase())
+                SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } })
+                if (weatherEnabled) {
+                    SettingLabel(label = strings.weatherCurrentCity.format(currentCity))
+                    OutlinedTextField(value = cityQuery, onValueChange = { cityQuery = it }, placeholder = { Text(strings.weatherSearchPlaceholder, color = TextSecondary, fontSize = 14.sp) }, singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue, unfocusedBorderColor = DividerColor, cursorColor = AccentBlue), modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
+                    searchResults.forEach { loc ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 3.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceBg).border(1.dp, DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setWeatherLocation(loc.latitude, loc.longitude, loc.cityName); cityQuery = ""; searchResults.clear() } }.padding(12.dp)) {
+                            Text("•", color = AccentBlue, fontWeight = FontWeight.Bold); Spacer(Modifier.width(8.dp)); Text(text = loc.cityName, color = TextPrimary, fontSize = 14.sp)
+                        }
+                    }
+                }
+                SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } })
+                SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } })
+                SettingSwitch(label = strings.pomodoroLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } })
+                SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } })
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = DividerColor, thickness = 1.dp)
+
+                // ─── 3. CONTENT (CONTENUTI) ───
+                SectionHeader(title = (if(appLanguage == "IT") "Contenuti" else "Content").uppercase())
+                SettingSwitch(label = strings.newsEnabledLabel, checked = newsEnabled, onCheckedChange = { scope.launch { appSettings.setNewsEnabled(it) } })
+                if (newsEnabled) {
+                    FlowRow(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        DEFAULT_RSS_SOURCES.forEach { source ->
+                            val isSelected = source.name in enabledNewsSources
+                            Box(modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { val current = enabledNewsSources.toMutableSet(); if (isSelected) current.remove(source.name) else current.add(source.name); appSettings.setNewsSources(current) } }.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                                Text(text = source.name, color = if (isSelected) AccentBlue else TextPrimary, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(RoundedCornerShape(12.dp)).background(AccentBlue.copy(alpha = 0.15f)).border(1.dp, AccentBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp)).clickable { onNewsRefresh(); onDismiss() }.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                        Text(text = strings.newsRefreshButton.uppercase(), color = AccentBlue, fontSize = 14.sp, fontWeight = FontWeight.Black)
+                    }
+                }
                 SettingSwitch(label = strings.inspirationEnabledLabel, checked = inspirationEnabled, onCheckedChange = { scope.launch { appSettings.setInspirationEnabled(it) } })
                 SettingSwitch(label = strings.sunriseModeLabel, checked = sunriseModeEnabled, onCheckedChange = { scope.launch { appSettings.setSunriseModeEnabled(it) } })
                 Spacer(modifier = Modifier.height(32.dp))

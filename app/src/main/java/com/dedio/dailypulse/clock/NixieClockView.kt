@@ -28,6 +28,7 @@ fun NixieClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     showSeconds: Boolean = true,
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
@@ -49,23 +50,13 @@ fun NixieClock(
     val showColon = (tick.longValue / 500L) % 2 == 0L
 
     // Nixie colors
-    val nixieAmber = Color(0xFFFF8C00)
-    val nixieGlow1 = nixieAmber.copy(alpha = 0.35f)
-    val nixieGlow2 = nixieAmber.copy(alpha = 0.12f)
-    val nixieGlow3 = nixieAmber.copy(alpha = 0.05f)
-    val tubeColor = Color(0xFF0A0A14)
-    val tubeRim = Color(0xFF252540)
-    val secAmber = nixieAmber.copy(alpha = 0.65f)
+    val nixieAmber = if (isNeon) Color(0xFF00E5FF) else Color(0xFFFF8C00)
+    val tubeColor = if (isNeon) Color(0xFF000A0A) else Color(0xFF0A0A14)
+    val tubeRim = if (isNeon) Color(0xFF002525) else Color(0xFF252540)
+    val secAmber = if (isNeon) Color(0xFFFF4081) else nixieAmber.copy(alpha = 0.65f)
 
     // Pre-allocated Paint objects
     val textPaint = remember {
-        Paint().apply {
-            typeface = Typeface.create("serif", Typeface.BOLD)
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
-    }
-    val glowPaint = remember {
         Paint().apply {
             typeface = Typeface.create("serif", Typeface.BOLD)
             textAlign = Paint.Align.CENTER
@@ -105,9 +96,6 @@ fun NixieClock(
                 val dotR = tubeW * 0.07f
                 if (showColon) {
                     for (dot in listOf(dot1Y, dot2Y)) {
-                        drawCircle(nixieGlow3, dotR * 8f, Offset(cx, dot))
-                        drawCircle(nixieGlow2, dotR * 4f, Offset(cx, dot))
-                        drawCircle(nixieGlow1, dotR * 2f, Offset(cx, dot))
                         drawCircle(nixieAmber, dotR, Offset(cx, dot))
                     }
                 }
@@ -134,19 +122,6 @@ fun NixieClock(
                 // Glow layers
                 val cx = xPos + tubeW / 2f
                 val ty = startY + tubeH * 0.75f
-                
-                // Draw with cached paints
-                glowPaint.color = nixieGlow3.toArgb()
-                glowPaint.textSize = tubeH * 0.90f
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint)
-                
-                glowPaint.color = nixieGlow2.toArgb()
-                glowPaint.textSize = tubeH * 0.80f
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, glowPaint)
-                
-                textPaint.color = nixieAmber.copy(alpha = 0.55f).toArgb()
-                textPaint.textSize = tubeH * 0.74f
-                drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint)
                 
                 textPaint.color = nixieAmber.toArgb()
                 textPaint.textSize = tubeH * 0.72f

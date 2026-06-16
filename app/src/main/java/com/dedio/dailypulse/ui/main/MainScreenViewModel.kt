@@ -23,6 +23,7 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
     val clockTypeName = appSettings.clockType.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FLIP")
     val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEEE)
     val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val binaryModeName = appSettings.binaryClockMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "BINARY")
 
     val newsEnabled = appSettings.newsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -45,6 +46,10 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
     
     val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)
+    val nightModeEnd = appSettings.nightModeEnd.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
+    val nightBrightness = appSettings.nightModeBrightness.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.3f)
 
     // --- Burn-in Protection ---
     private val _burnInOffset = MutableStateFlow(Offset.Zero)
@@ -69,12 +74,13 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
     }
 
     // --- Night Shift ---
-    val isNightTime = flow {
-        while (true) {
-            val calendar = Calendar.getInstance()
-            val hour = calendar[Calendar.HOUR_OF_DAY]
-            emit((hour in 22..23) || (hour in 0..6))
-            delay(10.minutes)
+    val isNightTime = combine(nightModeStart, nightModeEnd) { start, end ->
+        val calendar = Calendar.getInstance()
+        val hour = calendar[Calendar.HOUR_OF_DAY]
+        if (start < end) {
+            hour in start until end
+        } else {
+            hour >= start || hour < end
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 

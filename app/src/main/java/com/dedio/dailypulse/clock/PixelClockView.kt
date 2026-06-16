@@ -25,6 +25,7 @@ fun PixelClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     showSeconds: Boolean = true,
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
@@ -41,8 +42,9 @@ fun PixelClock(
         }
     }
 
-    val dimColor = textColor.copy(alpha = 0.07f)
-    val accentColor = Color(0xFFE8722A)
+    val pixelColor = if (isNeon) Color(0xFF00E5FF) else textColor
+    val dimColor = pixelColor.copy(alpha = 0.07f)
+    val accentColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
 
     Canvas(modifier = modifier.fillMaxSize()) {
         val cw = size.width
@@ -67,9 +69,12 @@ fun PixelClock(
             for (row in 0 until 5) {
                 for (col in 0 until 3) {
                     val on = (pattern[row] shr (2 - col)) and 1 == 1
+                    val cx = ox + col * cellSize
+                    val cy = oy + row * cellSize
+                    
                     drawRoundRect(
                         color = if (on) color else offColor,
-                        topLeft = Offset(ox + col * cellSize, oy + row * cellSize),
+                        topLeft = Offset(cx, cy),
                         size = Size(dotSize, dotSize),
                         cornerRadius = CornerRadius(dotSize * 0.3f)
                     )
@@ -85,10 +90,10 @@ fun PixelClock(
 
         var xCursor = startX
 
-        drawDigit(h0, xCursor, startY, textColor, dimColor)
+        drawDigit(h0, xCursor, startY, pixelColor, dimColor)
         xCursor += 3 * cellSize + spacingDots * cellSize
 
-        drawDigit(h1, xCursor, startY, textColor, dimColor)
+        drawDigit(h1, xCursor, startY, pixelColor, dimColor)
         xCursor += 3 * cellSize + spacingDots * cellSize
 
         // Colon — two dots in the middle
@@ -97,14 +102,15 @@ fun PixelClock(
         val dot2Y = startY + 3 * cellSize + gap / 2
         val blinkOn = (System.currentTimeMillis() / 500L) % 2 == 0L
         val colonColor = if (blinkOn) accentColor else dimColor
+        
         drawRoundRect(colonColor, Offset(colonX, dot1Y), Size(dotSize, dotSize), CornerRadius(dotSize * 0.3f))
         drawRoundRect(colonColor, Offset(colonX, dot2Y), Size(dotSize, dotSize), CornerRadius(dotSize * 0.3f))
         xCursor += colonDots * cellSize + spacingDots * cellSize
 
-        drawDigit(m0, xCursor, startY, textColor, dimColor)
+        drawDigit(m0, xCursor, startY, pixelColor, dimColor)
         xCursor += 3 * cellSize + spacingDots * cellSize
 
-        drawDigit(m1, xCursor, startY, textColor, dimColor)
+        drawDigit(m1, xCursor, startY, pixelColor, dimColor)
 
         // Seconds — smaller, below
         if (showSeconds) {
@@ -116,7 +122,7 @@ fun PixelClock(
             val secGridW = (3 * 2 + 2) * secCell
             val secX = (cw - secGridW) / 2f
             val secY = startY + gridH + gridH * 0.10f
-            val secColor = accentColor.copy(alpha = 0.75f)
+            val secColor = if (isNeon) accentColor else accentColor.copy(alpha = 0.75f)
             val secDim = dimColor.copy(alpha = 0.04f)
 
             fun drawSmallDigit(digit: Int, ox: Float, oy: Float) {
@@ -124,9 +130,12 @@ fun PixelClock(
                 for (row in 0 until 5) {
                     for (col in 0 until 3) {
                         val on = (pattern[row] shr (2 - col)) and 1 == 1
+                        val cx = ox + col * secCell
+                        val cy = oy + row * secCell
+                        
                         drawRoundRect(
                             color = if (on) secColor else secDim,
-                            topLeft = Offset(ox + col * secCell, oy + row * secCell),
+                            topLeft = Offset(cx, cy),
                             size = Size(secDot, secDot),
                             cornerRadius = CornerRadius(secDot * 0.3f)
                         )

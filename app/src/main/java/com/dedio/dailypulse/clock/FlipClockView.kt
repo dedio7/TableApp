@@ -32,6 +32,7 @@ import java.util.Calendar
 fun FlipClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val currentHour = remember { mutableIntStateOf(0) }
@@ -55,12 +56,14 @@ fun FlipClock(
     val second = currentSecond.intValue
     val showColon = (tick.longValue / 1000L) % 2 == 0L
 
-    val panelColor = Color(0xFF1A1A2E)
-    val panelTopColor = Color(0xFF22223A)
-    val panelBottomColor = Color(0xFF151528)
-    val accentOrange = Color(0xFFE8722A)
+    val panelColor = if (isNeon) Color(0xFF001A1A) else Color(0xFF1A1A2E)
+    val panelTopColor = if (isNeon) Color(0xFF002222) else Color(0xFF22223A)
+    val panelBottomColor = if (isNeon) Color(0xFF001515) else Color(0xFF151528)
+    val accentOrange = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
     val dividerColor = Color(0xFF0D0D1A)
     val shadowColor = Color(0x66000000)
+    
+    val flipTextColor = if (isNeon) Color(0xFF00E5FF) else textColor
 
     val digits = listOf(
         hour / 10, hour % 10,
@@ -69,13 +72,13 @@ fun FlipClock(
     )
 
     // Pre-allocated objects
-    val textPaint = remember(textColor) {
+    val textPaint = remember(flipTextColor) {
         android.graphics.Paint().apply {
             color = android.graphics.Color.argb(
-                (textColor.alpha * 255).toInt(),
-                (textColor.red * 255).toInt(),
-                (textColor.green * 255).toInt(),
-                (textColor.blue * 255).toInt()
+                (flipTextColor.alpha * 255).toInt(),
+                (flipTextColor.red * 255).toInt(),
+                (flipTextColor.green * 255).toInt(),
+                (flipTextColor.blue * 255).toInt()
             )
             typeface = Typeface.create(Typeface.DEFAULT_BOLD, Typeface.BOLD)
             textAlign = android.graphics.Paint.Align.CENTER
@@ -84,7 +87,7 @@ fun FlipClock(
         }
     }
 
-    val secondsPaint = remember {
+    val secondsPaint = remember(accentOrange) {
         android.graphics.Paint().apply {
             color = android.graphics.Color.argb(
                 180,
@@ -132,8 +135,6 @@ fun FlipClock(
                     val dotY1 = startY + panelHeight * 0.33f
                     val dotY2 = startY + panelHeight * 0.67f
 
-                    drawCircle(color = accentOrange.copy(alpha = 0.3f), radius = dotRadius * 2.5f, center = Offset(colonCenterX, dotY1))
-                    drawCircle(color = accentOrange.copy(alpha = 0.3f), radius = dotRadius * 2.5f, center = Offset(colonCenterX, dotY2))
                     drawCircle(color = accentOrange, radius = dotRadius, center = Offset(colonCenterX, dotY1))
                     drawCircle(color = accentOrange, radius = dotRadius, center = Offset(colonCenterX, dotY2))
                 }
@@ -149,7 +150,6 @@ fun FlipClock(
                     panelTopColor = panelTopColor,
                     panelBottomColor = panelBottomColor,
                     panelColor = panelColor,
-                    accentOrange = accentOrange,
                     dividerColor = dividerColor,
                     shadowColor = shadowColor,
                     textPaint = textPaint,
@@ -180,7 +180,6 @@ private fun DrawScope.drawFlipPanel(
     panelTopColor: Color,
     panelBottomColor: Color,
     panelColor: Color,
-    accentOrange: Color,
     dividerColor: Color,
     shadowColor: Color,
     textPaint: android.graphics.Paint,
@@ -191,7 +190,6 @@ private fun DrawScope.drawFlipPanel(
     val digitStr = digit.toString()
 
     drawRoundRect(color = shadowColor, topLeft = Offset(x + 3.dp.toPx(), y + 5.dp.toPx()), size = Size(width, height), cornerRadius = CornerRadius(cornerRadius))
-    drawRoundRect(color = accentOrange.copy(alpha = 0.25f), topLeft = Offset(x - 1.5f, y), size = Size(width + 3f, height), cornerRadius = CornerRadius(cornerRadius))
 
     // --- TOP HALF ---
     topPath.reset()

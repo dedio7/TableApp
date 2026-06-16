@@ -19,6 +19,7 @@ fun WordClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     language: String = "IT",
+    isNeon: Boolean = false,
     isFullScreen: Boolean = false,
 ) {
     val hour = remember { mutableIntStateOf(0) }
@@ -34,14 +35,16 @@ fun WordClock(
     }
 
     if (language == "EN") {
-        EnglishWordClock(modifier, textColor, hour.intValue, minute.intValue, isFullScreen)
+        EnglishWordClock(modifier, textColor, hour.intValue, minute.intValue, isNeon, isFullScreen)
     } else {
-        ItalianWordClock(modifier, textColor, hour.intValue, minute.intValue, isFullScreen)
+        ItalianWordClock(modifier, textColor, hour.intValue, minute.intValue, isNeon, isFullScreen)
     }
 }
 
 @Composable
-private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isFullScreen: Boolean) {
+private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isNeon: Boolean, isFullScreen: Boolean) {
+    // ... (rest of the logic remains same, just pass isNeon to WordClockGrid)
+    // Actually I need to include the full function body to replace correctly
     val m5 = (m / 5) * 5
     val remainder = m % 5
     val displayHour = if (m5 >= 35) (h + 1) % 24 else h
@@ -82,11 +85,11 @@ private fun ItalianWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("VENTICINQUE" to "VENTICINQUE", "CINQUE" to "CINQUE_MIN", "DIECI" to "DIECI_MIN"),
     )
 
-    WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
+    WordClockGrid(modifier, textColor, grid, lit, remainder, isNeon, isFullScreen)
 }
 
 @Composable
-private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isFullScreen: Boolean) {
+private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: Int, isNeon: Boolean, isFullScreen: Boolean) {
     val m5 = (m / 5) * 5
     val remainder = m % 5
     val displayHour = if (m5 > 30) (h + 1) % 24 else h
@@ -122,7 +125,7 @@ private fun EnglishWordClock(modifier: Modifier, textColor: Color, h: Int, m: In
         listOf("O'CLOCK" to "OCLOCK"),
     )
 
-    WordClockGrid(modifier, textColor, grid, lit, remainder, isFullScreen)
+    WordClockGrid(modifier, textColor, grid, lit, remainder, isNeon, isFullScreen)
 }
 
 @Composable
@@ -132,6 +135,7 @@ private fun WordClockGrid(
     grid: List<List<Pair<String, String>>>,
     lit: Set<String>,
     remainder: Int,
+    isNeon: Boolean,
     isFullScreen: Boolean,
 ) {
     val configuration = LocalConfiguration.current
@@ -140,8 +144,9 @@ private fun WordClockGrid(
     val baseScale = if (isFullScreen) 1.5f else 1.15f
     val scale = if (isPortrait) baseScale * 0.75f else baseScale
     
-    val dimColor = textColor.copy(alpha = 0.12f)
-    val accentColor = Color(0xFFE8722A)
+    val wordColor = if (isNeon) Color(0xFF00E5FF) else textColor
+    val dimColor = wordColor.copy(alpha = 0.12f)
+    val accentColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFE8722A)
 
     Column(
         modifier = modifier.fillMaxSize().padding(if (isPortrait) 8.dp else 16.dp),
@@ -159,13 +164,17 @@ private fun WordClockGrid(
                     val isLit = id in lit
                     Text(
                         text = display,
-                        color = if (isLit) textColor else dimColor,
+                        color = if (isLit) wordColor else dimColor,
                         fontWeight = if (isLit) FontWeight.Bold else FontWeight.Light,
                         fontSize = (19 * scale).sp,
                         letterSpacing = (if (isPortrait) 1.0 * scale else 2.0 * scale).sp,
                         modifier = Modifier.padding(
                             horizontal = (if (isPortrait) 6 * scale else 10 * scale).dp, 
                             vertical = (if (isPortrait) 3 * scale else 4 * scale).dp
+                        ).then(
+                            if (isLit && isNeon) {
+                                Modifier.padding(2.dp) // dummy to avoid merging
+                            } else Modifier
                         )
                     )
                 }
@@ -177,9 +186,10 @@ private fun WordClockGrid(
         // Precision dots
         Row(horizontalArrangement = Arrangement.spacedBy((12 * scale).dp)) {
             for (i in 1..4) {
+                val isActive = i <= remainder
                 Text(
                     text = "●",
-                    color = if (i <= remainder) accentColor else dimColor,
+                    color = if (isActive) accentColor else dimColor,
                     fontSize = (12 * scale).sp
                 )
             }

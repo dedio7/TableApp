@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DailyPulse — Privacy Policy</title>
+    <meta name="description" content="Privacy Policy for DailyPulse Android App by dedio7">
+    <style>
+        :root {
+            --color-bg: #fafafa;
+            --color-surface: #ffffff;
+            --color-primary: #1a1a2e;
+            --color-accent: #4361ee;
+            --color-accent-hover: #3a56d4;
+            --color-text: #2d2d2d;
+            --color-text-secondary: #5a5a6e;
+            --color-border: #e8e8ef;
+            --color-highlight-bg: #f0f4ff;
+            --color-highlight-border: #c5d3f7;
+            --color-green-bg: #edf7ed;
+            --color-green-border: #b7ddb7;
+            --color-green-text: #1e5631;
+            --color-amber-bg: #fff8e1;
+            --color-amber-border: #ffe082;
+            --color-amber-text: #7a5900;
+            --radius: 12px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+            --shadow-lg: 0 4px 24px rgba(0,0,0,0.08);
+            --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+            --max-width: 780px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── Header ─── */
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff;
+            padding: 3rem 1.5rem 2.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0; right: 0;
+            height: 40px;
+            background: var(--color-bg);
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+        .header .app-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px; height: 64px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 16px;
+            font-size: 28px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.25rem;
+        }
+        .header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* ─── Language Toggle ─── */
+        .lang-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 2px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 3px;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .lang-toggle button {
+            font-family: var(--font-sans);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: rgba(255,255,255,0.7);
+            background: transparent;
+        }
+        .lang-toggle button.active {
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        .lang-toggle button:hover:not(.active) {
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* ─── Main Container ─── */
+        .container {
+            max-width: var(--max-width);
+            margin: -1rem auto 3rem;
+            padding: 0 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── Effective Date Badge ─── */
+        .effective-date {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-size: 0.82rem;
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+        .effective-date .dot {
+            width: 7px; height: 7px;
+            background: #4ade80;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ─── Sections ─── */
+        .section {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        .section h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
+            background: var(--color-highlight-bg);
+            border-radius: 8px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin: 1.5rem 0 0.5rem;
+        }
+        .section p {
+            margin-bottom: 0.85rem;
+            color: var(--color-text);
+        }
+        .section ul, .section ol {
+            margin: 0.5rem 0 1rem 1.25rem;
+            color: var(--color-text);
+        }
+        .section li {
+            margin-bottom: 0.5rem;
+        }
+        .section li::marker {
+            color: var(--color-accent);
+        }
+
+        /* ─── Callout Boxes ─── */
+        .callout {
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+        .callout-green {
+            background: var(--color-green-bg);
+            border: 1px solid var(--color-green-border);
+            color: var(--color-green-text);
+        }
+        .callout-blue {
+            background: var(--color-highlight-bg);
+            border: 1px solid var(--color-highlight-border);
+            color: #1e3a6e;
+        }
+        .callout-amber {
+            background: var(--color-amber-bg);
+            border: 1px solid var(--color-amber-border);
+            color: var(--color-amber-text);
+        }
+        .callout strong {
+            font-weight: 700;
+        }
+
+        /* ─── Permissions Table ─── */
+        .perm-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .perm-table th {
+            text-align: left;
+            padding: 10px 12px;
+            background: var(--color-highlight-bg);
+            border-bottom: 2px solid var(--color-highlight-border);
+            font-weight: 600;
+            color: var(--color-primary);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .perm-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: top;
+        }
+        .perm-table tr:last-child td {
+            border-bottom: none;
+        }
+        .perm-table code {
+            font-size: 0.78rem;
+            background: #f1f3f8;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            color: #5046e5;
+            white-space: nowrap;
+        }
+
+        /* ─── Links ─── */
+        a {
+            color: var(--color-accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        a:hover {
+            border-bottom-color: var(--color-accent);
+        }
+
+        /* ─── Footer ─── */
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem 3rem;
+            font-size: 0.82rem;
+            color: var(--color-text-secondary);
+            border-top: 1px solid var(--color-border);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+        .footer a {
+            color: var(--color-accent);
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 640px) {
+            .header { padding: 2.5rem 1rem 2rem; }
+            .header h1 { font-size: 1.4rem; }
+            .lang-toggle { top: 0.75rem; right: 0.75rem; }
+            .lang-toggle button { padding: 5px 10px; font-size: 0.75rem; }
+            .container { padding: 0 1rem; }
+            .section { padding: 1.5rem 1.25rem; }
+            .perm-table { font-size: 0.82rem; }
+            .perm-table th, .perm-table td { padding: 8px; }
+            .perm-table code { font-size: 0.72rem; }
+        }
+
+        /* ─── Language visibility ─── */
+        [lang="en"] { display: none; }
+        body.en [lang="en"] { display: block; }
+        body.en [lang="it"] { display: none; }
+        body.en table[lang="en"],
+        table[lang="it"] { display: table; }
+        body.en table[lang="it"] { display: none; }
+        body.en .effective-date [lang="en"],
+        .effective-date [lang="it"] { display: inline; }
+        body.en .effective-date [lang="it"] { display: none; }
+        .effective-date [lang="en"] { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="header">
+    <div class="lang-toggle">
+        <button id="btn-it" class="active" onclick="setLang('it')" aria-label="Italiano">🇮🇹 IT</button>
+        <button id="btn-en" onclick="setLang('en')" aria-label="English">🇬🇧 EN</button>
+    </div>
+    <div class="app-icon">⚡</div>
+    <h1>DailyPulse</h1>
+    <p class="subtitle" lang="it">Informativa sulla Privacy</p>
+    <p class="subtitle" lang="en">Privacy Policy</p>
+</header>
+
+<!-- ═══════════════════ CONTENT ═══════════════════ -->
+<main class="container">
+
+    <div class="effective-date">
+        <span class="dot"></span>
+        <span lang="it">Data di efficacia: Giugno 2026</span>
+        <span lang="en">Effective date: June 2026</span>
+    </div>
+
+    <!-- ── 1. INTRODUCTION ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">📋</span> 1. Introduzione</h2>
+        <p>La presente informativa sulla privacy descrive come l'applicazione <strong>DailyPulse</strong> (pacchetto: <code>com.dedio.dailypulse</code>) gestisce i dati dell'utente. L'app è sviluppata e mantenuta da un singolo sviluppatore indipendente.</p>
+        <div class="callout callout-green">
+            <strong>✅ In sintesi:</strong> DailyPulse non raccoglie, non trasmette e non vende alcun dato personale. Tutti i dati rimangono sul tuo dispositivo.
+        </div>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">📋</span> 1. Introduction</h2>
+        <p>This privacy policy describes how the <strong>DailyPulse</strong> application (package: <code>com.dedio.dailypulse</code>) handles user data. The app is developed and maintained by an independent developer.</p>
+        <div class="callout callout-green">
+            <strong>✅ In short:</strong> DailyPulse does not collect, transmit, or sell any personal data. All data stays on your device.
+        </div>
+    </section>
+
+    <!-- ── 2. DATA COLLECTED ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">🔒</span> 2. Dati raccolti e utilizzo</h2>
+        <p>DailyPulse <strong>non raccoglie dati personali</strong>. L'app richiede determinati permessi Android esclusivamente per fornire le sue funzionalità. Di seguito sono elencati tutti i permessi e il relativo utilizzo:</p>
+
+        <table class="perm-table">
+            <thead>
+                <tr><th>Permesso</th><th>Scopo</th><th>Dati coinvolti</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>INTERNET</code><br><code>ACCESS_NETWORK_STATE</code></td>
+                    <td>Recupero dati meteo dall'API Open-Meteo e feed di notizie RSS</td>
+                    <td>Nessun dato utente inviato. Solo richieste in lettura a servizi pubblici.</td>
+                </tr>
+                <tr>
+                    <td><code>ACCESS_FINE_LOCATION</code><br><code>ACCESS_COARSE_LOCATION</code></td>
+                    <td>Determinare la posizione per le previsioni meteo</td>
+                    <td>Le coordinate vengono elaborate localmente e inviate <strong>solo</strong> all'API Open-Meteo (che non richiede chiavi API né identificazione utente). La posizione <strong>non viene memorizzata</strong> in modo persistente.</td>
+                </tr>
+                <tr>
+                    <td><code>READ_CALENDAR</code><br><code>WRITE_CALENDAR</code></td>
+                    <td>Leggere e visualizzare gli eventi del calendario sulla dashboard; creare/modificare eventi</td>
+                    <td>I dati del calendario restano sul dispositivo e si sincronizzano tramite il servizio Google Calendar dell'utente.</td>
+                </tr>
+                <tr>
+                    <td><code>BIND_NOTIFICATION_LISTENER_SERVICE</code></td>
+                    <td>Leggere le notifiche di Spotify per mostrare il brano in riproduzione</td>
+                    <td>Vengono lette <strong>solo</strong> le notifiche multimediali di Spotify. Nessun altro contenuto di notifica viene accessato o memorizzato.</td>
+                </tr>
+                <tr>
+                    <td><code>BIND_DREAM_SERVICE</code></td>
+                    <td>Fornire la funzionalità screensaver (Daydream)</td>
+                    <td>Nessuna raccolta di dati.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">🔒</span> 2. Data collected and usage</h2>
+        <p>DailyPulse <strong>does not collect personal data</strong>. The app requests certain Android permissions solely to provide its features. All permissions and their purposes are listed below:</p>
+
+        <table class="perm-table">
+            <thead>
+                <tr><th>Permission</th><th>Purpose</th><th>Data involved</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>INTERNET</code><br><code>ACCESS_NETWORK_STATE</code></td>
+                    <td>Fetch weather data from the Open-Meteo API and RSS news feeds</td>
+                    <td>No user data is sent. Read-only requests to public services.</td>
+                </tr>
+                <tr>
+                    <td><code>ACCESS_FINE_LOCATION</code><br><code>ACCESS_COARSE_LOCATION</code></td>
+                    <td>Determine user location for weather forecasts</td>
+                    <td>Coordinates are processed locally and sent <strong>only</strong> to the Open-Meteo API (which requires no API keys or user identification). Location is <strong>not stored</strong> persistently.</td>
+                </tr>
+                <tr>
+                    <td><code>READ_CALENDAR</code><br><code>WRITE_CALENDAR</code></td>
+                    <td>Read and display calendar events on the dashboard; create/edit events</td>
+                    <td>Calendar data stays on-device and syncs through the user's own Google Calendar service.</td>
+                </tr>
+                <tr>
+                    <td><code>BIND_NOTIFICATION_LISTENER_SERVICE</code></td>
+                    <td>Read Spotify notifications to display the currently playing track</td>
+                    <td><strong>Only</strong> Spotify media notifications are read. No other notification content is accessed or stored.</td>
+                </tr>
+                <tr>
+                    <td><code>BIND_DREAM_SERVICE</code></td>
+                    <td>Provide screensaver (Daydream) functionality</td>
+                    <td>No data collection involved.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- ── 3. DATA STORAGE ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">💾</span> 3. Archiviazione dei dati</h2>
+        <p>Tutti i dati dell'app sono memorizzati <strong>localmente sul dispositivo</strong> dell'utente:</p>
+        <ul>
+            <li><strong>Impostazioni dell'app:</strong> salvate tramite Android DataStore (solo su dispositivo).</li>
+            <li><strong>Dati meteo:</strong> memorizzati temporaneamente nella cache locale per l'utilizzo offline.</li>
+            <li><strong>Dati del calendario:</strong> accessati tramite il Calendar Provider di sistema Android; non duplicati dall'app.</li>
+        </ul>
+        <div class="callout callout-blue">
+            <strong>ℹ️ Nota:</strong> L'app non utilizza database remoti, servizi cloud proprietari, né alcun meccanismo di sincronizzazione dati verso server esterni.
+        </div>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">💾</span> 3. Data storage</h2>
+        <p>All app data is stored <strong>locally on the user's device</strong>:</p>
+        <ul>
+            <li><strong>App settings:</strong> saved via Android DataStore (on-device only).</li>
+            <li><strong>Weather data:</strong> temporarily cached locally for offline use.</li>
+            <li><strong>Calendar data:</strong> accessed through the Android system Calendar Provider; not duplicated by the app.</li>
+        </ul>
+        <div class="callout callout-blue">
+            <strong>ℹ️ Note:</strong> The app does not use remote databases, proprietary cloud services, or any data synchronization mechanism to external servers.
+        </div>
+    </section>
+
+    <!-- ── 4. THIRD-PARTY SERVICES ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">🌐</span> 4. Servizi di terze parti</h2>
+        <p>DailyPulse interagisce con i seguenti servizi esterni:</p>
+
+        <h3>Open-Meteo API</h3>
+        <p>Utilizzata per ottenere dati meteorologici. Open-Meteo è un'API open source e gratuita che non richiede chiavi API né identificazione dell'utente. Le uniche informazioni inviate sono le coordinate geografiche per la richiesta meteo.</p>
+        <p>🔗 Informativa sulla privacy di Open-Meteo: <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">open-meteo.com/en/terms</a></p>
+
+        <h3>Google Calendar</h3>
+        <p>L'app accede ai dati del calendario tramite il Calendar Provider di sistema Android. La sincronizzazione avviene attraverso il servizio Google Calendar configurato dall'utente sul proprio dispositivo. DailyPulse non comunica direttamente con i server Google.</p>
+
+        <h3>Feed RSS di notizie</h3>
+        <p>L'app scarica feed RSS pubblici per mostrare le notizie. Non viene inviata alcuna informazione identificativa dell'utente ai server dei feed.</p>
+
+        <div class="callout callout-green">
+            <strong>✅ Nessun tracciamento:</strong> L'app non integra SDK di analisi, pubblicità, crash reporting di terze parti, né alcun altro servizio di tracciamento.
+        </div>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">🌐</span> 4. Third-party services</h2>
+        <p>DailyPulse interacts with the following external services:</p>
+
+        <h3>Open-Meteo API</h3>
+        <p>Used to fetch weather data. Open-Meteo is a free, open-source API that does not require API keys or user identification. The only information sent is geographic coordinates for the weather request.</p>
+        <p>🔗 Open-Meteo privacy policy: <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">open-meteo.com/en/terms</a></p>
+
+        <h3>Google Calendar</h3>
+        <p>The app accesses calendar data through the Android system Calendar Provider. Synchronization happens through the user's own Google Calendar service configured on their device. DailyPulse does not communicate directly with Google servers.</p>
+
+        <h3>RSS News Feeds</h3>
+        <p>The app downloads public RSS feeds to display news. No user-identifying information is sent to feed servers.</p>
+
+        <div class="callout callout-green">
+            <strong>✅ No tracking:</strong> The app does not integrate any third-party analytics, advertising, crash reporting SDKs, or any other tracking services.
+        </div>
+    </section>
+
+    <!-- ── 5. NO DATA SHARING ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">🚫</span> 5. Condivisione dei dati</h2>
+        <p>DailyPulse <strong>non condivide, non vende e non trasferisce</strong> alcun dato personale a terze parti. Non esistono:</p>
+        <ul>
+            <li>Account utente o sistemi di registrazione</li>
+            <li>Servizi di analisi o tracciamento</li>
+            <li>Reti pubblicitarie</li>
+            <li>Strumenti di profilazione</li>
+            <li>Raccolta di dati a fini commerciali</li>
+        </ul>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">🚫</span> 5. Data sharing</h2>
+        <p>DailyPulse <strong>does not share, sell, or transfer</strong> any personal data to third parties. There are no:</p>
+        <ul>
+            <li>User accounts or registration systems</li>
+            <li>Analytics or tracking services</li>
+            <li>Advertising networks</li>
+            <li>Profiling tools</li>
+            <li>Data collection for commercial purposes</li>
+        </ul>
+    </section>
+
+    <!-- ── 6. GDPR RIGHTS ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">⚖️</span> 6. I tuoi diritti (GDPR)</h2>
+        <p>Ai sensi del Regolamento Generale sulla Protezione dei Dati (UE 2016/679), hai diritto a:</p>
+        <ul>
+            <li><strong>Accesso:</strong> richiedere informazioni sui dati personali trattati.</li>
+            <li><strong>Rettifica:</strong> richiedere la correzione di dati inesatti.</li>
+            <li><strong>Cancellazione:</strong> richiedere la cancellazione dei tuoi dati personali.</li>
+            <li><strong>Limitazione del trattamento:</strong> richiedere la limitazione del trattamento dei tuoi dati.</li>
+            <li><strong>Portabilità:</strong> richiedere la trasmissione dei dati in formato strutturato.</li>
+            <li><strong>Opposizione:</strong> opporti al trattamento dei tuoi dati personali.</li>
+        </ul>
+        <div class="callout callout-amber">
+            <strong>📌 Nota importante:</strong> Poiché DailyPulse non raccoglie né memorizza dati personali su server esterni, la maggior parte di questi diritti è già soddisfatta per natura dell'app. Tutti i dati sono sotto il tuo controllo diretto sul tuo dispositivo. Puoi revocare qualsiasi permesso in qualsiasi momento dalle impostazioni Android, oppure eliminare tutti i dati disinstallando l'app.
+        </div>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">⚖️</span> 6. Your rights (GDPR)</h2>
+        <p>Under the General Data Protection Regulation (EU 2016/679), you have the right to:</p>
+        <ul>
+            <li><strong>Access:</strong> request information about personal data being processed.</li>
+            <li><strong>Rectification:</strong> request correction of inaccurate data.</li>
+            <li><strong>Erasure:</strong> request deletion of your personal data.</li>
+            <li><strong>Restriction:</strong> request restriction of processing of your data.</li>
+            <li><strong>Portability:</strong> request transmission of data in a structured format.</li>
+            <li><strong>Objection:</strong> object to the processing of your personal data.</li>
+        </ul>
+        <div class="callout callout-amber">
+            <strong>📌 Important note:</strong> Since DailyPulse does not collect or store personal data on external servers, most of these rights are inherently satisfied by the app's design. All data is under your direct control on your device. You can revoke any permission at any time from Android settings, or delete all data by uninstalling the app.
+        </div>
+    </section>
+
+    <!-- ── 7. CHILDREN'S PRIVACY ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">👶</span> 7. Privacy dei minori</h2>
+        <p>DailyPulse non è destinata a bambini di età inferiore ai 13 anni e non raccoglie consapevolmente dati da minori. Poiché l'app non raccoglie alcun dato personale, non esiste rischio di raccolta involontaria di dati relativi a minori.</p>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">👶</span> 7. Children's privacy</h2>
+        <p>DailyPulse is not directed at children under the age of 13 and does not knowingly collect data from minors. Since the app does not collect any personal data, there is no risk of inadvertent collection of children's data.</p>
+    </section>
+
+    <!-- ── 8. SECURITY ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">🛡️</span> 8. Sicurezza</h2>
+        <p>Le comunicazioni di rete dell'app (richieste meteo e feed RSS) avvengono tramite protocollo HTTPS quando supportato dal server. Tutti i dati locali sono protetti dal sistema di sandboxing delle applicazioni Android, che impedisce ad altre app di accedere ai dati di DailyPulse.</p>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">🛡️</span> 8. Security</h2>
+        <p>The app's network communications (weather requests and RSS feeds) use HTTPS protocol when supported by the server. All local data is protected by Android's application sandboxing system, which prevents other apps from accessing DailyPulse's data.</p>
+    </section>
+
+    <!-- ── 9. CHANGES ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">📝</span> 9. Modifiche alla presente informativa</h2>
+        <p>Questa informativa sulla privacy può essere aggiornata periodicamente. Eventuali modifiche saranno pubblicate su questa pagina con una nuova data di efficacia. Si consiglia di consultare periodicamente questa pagina per eventuali aggiornamenti.</p>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">📝</span> 9. Changes to this policy</h2>
+        <p>This privacy policy may be updated from time to time. Any changes will be posted on this page with a new effective date. We recommend checking this page periodically for updates.</p>
+    </section>
+
+    <!-- ── 10. CONTACT ── -->
+    <section class="section" lang="it">
+        <h2><span class="icon">✉️</span> 10. Contatti</h2>
+        <p>Per domande, dubbi o richieste relative alla presente informativa sulla privacy, puoi contattare lo sviluppatore all'indirizzo:</p>
+        <p style="text-align:center; margin: 1.25rem 0;">
+            <a href="mailto:dedio7@gmail.com" style="font-weight:600; font-size:1.05rem;">📧 dedio7@gmail.com</a>
+        </p>
+    </section>
+    <section class="section" lang="en">
+        <h2><span class="icon">✉️</span> 10. Contact</h2>
+        <p>For questions, concerns, or requests regarding this privacy policy, you can contact the developer at:</p>
+        <p style="text-align:center; margin: 1.25rem 0;">
+            <a href="mailto:dedio7@gmail.com" style="font-weight:600; font-size:1.05rem;">📧 dedio7@gmail.com</a>
+        </p>
+    </section>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+    <p lang="it">© 2026 DailyPulse — Sviluppato da <a href="mailto:dedio7@gmail.com">dedio7</a> · Tutti i diritti riservati</p>
+    <p lang="en">© 2026 DailyPulse — Developed by <a href="mailto:dedio7@gmail.com">dedio7</a> · All rights reserved</p>
+</footer>
+
+<!-- ═══════════════════ SCRIPT ═══════════════════ -->
+<script>
+    function setLang(lang) {
+        document.body.className = lang === 'en' ? 'en' : '';
+        document.documentElement.lang = lang;
+        document.getElementById('btn-it').classList.toggle('active', lang === 'it');
+        document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+        try { localStorage.setItem('dp-lang', lang); } catch(e) {}
+    }
+    // Restore saved preference
+    try {
+        const saved = localStorage.getItem('dp-lang');
+        if (saved === 'en') setLang('en');
+    } catch(e) {}
+</script>
+
+</body>
+</html>
