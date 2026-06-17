@@ -43,9 +43,9 @@ fun FlipClock(
     LaunchedEffect(Unit) {
         while (true) {
             val cal = Calendar.getInstance()
-            currentHour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            currentMinute.intValue = cal.get(Calendar.MINUTE)
-            currentSecond.intValue = cal.get(Calendar.SECOND)
+            currentHour.intValue = cal[Calendar.HOUR_OF_DAY]
+            currentMinute.intValue = cal[Calendar.MINUTE]
+            currentSecond.intValue = cal[Calendar.SECOND]
             tick.longValue = System.currentTimeMillis()
             delay(1000L)
         }
@@ -54,7 +54,7 @@ fun FlipClock(
     val hour = currentHour.intValue
     val minute = currentMinute.intValue
     val second = currentSecond.intValue
-    val showColon = (tick.longValue / 1000L) % 2 == 0L
+    val showColon = ((tick.longValue / 1000L) % 2) == 0L
 
     val panelColor = if (isNeon) Color(0xFF001A1A) else Color(0xFF1A1A2E)
     val panelTopColor = if (isNeon) Color(0xFF002222) else Color(0xFF22223A)
@@ -68,7 +68,7 @@ fun FlipClock(
     val digits = listOf(
         hour / 10, hour % 10,
         -1, // colon
-        minute / 10, minute % 10
+        minute / 10, minute % 10,
     )
 
     // Pre-allocated objects
@@ -160,7 +160,7 @@ fun FlipClock(
             }
         }
 
-        val secondsText = String.format("%02d", second)
+        val secondsText = String.format(java.util.Locale.getDefault(), "%02d", second)
         drawContext.canvas.nativeCanvas.drawText(
             secondsText,
             canvasWidth / 2f,
@@ -196,10 +196,10 @@ private fun DrawScope.drawFlipPanel(
     topPath.addRoundRect(
         RoundRect(
             rect = Rect(x, y, x + width, y + halfH),
-            topLeft = androidx.compose.ui.geometry.CornerRadius(cornerRadius),
-            topRight = androidx.compose.ui.geometry.CornerRadius(cornerRadius),
-            bottomLeft = androidx.compose.ui.geometry.CornerRadius(0f),
-            bottomRight = androidx.compose.ui.geometry.CornerRadius(0f)
+            topLeft = CornerRadius(cornerRadius),
+            topRight = CornerRadius(cornerRadius),
+            bottomLeft = CornerRadius(0f),
+            bottomRight = CornerRadius(0f)
         )
     )
 

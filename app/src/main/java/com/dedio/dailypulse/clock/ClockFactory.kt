@@ -34,11 +34,11 @@ fun ClockDisplay(
         ClockType.PIXEL     -> PixelClock(modifier = modifier, textColor = textColor, showSeconds = showSeconds, isNeon = isNeon, isFullScreen = isFullScreen)
         ClockType.BINARY    -> {
             val mode = if (binaryMode == "BCD") ClockMode.BCD else ClockMode.BINARY
-            val theme = if (binaryTheme == "ACCENT" || isNeon) {
+            val theme = if ((binaryTheme == "ACCENT") || isNeon) {
                 BinaryClockTheme(
                     litColor = if (isNeon) Color(0xFF00E5FF) else Color(0xFF00E5FF),
                     accentColor = if (isNeon) Color(0xFFFF4081) else Color(0xFFFF4081),
-                    glowAlpha = if (isNeon) 0.35f else 0.12f
+                    glowAlpha = if (isNeon) 0.35f else 0.12f,
                 )
             } else {
                 BinaryClockTheme(litColor = textColor)

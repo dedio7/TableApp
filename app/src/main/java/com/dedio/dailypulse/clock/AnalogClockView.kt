@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -32,12 +31,12 @@ fun AnalogClock(
     val minute = remember { mutableIntStateOf(0) }
     val second = remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(showSeconds) {
         while (true) {
             val cal = Calendar.getInstance()
-            hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            minute.intValue = cal.get(Calendar.MINUTE)
-            second.intValue = cal.get(Calendar.SECOND)
+            hour.intValue = cal[Calendar.HOUR_OF_DAY]
+            minute.intValue = cal[Calendar.MINUTE]
+            second.intValue = cal[Calendar.SECOND]
             delay(if (showSeconds) 1000L else 10_000L)
         }
     }
@@ -68,7 +67,7 @@ fun AnalogClock(
 
         // ── Tick marks ──────────────────────────────────────────────────────
         for (i in 0 until 60) {
-            val angle = Math.toRadians(i * 6.0 - 90)
+            val angle = Math.toRadians((i * 6.0) - 90)
             val isMajor = i % 5 == 0
             val inner = if (isMajor) radius * 0.82f else radius * 0.90f
             val outer = radius * 0.97f
@@ -78,7 +77,7 @@ fun AnalogClock(
                 color = if (isMajor) majorTickColor else tickColor,
                 start = Offset(cx + inner * cos(angle).toFloat(), cy + inner * sin(angle).toFloat()),
                 end = Offset(cx + outer * cos(angle).toFloat(), cy + outer * sin(angle).toFloat()),
-                strokeWidth = strokeW
+                strokeWidth = strokeW,
             )
         }
 

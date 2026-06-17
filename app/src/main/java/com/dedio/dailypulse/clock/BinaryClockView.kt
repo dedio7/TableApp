@@ -25,7 +25,7 @@ import java.util.Calendar
 fun BinaryClock(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
-    showSeconds: Boolean = true
+    showSeconds: Boolean = true,
 ) {
     val hour = remember { mutableIntStateOf(0) }
     val minute = remember { mutableIntStateOf(0) }
@@ -34,14 +34,13 @@ fun BinaryClock(
     LaunchedEffect(Unit) {
         while (true) {
             val cal = Calendar.getInstance()
-            hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            minute.intValue = cal.get(Calendar.MINUTE)
-            second.intValue = cal.get(Calendar.SECOND)
+            hour.intValue = cal[Calendar.HOUR_OF_DAY]
+            minute.intValue = cal[Calendar.MINUTE]
+            second.intValue = cal[Calendar.SECOND]
             delay(1000L)
         }
     }
 
-    val litColor = textColor
     val dimColor = textColor.copy(alpha = 0.08f)
     val accentColor = Color(0xFFE8722A)
 
@@ -52,15 +51,14 @@ fun BinaryClock(
         val cols = if (showSeconds) 3 else 2
         val bits = 6  // rows
         val colSpacing = cw * 0.06f
-        val dotSize = ((cw - colSpacing * (cols + 1)) / cols).coerceAtMost(ch * 0.10f)
+        val dotSize = (((cw - (colSpacing * (cols + 1)))) / cols).coerceAtMost(ch * 0.10f)
         val dotGap = dotSize * 0.45f
         val cellSize = dotSize + dotGap
-        val colW = dotSize
         val totalH = bits * cellSize
         val labelH = dotSize * 0.9f
 
         val startY = (ch - totalH - labelH - dotGap) / 2f
-        val totalW = cols * colW + colSpacing * (cols - 1).coerceAtLeast(1)
+        val totalW = (cols * dotSize) + (colSpacing * (cols - 1).coerceAtLeast(1))
         val startX = (cw - totalW) / 2f
 
         val values = if (showSeconds)
@@ -84,10 +82,12 @@ fun BinaryClock(
         val labels = listOf("H", "M", "S")
 
         for ((colIdx, value) in values.withIndex()) {
-            val cx = startX + colIdx * (colW + colSpacing) + colW / 2f
-            val colColor = if (colIdx == 0) textColor
-            else if (colIdx == 1) textColor.copy(alpha = 0.85f)
-            else accentColor
+            val cx = startX + colIdx * (dotSize + colSpacing) + dotSize / 2f
+            val colColor = when (colIdx) {
+                0 -> textColor
+                1 -> textColor.copy(alpha = 0.85f)
+                else -> accentColor
+            }
 
             for (bit in 0 until bits) {
                 val bitIndex = bits - 1 - bit          // MSB at top

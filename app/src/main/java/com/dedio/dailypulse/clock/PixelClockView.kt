@@ -35,9 +35,9 @@ fun PixelClock(
     LaunchedEffect(Unit) {
         while (true) {
             val cal = Calendar.getInstance()
-            hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            minute.intValue = cal.get(Calendar.MINUTE)
-            second.intValue = cal.get(Calendar.SECOND)
+            hour.intValue = cal[Calendar.HOUR_OF_DAY]
+            minute.intValue = cal[Calendar.MINUTE]
+            second.intValue = cal[Calendar.SECOND]
             delay(1000L)
         }
     }
@@ -53,7 +53,7 @@ fun PixelClock(
         // Layout: 4 main digits + 2-dot colon + optional 2 second digits
         val colonDots = 2  // width in dot-columns
         val spacingDots = 1
-        val totalDotCols = 3 * 4 + colonDots + spacingDots * 5
+        val totalDotCols = (3 * 4) + colonDots + (spacingDots * 5)
         
         val dotSize = (cw / (totalDotCols + (if (isFullScreen) 10f else 12f))).coerceAtMost(ch / (if (isFullScreen) 14f else 15f))
         val gap = dotSize * 0.35f
@@ -76,7 +76,7 @@ fun PixelClock(
                         color = if (on) color else offColor,
                         topLeft = Offset(cx, cy),
                         size = Size(dotSize, dotSize),
-                        cornerRadius = CornerRadius(dotSize * 0.3f)
+                        cornerRadius = CornerRadius(dotSize * 0.3f),
                     )
                 }
             }

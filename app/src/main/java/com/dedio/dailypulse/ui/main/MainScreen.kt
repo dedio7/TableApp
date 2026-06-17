@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -66,8 +65,8 @@ fun MainScreen(
     val mediaInfo = com.dedio.dailypulse.media.rememberMediaController()
 
     // --- UX Idle Logic ---
-    var isIdle by remember { mutableStateOf(false) }
-    var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var isIdle by remember { mutableStateOf(value = false) }
+    var lastInteraction by remember { mutableLongStateOf(0L) }
     
     LaunchedEffect(lastInteraction) {
         isIdle = false
@@ -78,7 +77,8 @@ fun MainScreen(
     val controlsAlpha by animateFloatAsState(targetValue = if (isIdle) 0f else 1f, animationSpec = tween(1500), label = "fade")
     val batteryGlowAlpha by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 0.3f, targetValue = 0.8f, 
-        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse), label = "alpha"
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label = "alpha"
     )
 
     // --- Screen On Logic ---
@@ -88,7 +88,7 @@ fun MainScreen(
         val statusIntent = context.registerReceiver(null, intentFilter)
         statusIntent?.let { intent ->
             val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+            val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) || (status == BatteryManager.BATTERY_STATUS_FULL)
             activity?.window?.let { window ->
                 if (isCharging) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

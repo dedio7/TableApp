@@ -98,7 +98,7 @@ fun SettingsPanel(
 
     LaunchedEffect(cityQuery) {
         if (cityQuery.length >= 2) {
-            delay(600)
+            delay(600L)
             val results = weatherRepo.searchCity(cityQuery, appLanguage)
             searchResults.clear()
             searchResults.addAll(results)
@@ -295,7 +295,7 @@ fun SettingsPanel(
 
 @Composable
 private fun AtmosphereGallery(selected: String, onSelect: (String) -> Unit) {
-    val atmospheres = Atmosphere.values()
+    val atmospheres = Atmosphere.entries
     Column(modifier = Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         atmospheres.toList().chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

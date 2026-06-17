@@ -26,7 +26,7 @@ import java.util.Calendar
 @Composable
 fun NixieClock(
     modifier: Modifier = Modifier,
-    textColor: Color = Color.White,
+    @Suppress("UNUSED_PARAMETER") textColor: Color = Color.White,
     showSeconds: Boolean = true,
     isNeon: Boolean = false,
     isFullScreen: Boolean = false,
@@ -39,15 +39,15 @@ fun NixieClock(
     LaunchedEffect(Unit) {
         while (true) {
             val cal = Calendar.getInstance()
-            hour.intValue = cal.get(Calendar.HOUR_OF_DAY)
-            minute.intValue = cal.get(Calendar.MINUTE)
-            second.intValue = cal.get(Calendar.SECOND)
+            hour.intValue = cal[Calendar.HOUR_OF_DAY]
+            minute.intValue = cal[Calendar.MINUTE]
+            second.intValue = cal[Calendar.SECOND]
             tick.longValue = System.currentTimeMillis()
             delay(1000L)
         }
     }
 
-    val showColon = (tick.longValue / 500L) % 2 == 0L
+    val showColon = ((tick.longValue / 500L) % 2) == 0L
 
     // Nixie colors
     val nixieAmber = if (isNeon) Color(0xFF00E5FF) else Color(0xFFFF8C00)
@@ -82,7 +82,7 @@ fun NixieClock(
             hour.intValue % 10,
             -1, // colon
             minute.intValue / 10,
-            minute.intValue % 10
+            minute.intValue % 10,
         )
 
         var xPos = startX
@@ -155,8 +155,13 @@ fun NixieClock(
             for ((i, d) in listOf(s0, s1).withIndex()) {
                 val sx = secX + i * (secTubeW + spacing)
                 drawRoundRect(tubeColor, Offset(sx, secY), Size(secTubeW, secTubeH), CornerRadius(secCorner))
-                drawRoundRect(tubeRim, Offset(sx, secY), Size(secTubeW, secTubeH), CornerRadius(secCorner),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(1f))
+                drawRoundRect(
+                    color = tubeRim,
+                    topLeft = Offset(sx, secY),
+                    size = Size(secTubeW, secTubeH),
+                    cornerRadius = CornerRadius(secCorner),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1f)
+                )
                 drawContext.canvas.nativeCanvas.drawText(
                     d.toString(), sx + secTubeW / 2f, secY + secTubeH * 0.76f, textPaint
                 )

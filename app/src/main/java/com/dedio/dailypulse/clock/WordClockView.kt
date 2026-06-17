@@ -151,7 +151,7 @@ private fun WordClockGrid(
     Column(
         modifier = modifier.fillMaxSize().padding(if (isPortrait) 8.dp else 16.dp),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         grid.forEach { row ->
             Row(
