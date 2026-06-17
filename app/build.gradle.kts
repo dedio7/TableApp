@@ -18,7 +18,7 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.dedio.dailypulse"
-    compileSdk = 36
+    compileSdk = 37
 
     signingConfigs {
         create("release") {
