@@ -18,7 +18,7 @@ val keystoreProperties = Properties().apply {
 
 android {
     namespace = "com.dedio.dailypulse"
-    compileSdk = 37
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -33,10 +33,10 @@ android {
 
     defaultConfig {
         applicationId = "com.dedio.dailypulse"
-        minSdk = 23
-        targetSdk = 36
-        versionCode = 3
-        versionName = "1.0.2"
+        minSdk = 21
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.0.5"
     }
 
     buildTypes {
@@ -46,7 +46,7 @@ android {
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             
-            // Include native debug symbols for Play Store crash analysis
+            // Comprehensive debug symbol inclusion for Play Store
             ndk {
                 debugSymbolLevel = "FULL"
             }
@@ -119,8 +119,5 @@ dependencies {
   androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.androidx.test.espresso.core)
 
-  // Navigation
-  implementation(libs.androidx.navigation3.ui)
-  implementation(libs.androidx.navigation3.runtime)
-  implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+  // Navigation removed (Navigation3 was causing API 23 restriction)
 }

@@ -76,6 +76,9 @@ class AppSettings(private val context: Context) {
         context.dataStore.edit { it[WEATHER_LATITUDE] = lat; it[WEATHER_LONGITUDE] = lon; it[WEATHER_CITY] = city }
     }
 
+    val weatherUseGps: Flow<Boolean> = context.dataStore.data.map { it[WEATHER_USE_GPS] ?: false }
+    suspend fun setWeatherUseGps(enabled: Boolean) { context.dataStore.edit { it[WEATHER_USE_GPS] = enabled } }
+
     val newsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NEWS_ENABLED] ?: true }
     suspend fun setNewsEnabled(enabled: Boolean) { context.dataStore.edit { it[NEWS_ENABLED] = enabled } }
 

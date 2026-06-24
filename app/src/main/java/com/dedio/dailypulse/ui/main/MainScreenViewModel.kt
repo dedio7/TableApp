@@ -1,17 +1,25 @@
 package com.dedio.dailypulse.ui.main
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.location.Geocoder
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dedio.dailypulse.background.Atmosphere
 import com.dedio.dailypulse.settings.AppSettings
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.time.Duration.Companion.minutes
 
-class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
+class MainScreenViewModel(
+    private val context: Context,
+    private val appSettings: AppSettings
+) : ViewModel() {
 
     // --- Settings StateFlows ---
     val atmosphereName = appSettings.atmosphereName.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "DEEP_SPACE")
@@ -21,9 +29,9 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Atmosphere.DEEP_SPACE)
 
     val clockTypeName = appSettings.clockType.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FLIP")
-    val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEEE)
-    val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = true)
-    val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEE)
+    val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val binaryModeName = appSettings.binaryClockMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "BINARY")
 
     val newsEnabled = appSettings.newsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -82,11 +90,66 @@ class MainScreenViewModel(private val appSettings: AppSettings) : ViewModel() {
         } else {
             hour !in (end until start)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val applyNightShift = combine(appSettings.nightShiftEnabled, isNightTime) { enabled, night ->
         enabled && night
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    // --- Dynamic Location Tracking ---
+    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+    init {
+        // Periodic location refresh if GPS is enabled
+        viewModelScope.launch {
+            while (true) {
+                refreshLocationIfGpsEnabled()
+                delay(60.minutes)
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun refreshLocationIfGpsEnabled() {
+        viewModelScope.launch {
+            val useGps = appSettings.weatherUseGps.firstOrNull() ?: false
+            if (!useGps) return@launch
+
+            try {
+                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                    .addOnSuccessListener { location ->
+                        location?.let {
+                            updateLocationSettings(it.latitude, it.longitude)
+                        }
+                    }
+            } catch (e: Exception) {
+                android.util.Log.e("MainViewModel", "Error getting location", e)
+            }
+        }
+    }
+
+    private fun updateLocationSettings(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            // Reverse geocode to get city name
+            val geocoder = Geocoder(context, java.util.Locale.getDefault())
+            val addresses = try {
+                @Suppress("DEPRECATION")
+                geocoder.getFromLocation(lat, lon, 1)
+            } catch (e: Exception) {
+                null
+            }
+
+            val cityName = addresses?.firstOrNull()?.let { address ->
+                address.locality ?: address.subAdminArea ?: address.adminArea ?: "Unknown"
+            } ?: "Unknown"
+
+            // Only update if significantly changed or city name updated
+            val currentCity = appSettings.weatherCity.firstOrNull()
+            if (cityName != "Unknown" && cityName != currentCity) {
+                appSettings.setWeatherLocation(lat, lon, cityName)
+            }
+        }
+    }
 
     fun setClockType(type: String) {
         viewModelScope.launch { appSettings.setClockType(type) }

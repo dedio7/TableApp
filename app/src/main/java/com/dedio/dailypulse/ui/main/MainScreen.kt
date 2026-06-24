@@ -60,7 +60,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
-    val viewModel: MainScreenViewModel = viewModel { MainScreenViewModel(appSettings) }
+    val viewModel: MainScreenViewModel = viewModel { MainScreenViewModel(context, appSettings) }
     val batteryInfo = rememberBatteryState()
     val mediaInfo = com.dedio.dailypulse.media.rememberMediaController()
 
@@ -245,7 +245,7 @@ fun MainScreen(
                                 ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                             }
                         }
-                        if (inspirationEnabled) { InspirationWidget(textColor = clockColor); Spacer(modifier = Modifier.height(32.dp)) }
+                        if (inspirationEnabled) { InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight); Spacer(modifier = Modifier.height(32.dp)) }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
@@ -287,7 +287,7 @@ fun MainScreen(
                                     ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                                 }
                             }
-                            if (inspirationEnabled) InspirationWidget(textColor = clockColor)
+                            if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
                         }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)) {

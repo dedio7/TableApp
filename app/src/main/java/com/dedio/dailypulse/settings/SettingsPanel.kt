@@ -87,6 +87,7 @@ fun SettingsPanel(
     val nightBrightness by appSettings.nightModeBrightness.collectAsStateWithLifecycle(initialValue = 0.3f)
 
     val weatherEnabled by appSettings.weatherEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val weatherUseGps by appSettings.weatherUseGps.collectAsStateWithLifecycle(initialValue = false)
     val batteryEnabled by appSettings.batteryEnabled.collectAsStateWithLifecycle(initialValue = true)
     val mediaEnabled by appSettings.mediaEnabled.collectAsStateWithLifecycle(initialValue = true)
     val calendarEnabled by appSettings.calendarEnabled.collectAsStateWithLifecycle(initialValue = true)
@@ -252,11 +253,15 @@ fun SettingsPanel(
                 SectionHeader(title = strings.widgetSection.uppercase())
                 SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } })
                 if (weatherEnabled) {
-                    SettingLabel(label = strings.weatherCurrentCity.format(currentCity))
-                    OutlinedTextField(value = cityQuery, onValueChange = { cityQuery = it }, placeholder = { Text(strings.weatherSearchPlaceholder, color = TextSecondary, fontSize = 14.sp) }, singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue, unfocusedBorderColor = DividerColor, cursorColor = AccentBlue), modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
-                    searchResults.forEach { loc ->
-                        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 3.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceBg).border(1.dp, DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setWeatherLocation(loc.latitude, loc.longitude, loc.cityName); cityQuery = ""; searchResults.clear() } }.padding(12.dp)) {
-                            Text("•", color = AccentBlue, fontWeight = FontWeight.Bold); Spacer(Modifier.width(8.dp)); Text(text = loc.cityName, color = TextPrimary, fontSize = 14.sp)
+                    SettingSwitch(label = (if(appLanguage == "IT") "Usa GPS" else "Use GPS"), checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } })
+                    
+                    if (!weatherUseGps) {
+                        SettingLabel(label = strings.weatherCurrentCity.format(currentCity))
+                        OutlinedTextField(value = cityQuery, onValueChange = { cityQuery = it }, placeholder = { Text(strings.weatherSearchPlaceholder, color = TextSecondary, fontSize = 14.sp) }, singleLine = true, colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue, unfocusedBorderColor = DividerColor, cursorColor = AccentBlue), modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp))
+                        searchResults.forEach { loc ->
+                            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 3.dp).clip(RoundedCornerShape(8.dp)).background(SurfaceBg).border(1.dp, DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setWeatherLocation(loc.latitude, loc.longitude, loc.cityName); cityQuery = ""; searchResults.clear() } }.padding(12.dp)) {
+                                Text("•", color = AccentBlue, fontWeight = FontWeight.Bold); Spacer(Modifier.width(8.dp)); Text(text = loc.cityName, color = TextPrimary, fontSize = 14.sp)
+                            }
                         }
                     }
                 }

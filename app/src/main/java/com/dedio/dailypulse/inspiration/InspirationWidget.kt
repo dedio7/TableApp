@@ -18,7 +18,8 @@ import java.util.*
 @Composable
 fun InspirationWidget(
     modifier: Modifier = Modifier,
-    textColor: Color = Color.White
+    textColor: Color = Color.White,
+    isSmallHeight: Boolean = false
 ) {
     val strings = LocalStrings.current
     val language = if (strings.settingsTitle == "Settings") "EN" else "IT"
@@ -27,28 +28,33 @@ fun InspirationWidget(
         getQuoteForToday(language)
     }
 
+    val quoteFontSize = if (isSmallHeight) 14.sp else 18.sp
+    val authorFontSize = if (isSmallHeight) 11.sp else 13.sp
+    val verticalPadding = if (isSmallHeight) 4.dp else 16.dp
+    val spacing = if (isSmallHeight) 2.dp else 8.dp
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 16.dp),
+            .padding(horizontal = 32.dp, vertical = verticalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "“${quote.text}”",
             color = textColor.copy(alpha = 0.85f),
-            fontSize = 18.sp,
+            fontSize = quoteFontSize,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Light,
             textAlign = TextAlign.Center,
-            lineHeight = 26.sp
+            lineHeight = if (isSmallHeight) 18.sp else 26.sp
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(spacing))
         
         Text(
             text = "— ${quote.author}",
             color = textColor.copy(alpha = 0.5f),
-            fontSize = 13.sp,
+            fontSize = authorFontSize,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
             textAlign = TextAlign.Center
