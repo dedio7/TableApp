@@ -1,17 +1,35 @@
+# Android Studio / IntelliJ
+.idea/
+.gradle/
+build/
+capture/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.iws
+*.ipr
+out/
+
+# Build artifacts
+app/build/
+*.apk
+*.aab
+
+# Local configuration (IMPORTANT: Do not commit sensitive data)
 local.properties
 keystore.properties
 *.jks
+*.keystore
+*.p12
+
+# Logs
+logcat.txt
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Kotlin
+.kotlin/
+
+# Optional: Secrets (Home Assistant tokens, etc.)
+secrets.properties
