@@ -1,35 +1,50 @@
-# Android Studio / IntelliJ
-.idea/
+# --- HIDDEN FOLDERS AND FILES ---
+# Exclude all hidden folders (folders starting with .)
+.*/
+# Exclude all hidden files (files starting with .)
+.*
+# Re-include .gitignore so it can be tracked
+!.gitignore
+
+# --- ANDROID / GRADLE ---
 .gradle/
+.idea/
 build/
-capture/
+app/build/
+local.properties
 *.iml
-*.iws
-*.ipr
+
+# --- BUILD ARTIFACTS ---
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+gen/
 out/
 
-# Build artifacts
-app/build/
-*.apk
-*.aab
+# --- KOTLIN ---
+.kotlin/
+kotlin-daemon-embeddable-*.jar
 
-# Local configuration (IMPORTANT: Do not commit sensitive data)
-local.properties
-keystore.properties
-*.jks
-*.keystore
-*.p12
-
-# Logs
+# --- LOGS ---
 logcat.txt
 *.log
 
-# OS generated
+# --- SENSITIVE DATA ---
+*.jks
+*.keystore
+secrets.properties
+keystore.properties
+
+# --- OS GENERATED ---
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Kotlin
-.kotlin/
-
-# Optional: Secrets (Home Assistant tokens, etc.)
-secrets.properties
+# --- IDE SPECIFIC ---
+*.ipr
+*.iws
+.vscode/
+.history/
