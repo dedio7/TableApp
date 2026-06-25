@@ -16,6 +16,7 @@ import kotlin.math.sin
  * Defines a generative atmosphere with its core color palette.
  */
 enum class Atmosphere(val displayName: String, val colors: List<Color>) {
+    COSMIC_FLOW("Cosmic Flow", listOf(Color(0xFF030712), Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570), Color(0xFF1AA7EC))),
     DEEP_SPACE("Deep Space", listOf(Color(0xFF020617), Color(0xFF0F172A), Color(0xFF1E1B4B))),
     MORNING_MIST("Morning Mist", listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0), Color(0xFFBFDBFE))),
     GOLDEN_HOUR("Golden Hour", listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFF92400E))),
@@ -40,12 +41,115 @@ fun AmbientBackground(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    if (config.atmosphere == Atmosphere.COSMIC_FLOW) {
+        CosmicFlowBackground(config.isMusicPlaying, modifier, content)
+    } else {
+        StandardAmbientBackground(config, modifier, content)
+    }
+}
+
+@Composable
+private fun CosmicFlowBackground(
+    isMusicPlaying: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "cosmicFlow")
+    
+    val pulse by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isMusicPlaying) 1.15f else 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
+
+    // Different movement speeds for each "blob"
+    val t1 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(35000, easing = LinearEasing), RepeatMode.Restart),
+        label = "t1"
+    )
+    val t2 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(42000, easing = LinearEasing), RepeatMode.Restart),
+        label = "t2"
+    )
+    val t3 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(55000, easing = LinearEasing), RepeatMode.Restart),
+        label = "t3"
+    )
+    val t4 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(48000, easing = LinearEasing), RepeatMode.Restart),
+        label = "t4"
+    )
+
+    val colors = Atmosphere.COSMIC_FLOW.colors
+    
+    Box(modifier = modifier.fillMaxSize()) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            
+            // Base background
+            drawRect(colors[0])
+
+            // Blob 1: Blue (Google Blue)
+            drawBlob(w, h, t1, 0.35f, 0.45f, 0.25f, colors[1].copy(alpha = 0.6f * pulse), 1.1f)
+            
+            // Blob 2: Deep Purple
+            drawBlob(w, h, t2, 0.65f, 0.55f, 0.30f, colors[2].copy(alpha = 0.5f), 1.2f)
+            
+            // Blob 3: Magenta/Pink
+            drawBlob(w, h, t3, 0.45f, 0.65f, 0.35f, colors[3].copy(alpha = 0.45f * pulse), 0.9f)
+            
+            // Blob 4: Cyan/Azure
+            drawBlob(w, h, t4, 0.75f, 0.35f, 0.40f, colors[4].copy(alpha = 0.4f), 1.0f)
+        }
+        content()
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBlob(
+    w: Float, h: Float, 
+    phase: Float, 
+    centerX: Float, centerY: Float, 
+    orbitRadius: Float,
+    color: Color,
+    blobRadiusScale: Float
+) {
+    val angle = Math.toRadians(phase.toDouble())
+    val offset = Offset(
+        x = (w * centerX) + (w * orbitRadius * cos(angle)).toFloat(),
+        y = (h * centerY) + (h * orbitRadius * sin(angle * 0.8)).toFloat() // Slight non-circular motion
+    )
+    drawCircle(
+        brush = Brush.radialGradient(
+            0.0f to color,
+            1.0f to Color.Transparent,
+            center = offset,
+            radius = w * blobRadiusScale
+        ),
+        center = offset,
+        radius = w * blobRadiusScale
+    )
+}
+
+@Composable
+private fun StandardAmbientBackground(
+    config: BackgroundConfig,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
     val infiniteTransition = rememberInfiniteTransition(label = "silkFlow")
     
-    // Music Pulse - Slow and gentle to avoid UI choke on old devices
     val musicPulse by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (config.isMusicPlaying) 1.08f else 1f, // Reduced amplitude
+        targetValue = if (config.isMusicPlaying) 1.08f else 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(if (config.isMusicPlaying) 1200 else 4000, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -71,10 +175,8 @@ fun AmbientBackground(
             val w = size.width
             val h = size.height
             
-            // 1. Base
             drawRect(colors[0])
 
-            // 2. Layer 1 - Simplified for performance
             val angle1 = Math.toRadians(phase1.toDouble())
             val center1 = Offset(
                 x = (w * 0.5f) + (w * 0.15f * cos(angle1)).toFloat(),
@@ -91,7 +193,6 @@ fun AmbientBackground(
                 radius = w * 0.9f
             )
 
-            // 3. Layer 2
             val angle2 = Math.toRadians(phase2.toDouble() + 180.0)
             val center2 = Offset(
                 x = (w * 0.5f) + (w * 0.2f * cos(angle2)).toFloat(),
@@ -108,7 +209,6 @@ fun AmbientBackground(
                 radius = w * 0.8f
             )
         }
-        
         content()
     }
 }
