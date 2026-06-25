@@ -43,7 +43,7 @@ fun MediaWidget(modifier: Modifier = Modifier) {
                     context.startActivity(intent)
                 }
                 .padding(12.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Text(
                 strings.spotifyEnableAccess,

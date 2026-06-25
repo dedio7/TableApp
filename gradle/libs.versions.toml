@@ -16,8 +16,10 @@ lifecycleViewmodelNav3 = "2.10.0"
 androidxDatastore = "1.1.7"
 playServicesLocation = "21.3.0"
 kotlinxSerializationJson = "1.8.1"
+coil = "2.7.0"
 
 [libraries]
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "androidxComposeBom" }

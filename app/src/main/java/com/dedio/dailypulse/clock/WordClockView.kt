@@ -157,7 +157,7 @@ private fun WordClockGrid(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 row.forEach { pair ->
                     val (display, id) = pair

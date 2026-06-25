@@ -24,14 +24,14 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun TimerWidget(
     modifier: Modifier = Modifier,
-    textColor: Color = Color.White
+    textColor: Color = Color.White,
 ) {
     var timeLeftSeconds by remember { mutableIntStateOf(0) }
     var initialSeconds by remember { mutableIntStateOf(0) }
-    var isRunning by remember { mutableStateOf(false) }
+    var isRunning by remember { mutableStateOf(value = false) }
 
     LaunchedEffect(isRunning, timeLeftSeconds) {
-        if (isRunning && timeLeftSeconds > 0) {
+        if ((isRunning) && timeLeftSeconds > 0) {
             delay(1.seconds)
             timeLeftSeconds--
             if (timeLeftSeconds == 0) isRunning = false

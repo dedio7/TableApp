@@ -28,6 +28,8 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import java.util.Locale
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -65,7 +67,7 @@ fun CalendarDetailsPanel(
                 .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
-            val isSmallHeight = maxHeight < 520.dp
+            val isSmallHeight = this.maxHeight < 520.dp
             val mainScrollState = rememberScrollState()
 
             Column(
@@ -201,13 +203,13 @@ fun CalendarDetailsPanel(
                         updateCalendarEvent(context, editingEvent!!.id, title, start, end)
                     }
                     if (success) {
-                        scope.launch { delay(200); refreshTrigger++; showEventDialog = false }
+                        scope.launch { delay(200.milliseconds); refreshTrigger++; showEventDialog = false }
                         Toast.makeText(context, "Evento salvato", Toast.LENGTH_SHORT).show()
                     }
                 },
                 onEventDeleted = { id ->
                     if (deleteCalendarEvent(context, id)) {
-                        scope.launch { delay(200); refreshTrigger++; showEventDialog = false }
+                        scope.launch { delay(200.milliseconds); refreshTrigger++; showEventDialog = false }
                         Toast.makeText(context, "Evento eliminato", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -411,7 +413,7 @@ fun TimeValuePicker(value: Int, range: IntRange, onValueChange: (Int) -> Unit) {
         modifier = Modifier.padding(horizontal = 4.dp).border(1.dp, Color.White.copy(alpha = 0.3f), RoundedCornerShape(4.dp))
             .clickable { val next = if (value >= range.last) range.first else value + 1; onValueChange(next) }
             .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) { Text(text = String.format("%02d", value), color = Color.White) }
+    ) { Text(text = String.format(Locale.getDefault(), "%02d", value), color = Color.White) }
 }
 
 private fun isToday(date: Calendar): Boolean {

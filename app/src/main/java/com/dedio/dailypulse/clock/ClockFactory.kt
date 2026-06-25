@@ -46,7 +46,7 @@ fun ClockDisplay(
             EnhancedBinaryClock(
                 modifier = modifier,
                 config = ClockConfig(mode = mode, showSeconds = showSeconds, theme = theme),
-                isFullScreen = isFullScreen
+                isFullScreen = isFullScreen,
             )
         }
         ClockType.WORD_CLOCK -> WordClock(modifier = modifier, textColor = textColor, language = language, isNeon = isNeon, isFullScreen = isFullScreen)

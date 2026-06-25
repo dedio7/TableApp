@@ -38,12 +38,12 @@ fun BatteryWidget(
     modifier: Modifier = Modifier,
     textColor: Color = Color.White,
     clockType: ClockType = ClockType.FLIP,
-    accentColor: Color = Color.White // New parameter to match background
+    accentColor: Color = Color.White, // New parameter to match background
 ) {
     val context = LocalContext.current
 
     var batteryLevel by remember { mutableFloatStateOf(100f) }
-    var isCharging by remember { mutableStateOf(false) }
+    var isCharging by remember { mutableStateOf(value = false) }
 
     fun updateBatteryState(intent: Intent?) {
         if (intent == null) return
@@ -52,7 +52,7 @@ fun BatteryWidget(
         val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
         val plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
 
-        if (level >= 0 && scale > 0) {
+        if ((level >= 0) && scale > 0) {
             batteryLevel = (level.toFloat() / scale.toFloat()) * 100f
         }
 
@@ -161,9 +161,9 @@ private fun VintageBatteryIcon(level: Float, color: Color, charging: Boolean) {
             color = color,
             radius = dotR,
             center = Offset(
-                (size.width / 2) + (r * Math.cos(rad)).toFloat(),
-                (size.height / 2) + (r * Math.sin(rad)).toFloat()
-            )
+                (size.width / 2) + (r * kotlin.math.cos(rad)).toFloat(),
+                (size.height / 2) + (r * kotlin.math.sin(rad)).toFloat(),
+            ),
         )
         if (charging) {
             drawCircle(color = color.copy(alpha = 0.3f), radius = dotR * 1.8f, center = center)

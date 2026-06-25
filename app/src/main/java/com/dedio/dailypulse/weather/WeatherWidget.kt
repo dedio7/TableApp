@@ -70,7 +70,7 @@ fun WeatherWidget(
     var isOffline by remember { mutableStateOf(value = false) }
     var hasError by remember { mutableStateOf(value = false) }
     var refreshTrigger by remember { mutableLongStateOf(0L) }
-    var detailsOpen by remember { mutableStateOf(false) }
+    var detailsOpen by remember { mutableStateOf(value = false) }
 
     val coroutineScope = rememberCoroutineScope()
 
@@ -116,10 +116,10 @@ fun WeatherWidget(
             .clip(RoundedCornerShape(16.dp))
             .background(cardBackground)
             .clickable(enabled = weatherData != null) { detailsOpen = true }
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         when {
-            isLoading && weatherData == null -> WeatherShimmer(textColor = textColor)
+            (isLoading && weatherData == null) -> WeatherShimmer(textColor = textColor)
             hasError -> {
                 WeatherError(
                     textColor = textColor,
@@ -128,10 +128,10 @@ fun WeatherWidget(
                         coroutineScope.launch {
                             refreshTrigger = System.currentTimeMillis()
                         }
-                    }
+                    },
                 )
             }
-            weatherData != null -> {
+            (weatherData != null) -> {
                 Box {
                     WeatherContent(
                         data = weatherData!!,
@@ -262,7 +262,7 @@ private fun WeatherContent(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 // Show next 3 days (skipping Today if it's the first element)
-                val forecastDays = data.daily.drop(1).take(3)
+                val forecastDays = data.daily.asSequence().drop(1).take(3)
                 forecastDays.forEach { day ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(

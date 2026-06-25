@@ -6,7 +6,7 @@ data class ClockColumn(
     val label: String,
     val value: Int,
     val bits: Int = 6,
-    val colorType: ColorType = ColorType.NORMAL
+    val colorType: ColorType = ColorType.NORMAL,
 )
 
 enum class ColorType {
@@ -18,9 +18,9 @@ enum class ColorType {
 object ClockLogic {
     fun getColumns(mode: ClockMode, showSeconds: Boolean): List<ClockColumn> {
         val cal = Calendar.getInstance()
-        val h = cal.get(Calendar.HOUR_OF_DAY)
-        val m = cal.get(Calendar.MINUTE)
-        val s = cal.get(Calendar.SECOND)
+        val h = cal[Calendar.HOUR_OF_DAY]
+        val m = cal[Calendar.MINUTE]
+        val s = cal[Calendar.SECOND]
 
         return when (mode) {
             ClockMode.BINARY -> {

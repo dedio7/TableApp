@@ -26,7 +26,7 @@ data class CalendarEvent(
     val time: String,
     val color: Color = Color(0xFF4FC3F7),
     val startTime: Long = 0,
-    val endTime: Long = 0
+    val endTime: Long = 0,
 )
 
 @Composable
@@ -35,7 +35,7 @@ fun CalendarWidget(modifier: Modifier = Modifier) {
     val strings = LocalStrings.current
     val state = rememberCalendarEvents()
     
-    var detailsOpen by remember { mutableStateOf(false) }
+    var detailsOpen by remember { mutableStateOf(value = false) }
 
     if (!state.hasPermission) {
         Box(
@@ -126,7 +126,7 @@ fun CalendarWidget(modifier: Modifier = Modifier) {
         
         CalendarDetailsPanel(
             visible = detailsOpen,
-            onDismiss = { detailsOpen = false }
+            onDismiss = { detailsOpen = false },
         )
     }
 }

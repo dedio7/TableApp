@@ -33,7 +33,7 @@ enum class Atmosphere(val displayName: String, val colors: List<Color>) {
 
 data class BackgroundConfig(
     val atmosphere: Atmosphere = Atmosphere.DEEP_SPACE,
-    val isMusicPlaying: Boolean = false
+    val isMusicPlaying: Boolean = false,
 )
 
 @Composable
@@ -127,7 +127,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMovingBlob(
     
     // Create organic movement using a mix of frequencies
     val xOffset = cos(angle).toFloat()
-    val yOffset = sin(angle * (0.7 + index * 0.1)).toFloat() 
+    val yOffset = sin(angle * (0.7 + (index * 0.1))).toFloat()
 
     val offset = Offset(
         x = (w * centerX) + (w * orbitRadius * xOffset),

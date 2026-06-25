@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
+import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -74,7 +75,7 @@ fun NewsTicker(
 
     LaunchedEffect(fetchKey, enabledSources, language) {
         isLoading = true
-        var success = false
+        var success: Boolean
         try {
             val filteredSources = if (enabledSources.isEmpty()) {
                 DEFAULT_RSS_SOURCES.filter { it.language == language }
@@ -86,7 +87,7 @@ fun NewsTicker(
             val empty = items.isEmpty()
             hasError = empty
             success = !empty
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             hasError = true
             success = false
         }
@@ -94,7 +95,7 @@ fun NewsTicker(
 
         if (isActive) {
             val wait = if (success) refreshIntervalMs else 10_000L
-            delay(wait)
+            delay(wait.milliseconds)
             fetchKey++
         }
     }

@@ -73,7 +73,7 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
             DailyPulseTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = MaterialTheme.colorScheme.background,
                 ) {
                     MainScreen(isDreamMode = true)
                 }
@@ -113,7 +113,7 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         super.onDetachedFromWindow()
         try {
             unregisterReceiver(batteryReceiver)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Receiver might not be registered
         }
     }

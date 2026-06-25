@@ -78,7 +78,8 @@ data class Strings(
     val pomodoroLabel: String,
     val burnInLabel: String,
     val inspirationLabel: String,
-    val binarySettingsLabel: String
+    val binarySettingsLabel: String,
+    val gpsLabel: String,
 )
 
 val ItalianStrings = Strings(
@@ -155,7 +156,8 @@ val ItalianStrings = Strings(
     pomodoroLabel = "Pomodoro (Timer)",
     burnInLabel = "Protezione Burn-in",
     inspirationLabel = "Citazione del Giorno",
-    binarySettingsLabel = "Impostazioni Binario"
+    binarySettingsLabel = "Impostazioni Binario",
+    gpsLabel = "Usa GPS"
 )
 
 val EnglishStrings = Strings(
@@ -232,7 +234,8 @@ val EnglishStrings = Strings(
     pomodoroLabel = "Pomodoro (Timer)",
     burnInLabel = "Burn-in Protection",
     inspirationLabel = "Daily Inspiration",
-    binarySettingsLabel = "Binary Settings"
+    binarySettingsLabel = "Binary Settings",
+    gpsLabel = "Use GPS"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }

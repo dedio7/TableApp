@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import java.util.Calendar
 
 /**
@@ -43,7 +44,7 @@ fun NixieClock(
             minute.intValue = cal[Calendar.MINUTE]
             second.intValue = cal[Calendar.SECOND]
             tick.longValue = System.currentTimeMillis()
-            delay(1000L)
+            delay(1000.milliseconds)
         }
     }
 
@@ -70,7 +71,7 @@ fun NixieClock(
 
         val colonW = cw * 0.045f
         val spacing = cw * 0.022f
-        val totalMainW = cw - colonW - spacing * 4
+        val totalMainW = cw - colonW - (spacing * 4)
         val tubeW = (totalMainW / 4f).coerceAtMost(ch * 0.35f)
         val tubeH = (ch * (if (isFullScreen) 0.58f else 0.48f)).coerceAtMost(tubeW * 1.85f)
         val cornerR = tubeW * 0.18f
@@ -108,7 +109,7 @@ fun NixieClock(
                     color = tubeColor,
                     topLeft = Offset(xPos, startY),
                     size = Size(tubeW, tubeH),
-                    cornerRadius = CornerRadius(cornerR)
+                    cornerRadius = CornerRadius(cornerR),
                 )
                 // Tube rim
                 drawRoundRect(

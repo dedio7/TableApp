@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import java.util.Calendar
 
@@ -37,7 +38,7 @@ fun BinaryClock(
             hour.intValue = cal[Calendar.HOUR_OF_DAY]
             minute.intValue = cal[Calendar.MINUTE]
             second.intValue = cal[Calendar.SECOND]
-            delay(1000L)
+            delay(1000.milliseconds)
         }
     }
 
@@ -71,7 +72,7 @@ fun BinaryClock(
                 (textColor.alpha * 160).toInt(),
                 (textColor.red * 255).toInt(),
                 (textColor.green * 255).toInt(),
-                (textColor.blue * 255).toInt()
+                (textColor.blue * 255).toInt(),
             )
             textSize = dotSize * 0.75f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
@@ -82,7 +83,7 @@ fun BinaryClock(
         val labels = listOf("H", "M", "S")
 
         for ((colIdx, value) in values.withIndex()) {
-            val cx = startX + colIdx * (dotSize + colSpacing) + dotSize / 2f
+            val cx = startX + (colIdx * (dotSize + colSpacing)) + (dotSize / 2f)
             val colColor = when (colIdx) {
                 0 -> textColor
                 1 -> textColor.copy(alpha = 0.85f)

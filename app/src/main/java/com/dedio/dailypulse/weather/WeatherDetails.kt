@@ -46,7 +46,7 @@ fun WeatherDetailsPanel(
                 .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
-            val isSmallHeight = maxHeight < 500.dp
+            val isSmallHeight = this.maxHeight < 500.dp
             val panelPadding = if (isSmallHeight) 16.dp else 24.dp
             val sectionSpacing = if (isSmallHeight) 12.dp else 24.dp
 

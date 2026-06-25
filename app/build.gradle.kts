@@ -109,6 +109,9 @@ dependencies {
   // Serialization
   implementation(libs.kotlinx.serialization.json)
 
+  // Image Loading
+  implementation(libs.coil.compose)
+
   // Local tests
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)

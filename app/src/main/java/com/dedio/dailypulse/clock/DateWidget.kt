@@ -49,21 +49,20 @@ fun DateWidget(
     val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK) - 1
     val dayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
     val month = cal.get(Calendar.MONTH)
-    val year = cal.get(Calendar.YEAR)
 
     val dateLine = if (dateFormat == "EN") {
         val m = if (isLanguageEn) MONTHS_EN[month] else MESI_IT[month]
-        "$m $dayOfMonth, $year"
+        "$m $dayOfMonth"
     } else {
         val m = if (isLanguageEn) MONTHS_EN[month] else MESI_IT[month]
-        "$dayOfMonth $m $year"
+        "$dayOfMonth $m"
     }
     
     val dayName = if (isLanguageEn) DAYS_EN[dayOfWeek] else GIORNI_IT[dayOfWeek]
 
-    val scale = if (isFullScreen) 1.25f else 0.85f
+    val scale = if (isFullScreen) 1.1f else 0.8f
 
-    // Removed fillMaxWidth() to allow external centering in Box
+    // Optimized layout: more compact and elegant without the year
     Row(
         modifier = modifier.wrapContentWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -71,20 +70,20 @@ fun DateWidget(
     ) {
         Text(
             text = dayName.uppercase(),
-            color = textColor.copy(alpha = 0.6f),
-            fontSize = (12 * scale).sp,
+            color = textColor.copy(alpha = 0.5f),
+            fontSize = (11 * scale).sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = (2 * scale).sp
+            letterSpacing = (1.5 * scale).sp
         )
-        Spacer(modifier = Modifier.width((8 * scale).dp))
-        Text(text = "•", color = textColor.copy(alpha = 0.3f), fontSize = (12 * scale).sp)
-        Spacer(modifier = Modifier.width((8 * scale).dp))
+        Spacer(modifier = Modifier.width((6 * scale).dp))
+        Text(text = "•", color = textColor.copy(alpha = 0.2f), fontSize = (11 * scale).sp)
+        Spacer(modifier = Modifier.width((6 * scale).dp))
         Text(
-            text = dateLine,
-            color = textColor.copy(alpha = 0.9f),
-            fontSize = (14 * scale).sp,
-            fontWeight = FontWeight.Light,
-            letterSpacing = (0.5 * scale).sp
+            text = dateLine.uppercase(),
+            color = textColor.copy(alpha = 0.8f),
+            fontSize = (13 * scale).sp,
+            fontWeight = FontWeight.Medium,
+            letterSpacing = (1 * scale).sp
         )
     }
 }

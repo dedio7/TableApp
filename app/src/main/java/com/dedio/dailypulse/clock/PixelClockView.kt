@@ -12,6 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 import java.util.Calendar
 
 /**
@@ -38,7 +39,7 @@ fun PixelClock(
             hour.intValue = cal[Calendar.HOUR_OF_DAY]
             minute.intValue = cal[Calendar.MINUTE]
             second.intValue = cal[Calendar.SECOND]
-            delay(1000L)
+            delay(1000.milliseconds)
         }
     }
 

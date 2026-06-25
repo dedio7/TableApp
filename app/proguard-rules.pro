@@ -4,19 +4,14 @@
 # You can edit the include path and order by changing the proguardFiles
 # directive in build.gradle.kts.
 
-# Keep Compose related classes
--keep class androidx.compose.ui.platform.** { *; }
+# Library consumer rules are automatically included by Jetpack libraries.
+# Avoid using broad package wildcards like '** { *; }' as they prevent proper shrinking.
 
-# Keep DataStore preferences
--keep class androidx.datastore.preferences.protobuf.** { *; }
-
-# Keep Kotlin Serialization models (mostly handled by the plugin, but as a fallback)
+# Keep Kotlin Serialization models (if used in the future) using targeted annotation selectors
 -keepattributes *Annotation*, EnclosingMethod, Signature
--keepclassmembers class ** {
-    @kotlinx.serialization.Serializable *;
-}
+-keep @kotlinx.serialization.Serializable class * { *; }
 
-# Keep our Service classes that are referenced in AndroidManifest.xml
+# Keep our Service classes that are referenced in AndroidManifest.xml (Specific classes)
 -keep class com.dedio.dailypulse.DailyPulseDreamService
 -keep class com.dedio.dailypulse.media.SpotifyNotificationService
 

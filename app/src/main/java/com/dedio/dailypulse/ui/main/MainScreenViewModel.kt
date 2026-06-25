@@ -51,8 +51,8 @@ class MainScreenViewModel(
     val dateFormat = appSettings.dateFormat.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
     val appLanguage = appSettings.appLanguage.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
     val antiBurnInEnabled = appSettings.antiBurnInEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-    
     val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val discoveryEnabled = appSettings.discoveryEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)

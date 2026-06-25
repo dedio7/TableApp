@@ -37,8 +37,8 @@ fun EnhancedBinaryClock(
     }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val width = constraints.maxWidth.toFloat()
-        val height = constraints.maxHeight.toFloat()
+        val width = this.constraints.maxWidth.toFloat()
+        val height = this.constraints.maxHeight.toFloat()
 
         val columnCount = columnsData.size
         // Ridotto lo spazio tra le colonne

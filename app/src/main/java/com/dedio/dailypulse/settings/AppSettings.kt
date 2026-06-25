@@ -16,7 +16,6 @@ class AppSettings(private val context: Context) {
         val CLOCK_COLOR = longPreferencesKey("clock_color")
         val SHOW_SECONDS = booleanPreferencesKey("show_seconds")
         val BINARY_CLOCK_MODE = stringPreferencesKey("binary_clock_mode")
-        val BINARY_CLOCK_THEME = stringPreferencesKey("binary_clock_theme")
 
         val WEATHER_ENABLED = booleanPreferencesKey("weather_enabled")
         val WEATHER_LATITUDE = doublePreferencesKey("weather_latitude")
@@ -41,6 +40,7 @@ class AppSettings(private val context: Context) {
         val ANTI_BURN_IN_ENABLED = booleanPreferencesKey("anti_burn_in_enabled")
         
         val INSPIRATION_ENABLED = booleanPreferencesKey("inspiration_enabled")
+        val DISCOVERY_ENABLED = booleanPreferencesKey("discovery_enabled")
         val SUNRISE_MODE_ENABLED = booleanPreferencesKey("sunrise_mode_enabled")
         val NEON_MODE_ENABLED = booleanPreferencesKey("neon_mode_enabled")
         
@@ -63,9 +63,6 @@ class AppSettings(private val context: Context) {
     val binaryClockMode: Flow<String> = context.dataStore.data.map { it[BINARY_CLOCK_MODE] ?: "BINARY" }
     suspend fun setBinaryClockMode(mode: String) { context.dataStore.edit { it[BINARY_CLOCK_MODE] = mode } }
 
-    val binaryClockTheme: Flow<String> = context.dataStore.data.map { it[BINARY_CLOCK_THEME] ?: "DEFAULT" }
-    suspend fun setBinaryClockTheme(theme: String) { context.dataStore.edit { it[BINARY_CLOCK_THEME] = theme } }
-
     val weatherEnabled: Flow<Boolean> = context.dataStore.data.map { it[WEATHER_ENABLED] ?: true }
     suspend fun setWeatherEnabled(enabled: Boolean) { context.dataStore.edit { it[WEATHER_ENABLED] = enabled } }
 
@@ -83,7 +80,6 @@ class AppSettings(private val context: Context) {
     suspend fun setNewsEnabled(enabled: Boolean) { context.dataStore.edit { it[NEWS_ENABLED] = enabled } }
 
     val newsRefreshMinutes: Flow<Int> = context.dataStore.data.map { it[NEWS_REFRESH_MINUTES] ?: 30 }
-    suspend fun setNewsRefreshMinutes(min: Int) { context.dataStore.edit { it[NEWS_REFRESH_MINUTES] = min } }
 
     val newsSources: Flow<Set<String>> = context.dataStore.data.map { it[NEWS_SOURCES_SET] ?: emptySet() }
     suspend fun setNewsSources(sources: Set<String>) { context.dataStore.edit { it[NEWS_SOURCES_SET] = sources } }
@@ -117,6 +113,9 @@ class AppSettings(private val context: Context) {
     
     val inspirationEnabled: Flow<Boolean> = context.dataStore.data.map { it[INSPIRATION_ENABLED] ?: false }
     suspend fun setInspirationEnabled(enabled: Boolean) { context.dataStore.edit { it[INSPIRATION_ENABLED] = enabled } }
+
+    val discoveryEnabled: Flow<Boolean> = context.dataStore.data.map { it[DISCOVERY_ENABLED] ?: false }
+    suspend fun setDiscoveryEnabled(enabled: Boolean) { context.dataStore.edit { it[DISCOVERY_ENABLED] = enabled } }
 
     val sunriseModeEnabled: Flow<Boolean> = context.dataStore.data.map { it[SUNRISE_MODE_ENABLED] ?: false }
     suspend fun setSunriseModeEnabled(enabled: Boolean) { context.dataStore.edit { it[SUNRISE_MODE_ENABLED] = enabled } }

@@ -165,14 +165,16 @@ class WeatherRepository {
                 val rawTime = hTimes.getString(i)
                 val hourStr = rawTime.substringAfter('T')
                 val hCode = hCodes.getInt(i)
-                val (_, hEmoji) = getWeatherDescription(hCode, true, language)
+                val (_, hEmoji) = getWeatherDescription(hCode, isDay = true, language)
                 
-                hourlyForecasts.add(HourlyForecast(
-                    time = hourStr,
-                    temperature = hTemps.getDouble(i),
-                    weatherCode = hCode,
-                    iconEmoji = hEmoji
-                ))
+                hourlyForecasts.add(
+                    HourlyForecast(
+                        time = hourStr,
+                        temperature = hTemps.getDouble(i),
+                        weatherCode = hCode,
+                        iconEmoji = hEmoji,
+                    ),
+                )
             }
 
             // 3. Daily Forecast (7 days)
@@ -238,7 +240,7 @@ class WeatherRepository {
 
                 val cityName = buildString {
                     append(name)
-                    if (admin1.isNotEmpty() && admin1 != name) append(", ").append(admin1)
+                    if ((admin1.isNotEmpty()) && admin1 != name) append(", ").append(admin1)
                     if (country.isNotEmpty()) append(", ").append(country)
                 }
 

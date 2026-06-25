@@ -10,7 +10,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -43,6 +42,7 @@ import com.dedio.dailypulse.calendar.CalendarWidget
 import com.dedio.dailypulse.clock.ClockDisplay
 import com.dedio.dailypulse.clock.ClockType
 import com.dedio.dailypulse.clock.DateWidget
+import com.dedio.dailypulse.inspiration.DiscoveryWidget
 import com.dedio.dailypulse.inspiration.InspirationWidget
 import com.dedio.dailypulse.media.MediaWidget
 import com.dedio.dailypulse.news.NewsTicker
@@ -68,7 +68,7 @@ fun MainScreen(
 
     // --- UX Idle Logic ---
     var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var isIdle by remember { mutableStateOf(false) }
+    var isIdle by remember { mutableStateOf(value = false) }
     
     LaunchedEffect(lastInteraction) {
         isIdle = false
@@ -79,7 +79,7 @@ fun MainScreen(
     val controlsAlpha by animateFloatAsState(
         targetValue = if (isIdle) 0f else 1f, 
         animationSpec = if (isIdle) tween(1500) else tween(300), 
-        label = "fade"
+        label = "fade",
     )
     val batteryGlowAlpha by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 0.3f, targetValue = 0.8f, 
@@ -124,6 +124,7 @@ fun MainScreen(
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val antiBurnInEnabled by viewModel.antiBurnInEnabled.collectAsStateWithLifecycle()
     val inspirationEnabled by viewModel.inspirationEnabled.collectAsStateWithLifecycle()
+    val discoveryEnabled by viewModel.discoveryEnabled.collectAsStateWithLifecycle()
     val sunriseModeEnabled by viewModel.sunriseModeEnabled.collectAsStateWithLifecycle()
     val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
     val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
@@ -145,6 +146,10 @@ fun MainScreen(
 
     var settingsOpen by remember { mutableStateOf(value = false) }
     var newsRefreshTrigger by remember { mutableIntStateOf(0) }
+    
+    // 0 = Inspiration, 1 = Movie, 2 = Album, 3 = TV Series
+    var motivationIndex by remember { mutableIntStateOf(0) }
+    
     val gearRotation by animateFloatAsState(targetValue = if (settingsOpen) 90f else 0f, animationSpec = tween(300), label = "gear")
     
     ProvideLocalization(appLanguage) {
@@ -171,18 +176,18 @@ fun MainScreen(
                         } else Modifier
                     )
             ) {
-
-                val screenHeight = maxHeight
+                // Use scope explicitly to avoid lint error
+                val screenHeight = this.maxHeight
                 val isSmallHeight = screenHeight < 500.dp
-                val isPortrait = maxWidth < maxHeight
+                val isPortrait = this.maxWidth < screenHeight
 
                 // 1. Unified Energy Ring & Settings (Mostra solo se NON in modalità screensaver)
                 if (!isDreamMode) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
-                            .size(if (isSmallHeight || isPortrait) 64.dp else 72.dp)
+                            .padding(top = if (isPortrait) 28.dp else 8.dp, end = 8.dp)
+                            .size(if (isSmallHeight || isPortrait) 48.dp else 56.dp)
                             .zIndex(10f)
                             .clickable { 
                                 lastInteraction = System.currentTimeMillis()
@@ -192,26 +197,25 @@ fun MainScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(if (isSmallHeight || isPortrait) 42.dp else 48.dp)
+                                .size(if (isSmallHeight || isPortrait) 34.dp else 40.dp)
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = 0.08f * controlsAlpha)),
                             contentAlignment = Alignment.Center
                         ) {
                             if (batteryEnabled) {
                                 Canvas(modifier = Modifier.fillMaxSize()) {
-                                    val sw = 3.dp.toPx()
+                                    val sw = 2.dp.toPx()
                                     val r = (size.minDimension - sw) / 2f
                                     drawCircle(Color.White.copy(alpha = 0.05f), radius = r, style = Stroke(width = sw))
                                     val sweep = (batteryInfo.level / 100f) * 360f
-                                    val ringColor = if (batteryInfo.level < 20 && !batteryInfo.isCharging) Color(0xFFFF5252) else Color(0xFF00E5FF).copy(alpha = 0.8f)
+                                    val ringColor = if ((batteryInfo.level < 20) && !batteryInfo.isCharging) Color(0xFFFF5252) else Color(0xFF00E5FF).copy(alpha = 0.8f)
                                     drawArc(color = if (batteryInfo.isCharging) Color.White.copy(alpha = batteryGlowAlpha) else ringColor, startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw, cap = StrokeCap.Round))
-                                    drawArc(color = (if (batteryInfo.isCharging) Color.White else ringColor).copy(alpha = 0.2f), startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw * 2.5f, cap = StrokeCap.Round))
                                 }
                             }
                             Text(
                                 text = "⚙",
                                 color = Color.White.copy(alpha = 0.9f * controlsAlpha),
-                                fontSize = if (isSmallHeight || isPortrait) 18.sp else 22.sp,
+                                fontSize = if (isSmallHeight || isPortrait) 16.sp else 18.sp,
                                 modifier = Modifier.rotate(gearRotation)
                             )
                         }
@@ -222,11 +226,11 @@ fun MainScreen(
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(top = 10.dp, end = 12.dp)
-                                .size(48.dp)
+                                .padding(top = 8.dp, end = 8.dp)
+                                .size(36.dp)
                         ) {
                             Canvas(modifier = Modifier.fillMaxSize()) {
-                                val sw = 2.5.dp.toPx()
+                                val sw = 2.dp.toPx()
                                 val r = (size.minDimension - sw) / 2f
                                 drawCircle(Color.White.copy(alpha = 0.05f), radius = r, style = Stroke(width = sw))
                                 val sweep = (batteryInfo.level / 100f) * 360f
@@ -247,8 +251,6 @@ fun MainScreen(
                             .padding(top = 80.dp, bottom = if (newsEnabled) 80.dp else 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        DateWidget(textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
-                        Spacer(modifier = Modifier.height(24.dp))
                         Box(
                             modifier = Modifier.fillMaxWidth().height(300.dp).pointerInput(Unit) {
                                     var totalDrag = 0f
@@ -270,7 +272,70 @@ fun MainScreen(
                                 ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                             }
                         }
-                        if (inspirationEnabled) { InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight); Spacer(modifier = Modifier.height(32.dp)) }
+                        DateWidget(textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        if (inspirationEnabled || discoveryEnabled) {
+                            val pages = remember(inspirationEnabled, discoveryEnabled) {
+                                mutableListOf<Int>().apply {
+                                    if (inspirationEnabled) add(0)
+                                    if (discoveryEnabled) { add(1); add(2); add(3) }
+                                }
+                            }
+                            
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .pointerInput(inspirationEnabled, discoveryEnabled) {
+                                            var totalDrag = 0f
+                                            detectHorizontalDragGestures(onDragEnd = {
+                                                if (kotlin.math.abs(totalDrag) > 60f) {
+                                                    val currentIndexInList = pages.indexOf(motivationIndex).coerceAtLeast(0)
+                                                    val nextIndexInList = if (totalDrag < 0) {
+                                                        (currentIndexInList + 1) % pages.size
+                                                    } else {
+                                                        (currentIndexInList - 1 + pages.size) % pages.size
+                                                    }
+                                                    motivationIndex = pages[nextIndexInList]
+                                                }
+                                                totalDrag = 0f
+                                            }) { change, dragAmount ->
+                                                change.consume()
+                                                totalDrag += dragAmount
+                                                lastInteraction = System.currentTimeMillis()
+                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Crossfade(targetState = motivationIndex, label = "motivationFade") { index ->
+                                        when (index) {
+                                            0 -> InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+                                            1 -> DiscoveryWidget(index = 0, textColor = clockColor) // Movie
+                                            2 -> DiscoveryWidget(index = 1, textColor = clockColor) // Album
+                                            3 -> DiscoveryWidget(index = 2, textColor = clockColor) // TV Series
+                                        }
+                                    }
+                                }
+                                
+                                // Pager Indicators (Dots)
+                                if (pages.size > 1) {
+                                    Row(
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        pages.forEach { page ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(if (motivationIndex == page) 6.dp else 4.dp)
+                                                    .clip(CircleShape)
+                                                    .background(color = if (motivationIndex == page) clockColor else clockColor.copy(alpha = 0.3f))
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
@@ -282,15 +347,11 @@ fun MainScreen(
                     }
                 } else {
                     Row(
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = if (isSmallHeight) 48.dp else 64.dp, bottom = if (newsEnabled) 60.dp else 16.dp, start = 24.dp, end = 24.dp),
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight().padding(top = if (isSmallHeight) 32.dp else 48.dp, bottom = if (newsEnabled) 60.dp else 16.dp, start = 24.dp, end = 24.dp),
                         horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 32.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-                                DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
-                            }
-                            Spacer(modifier = Modifier.height(if (isSmallHeight) 8.dp else 16.dp))
                             Box(
                                 modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
                                     var totalDrag = 0f
@@ -312,7 +373,69 @@ fun MainScreen(
                                     ClockDisplay(clockType = targetType, modifier = Modifier.fillMaxSize(), textColor = clockColor, showSeconds = showSeconds, isNeon = neonModeEnabled, binaryMode = binaryModeName, language = appLanguage, isFullScreen = !anyWidgetEnabled)
                                 }
                             }
-                            if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+                            DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
+                            Spacer(modifier = Modifier.height(if (isSmallHeight) 12.dp else 24.dp))
+                            if (inspirationEnabled || discoveryEnabled) {
+                                val pages = remember(inspirationEnabled, discoveryEnabled) {
+                                    mutableListOf<Int>().apply {
+                                        if (inspirationEnabled) add(0)
+                                        if (discoveryEnabled) { add(1); add(2); add(3) }
+                                    }
+                                }
+
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .pointerInput(inspirationEnabled, discoveryEnabled) {
+                                                var totalDrag = 0f
+                                                detectHorizontalDragGestures(onDragEnd = {
+                                                    if (kotlin.math.abs(totalDrag) > 60f) {
+                                                        val currentIndexInList = pages.indexOf(motivationIndex).coerceAtLeast(0)
+                                                        val nextIndexInList = if (totalDrag < 0) {
+                                                            (currentIndexInList + 1) % pages.size
+                                                        } else {
+                                                            (currentIndexInList - 1 + pages.size) % pages.size
+                                                        }
+                                                        motivationIndex = pages[nextIndexInList]
+                                                    }
+                                                    totalDrag = 0f
+                                                }) { change, dragAmount ->
+                                                    change.consume()
+                                                    totalDrag += dragAmount
+                                                    lastInteraction = System.currentTimeMillis()
+                                                }
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Crossfade(targetState = motivationIndex, label = "motivationFade") { index ->
+                                            when (index) {
+                                                0 -> InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+                                                1 -> DiscoveryWidget(index = 0, textColor = clockColor) // Movie
+                                                2 -> DiscoveryWidget(index = 1, textColor = clockColor) // Album
+                                                3 -> DiscoveryWidget(index = 2, textColor = clockColor) // TV Series
+                                            }
+                                        }
+                                    }
+
+                                    // Pager Indicators (Dots)
+                                    if (pages.size > 1) {
+                                        Row(
+                                            modifier = Modifier.padding(top = 4.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            pages.forEach { page ->
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(if (motivationIndex == page) 6.dp else 4.dp)
+                                                        .clip(CircleShape)
+                                                        .background(color = if (motivationIndex == page) clockColor else clockColor.copy(alpha = 0.3f))
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)) {
