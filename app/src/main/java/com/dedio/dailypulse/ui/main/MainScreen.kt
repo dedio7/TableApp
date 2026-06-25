@@ -10,6 +10,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -57,6 +58,7 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
+    isDreamMode: Boolean = false,
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
@@ -65,8 +67,8 @@ fun MainScreen(
     val mediaInfo = com.dedio.dailypulse.media.rememberMediaController()
 
     // --- UX Idle Logic ---
-    var isIdle by remember { mutableStateOf(value = false) }
-    var lastInteraction by remember { mutableLongStateOf(0L) }
+    var lastInteraction by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var isIdle by remember { mutableStateOf(false) }
     
     LaunchedEffect(lastInteraction) {
         isIdle = false
@@ -74,7 +76,11 @@ fun MainScreen(
         isIdle = true
     }
 
-    val controlsAlpha by animateFloatAsState(targetValue = if (isIdle) 0f else 1f, animationSpec = tween(1500), label = "fade")
+    val controlsAlpha by animateFloatAsState(
+        targetValue = if (isIdle) 0f else 1f, 
+        animationSpec = if (isIdle) tween(1500) else tween(300), 
+        label = "fade"
+    )
     val batteryGlowAlpha by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 0.3f, targetValue = 0.8f, 
         animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
@@ -146,6 +152,14 @@ fun MainScreen(
             BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                awaitPointerEvent(PointerEventPass.Initial)
+                                lastInteraction = System.currentTimeMillis()
+                            }
+                        }
+                    }
                     .then(
                         if (antiBurnInEnabled) {
                             Modifier.layout { measurable, constraints ->
@@ -157,58 +171,69 @@ fun MainScreen(
                         } else Modifier
                     )
             ) {
-                // Detect interaction to wake up UI - Moved to a separate transparent Box 
-                // to avoid intercepting clicks intended for sub-components
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(Unit) {
-                            awaitPointerEventScope {
-                                while (true) {
-                                    awaitPointerEvent(PointerEventPass.Initial)
-                                    lastInteraction = System.currentTimeMillis()
-                                }
-                            }
-                        }
-                )
 
                 val screenHeight = maxHeight
                 val isSmallHeight = screenHeight < 500.dp
                 val isPortrait = maxWidth < maxHeight
 
-                // 1. Unified Energy Ring & Settings (Top-Right)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
-                        .size(if (isSmallHeight || isPortrait) 64.dp else 72.dp) // Even larger hit area
-                        .alpha(controlsAlpha)
-                        .zIndex(10f) // Ensure it's on top of EVERYTHING
-                        .clickable { 
-                            lastInteraction = System.currentTimeMillis()
-                            settingsOpen = !settingsOpen 
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
+                // 1. Unified Energy Ring & Settings (Mostra solo se NON in modalità screensaver)
+                if (!isDreamMode) {
                     Box(
                         modifier = Modifier
-                            .size(if (isSmallHeight || isPortrait) 42.dp else 48.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.08f)),
+                            .align(Alignment.TopEnd)
+                            .padding(top = if (isPortrait) 32.dp else 10.dp, end = 12.dp)
+                            .size(if (isSmallHeight || isPortrait) 64.dp else 72.dp)
+                            .zIndex(10f)
+                            .clickable { 
+                                lastInteraction = System.currentTimeMillis()
+                                settingsOpen = !settingsOpen 
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (batteryEnabled) {
+                        Box(
+                            modifier = Modifier
+                                .size(if (isSmallHeight || isPortrait) 42.dp else 48.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f * controlsAlpha)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (batteryEnabled) {
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    val sw = 3.dp.toPx()
+                                    val r = (size.minDimension - sw) / 2f
+                                    drawCircle(Color.White.copy(alpha = 0.05f), radius = r, style = Stroke(width = sw))
+                                    val sweep = (batteryInfo.level / 100f) * 360f
+                                    val ringColor = if (batteryInfo.level < 20 && !batteryInfo.isCharging) Color(0xFFFF5252) else Color(0xFF00E5FF).copy(alpha = 0.8f)
+                                    drawArc(color = if (batteryInfo.isCharging) Color.White.copy(alpha = batteryGlowAlpha) else ringColor, startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw, cap = StrokeCap.Round))
+                                    drawArc(color = (if (batteryInfo.isCharging) Color.White else ringColor).copy(alpha = 0.2f), startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw * 2.5f, cap = StrokeCap.Round))
+                                }
+                            }
+                            Text(
+                                text = "⚙",
+                                color = Color.White.copy(alpha = 0.9f * controlsAlpha),
+                                fontSize = if (isSmallHeight || isPortrait) 18.sp else 22.sp,
+                                modifier = Modifier.rotate(gearRotation)
+                            )
+                        }
+                    }
+                } else {
+                    // In modalità screensaver, mostra solo l'anello della batteria (se attivo) in un angolo
+                    if (batteryEnabled) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 10.dp, end = 12.dp)
+                                .size(48.dp)
+                        ) {
                             Canvas(modifier = Modifier.fillMaxSize()) {
-                                val sw = 3.dp.toPx()
+                                val sw = 2.5.dp.toPx()
                                 val r = (size.minDimension - sw) / 2f
                                 drawCircle(Color.White.copy(alpha = 0.05f), radius = r, style = Stroke(width = sw))
                                 val sweep = (batteryInfo.level / 100f) * 360f
                                 val ringColor = if (batteryInfo.level < 20 && !batteryInfo.isCharging) Color(0xFFFF5252) else Color(0xFF00E5FF).copy(alpha = 0.8f)
                                 drawArc(color = if (batteryInfo.isCharging) Color.White.copy(alpha = batteryGlowAlpha) else ringColor, startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw, cap = StrokeCap.Round))
-                                drawArc(color = (if (batteryInfo.isCharging) Color.White else ringColor).copy(alpha = 0.2f), startAngle = -90f, sweepAngle = sweep, useCenter = false, style = Stroke(width = sw * 2.5f, cap = StrokeCap.Round))
                             }
                         }
-                        Text("⚙", color = Color.White.copy(alpha = 0.9f), fontSize = if (isSmallHeight || isPortrait) 18.sp else 22.sp, modifier = Modifier.rotate(gearRotation))
                     }
                 }
 

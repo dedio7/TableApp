@@ -2,6 +2,7 @@ package com.dedio.dailypulse.settings
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -96,6 +97,10 @@ fun SettingsPanel(
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
     val searchResults = remember { mutableStateListOf<WeatherLocation>() }
+
+    BackHandler(enabled = visible) {
+        onDismiss()
+    }
 
     LaunchedEffect(cityQuery) {
         if (cityQuery.length >= 2) {

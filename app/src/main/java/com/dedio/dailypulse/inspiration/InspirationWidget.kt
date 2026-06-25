@@ -28,15 +28,15 @@ fun InspirationWidget(
         getQuoteForToday(language)
     }
 
-    val quoteFontSize = if (isSmallHeight) 14.sp else 18.sp
-    val authorFontSize = if (isSmallHeight) 11.sp else 13.sp
-    val verticalPadding = if (isSmallHeight) 4.dp else 16.dp
-    val spacing = if (isSmallHeight) 2.dp else 8.dp
+    val quoteFontSize = if (isSmallHeight) 14.sp else 16.sp
+    val authorFontSize = if (isSmallHeight) 10.sp else 12.sp
+    val verticalPadding = if (isSmallHeight) 2.dp else 8.dp
+    val spacing = if (isSmallHeight) 1.dp else 4.dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = verticalPadding),
+            .padding(horizontal = 24.dp, vertical = verticalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(

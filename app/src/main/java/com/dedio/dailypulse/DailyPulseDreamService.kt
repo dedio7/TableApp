@@ -61,23 +61,24 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         val currentStatus = registerReceiver(batteryReceiver, filter)
         updateScreenBrightness(currentStatus)
 
-        val composeView = ComposeView(this).apply {
-            setContent {
-                DailyPulseTheme {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        MainScreen()
-                    }
-                }
-            }
-        }
-
+        val composeView = ComposeView(this)
+        
         // Set up the necessary owners for Compose to work in a Service
+        // These MUST be set before setContent or any composition begins
         composeView.setViewTreeLifecycleOwner(this)
         composeView.setViewTreeViewModelStoreOwner(this)
         composeView.setViewTreeSavedStateRegistryOwner(this)
+
+        composeView.setContent {
+            DailyPulseTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    MainScreen(isDreamMode = true)
+                }
+            }
+        }
 
         setContentView(composeView)
     }
@@ -115,10 +116,10 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         } catch (e: Exception) {
             // Receiver might not be registered
         }
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     }
 
     override fun onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         super.onDestroy()
         viewModelStore.clear()
     }
