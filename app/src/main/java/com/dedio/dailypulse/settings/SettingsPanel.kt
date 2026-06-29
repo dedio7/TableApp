@@ -85,6 +85,7 @@ fun SettingsPanel(
     val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
     val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
     val atmosphereName by appSettings.atmosphereName.collectAsStateWithLifecycle(initialValue = "DEEP_SPACE")
+    val appOrientation by appSettings.appOrientation.collectAsStateWithLifecycle(initialValue = "AUTO")
     
     val nightStart by appSettings.nightModeStart.collectAsStateWithLifecycle(initialValue = 22)
     val nightEnd by appSettings.nightModeEnd.collectAsStateWithLifecycle(initialValue = 7)
@@ -194,6 +195,17 @@ fun SettingsPanel(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SettingLabel(label = if(appLanguage == "IT") "Orientamento Schermo" else "Screen Orientation", horizontalPadding = 0.dp)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("AUTO" to "AUTO", "PORTRAIT" to (if(appLanguage == "IT") "VERTICALE" else "PORTRAIT"), "LANDSCAPE" to (if(appLanguage == "IT") "ORIZZONTALE" else "LANDSCAPE")).forEach { (code, label) ->
+                            val isSelected = appOrientation == code
+                            Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setAppOrientation(code) } }.padding(8.dp), contentAlignment = Alignment.Center) {
+                                Text(text = label, color = if (isSelected) AccentBlue else TextSecondary, fontSize = 9.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                            }
+                        }
+                    }
                 }
 
                 // ─── 2. CLOCK & APPEARANCE ───
@@ -234,7 +246,7 @@ fun SettingsPanel(
                 SettingGroup(title = if(appLanguage == "IT") "Widget & Funzioni" else "Widgets & Features") {
                     SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } }, horizontalPadding = 0.dp)
                     if (weatherEnabled) {
-                        SettingSwitch(label = strings.gpsLabel, checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
+                        SettingSwitch(label = (if(appLanguage == "IT") "Usa GPS" else "Use GPS"), checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
                         
                         if (!weatherUseGps) {
                             OutlinedTextField(

@@ -1,48 +1,41 @@
-# Piano di Implementazione - Fix GPS & Domotica (Home Assistant)
+# Piano di Implementazione - Citazioni Online Dinamiche
 
-Sistemazione definitiva del tracciamento posizione e introduzione della domotica.
+Sostituzione delle citazioni statiche con un servizio online multilingua (Italiano/Inglese).
 
-## 1. Fix GPS Dinamico (Meteo in viaggio)
+## Obiettivo
+Attualmente le citazioni sono salvate nel codice e si ripetono ogni pochi giorni. L'obiettivo è collegare l'app a un'API esterna per avere una citazione diversa ogni giorno, mantenendo il supporto sia per l'Italiano che per l'Inglese.
 
-### Problema
-L'app memorizza le coordinate una volta e non si accorge se l'utente cambia città (es. da Roma a Bratislava) finché non viene forzato manualmente.
+## Servizi Identificati
+- **Multilingual Quote API**: Un servizio open-source che supporta nativamente `it` ed `en`.
+- **ZenQuotes**: Ottimo per l'inglese (come backup).
 
-### Soluzione
-- **Monitoraggio Attivo**: Aggiunta di un servizio in `MainScreenViewModel` che, se l'impostazione "Usa GPS" è attiva, controlla la posizione ogni ora (o all'avvio dello screensaver).
-- **Reverse Geocoding**: Quando la posizione cambia di oltre 5km, l'app userà il sistema Android per tradurre le coordinate nel nome della città corretta (es. "Bratislava") e aggiornerà automaticamente le impostazioni.
-- **Refresh Automatico**: L'aggiornamento della città nelle impostazioni scatenerà immediatamente un nuovo download del meteo.
+## Proposed Changes
 
----
+### 1. Data Layer (Repository)
 
-## 2. Widget Domotica (Home Assistant) - Spiegazione Semplice
+#### [NEW] [InspirationRepository.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/InspirationRepository.kt)
+- Gestione chiamate `GET` verso l'API delle citazioni.
+- Logica di parsing JSON per estrarre testo e autore.
+- Implementazione di un timeout rapido per non rallentare l'avvio dell'app.
 
-### Cos'è Home Assistant?
-È un software (gratuito) che molti usano per gestire tutta la casa (luci, prese, tapparelle di marche diverse) da un unico posto.
+### 2. UI Layer (Widget)
 
-### Cosa faremo in DailyPulse?
-- **Pannello di Controllo**: Aggiungeremo una sezione nella dashboard con dei bottoni veloci (es. "Spegni Tutto", "Luce Comodino").
-- **Configurazione**: Nelle impostazioni basterà inserire l'indirizzo del tuo server Home Assistant e una "chiave" (Token) che trovi nel tuo profilo HA.
-- **Risultato**: Mentre guardi l'ora, potrai spegnere la luce della stanza con un tocco direttamente dall'orologio, senza cercare il telefono o aprire altre app.
+#### [InspirationWidget.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/InspirationWidget.kt)
+- Aggiunta di un caricamento asincrono (`LaunchedEffect`).
+- **Sistema di Fallback**: Se internet è assente o l'API non risponde, l'app userà istantaneamente la lista locale di citazioni (quelle attuali).
+- Cache giornaliera: La citazione scaricata verrà salvata temporaneamente per la sessione corrente.
 
 ---
 
 ## Prossimi Passaggi
-
-### [Componente GPS]
-#### [MainScreenViewModel.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/ui/main/MainScreenViewModel.kt)
-- Implementazione logica `refreshLocationIfGpsEnabled`.
-- Uso di `FusedLocationProviderClient` per ottenere la posizione precisa.
-- Implementazione `Geocoder` per aggiornare il nome della città.
-
-### [Componente Domotica]
-#### [NEW] [HomeAssistantWidget.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/domotics/HomeAssistantWidget.kt)
-- Creazione widget con icone per i dispositivi smart.
-#### [NEW] [HomeAssistantRepository.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/domotics/HomeAssistantRepository.kt)
-- Gestione chiamate API verso il server HA.
+1. Creazione della classe `InspirationRepository`.
+2. Modifica del widget per gestire lo stato "Online" vs "Offline".
 
 ---
 
 ## Piano di Verifica
-1. **Test GPS**: Simulerò un cambio di coordinate via software e verificherò che il nome della città cambi automaticamente in "Bratislava".
-2. **Test Meteo**: Verificherò che al cambio città il meteo si aggiorni entro pochi secondi.
-3. **Test Domotica**: Verificherò che i bottoni inviino correttamente il comando "Accendi/Spegni" (userò un server di test).
+
+### Manual Verification
+1. **Verifica Online**: Avvio l'app e controllo che la citazione sia diversa da quelle predefinite.
+2. **Verifica Offline**: Metto il dispositivo in modalità aereo e verifico che compaia una citazione della lista locale senza errori o blocchi.
+3. **Verifica Lingua**: Cambio lingua nelle impostazioni e verifico che la citazione cambi lingua coerentemente.

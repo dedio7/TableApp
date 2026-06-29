@@ -48,7 +48,15 @@ class AppSettings(private val context: Context) {
         val NIGHT_MODE_END = intPreferencesKey("night_mode_end")
         val NIGHT_MODE_BRIGHTNESS = floatPreferencesKey("night_mode_brightness")
 
+        val APP_ORIENTATION = stringPreferencesKey("app_orientation")
+
         val LAST_WEATHER_JSON = stringPreferencesKey("last_weather_json")
+
+        // Dynamic Quotes
+        val LAST_QUOTE_TEXT = stringPreferencesKey("last_quote_text")
+        val LAST_QUOTE_AUTHOR = stringPreferencesKey("last_quote_author")
+        val LAST_QUOTE_LANG = stringPreferencesKey("last_quote_lang")
+        val LAST_QUOTE_DATE = stringPreferencesKey("last_quote_date")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -132,6 +140,24 @@ class AppSettings(private val context: Context) {
     val nightModeBrightness: Flow<Float> = context.dataStore.data.map { it[NIGHT_MODE_BRIGHTNESS] ?: 0.3f }
     suspend fun setNightModeBrightness(b: Float) { context.dataStore.edit { it[NIGHT_MODE_BRIGHTNESS] = b } }
 
+    val appOrientation: Flow<String> = context.dataStore.data.map { it[APP_ORIENTATION] ?: "AUTO" }
+    suspend fun setAppOrientation(orientation: String) { context.dataStore.edit { it[APP_ORIENTATION] = orientation } }
+
     val lastWeatherJson: Flow<String?> = context.dataStore.data.map { it[LAST_WEATHER_JSON] }
     suspend fun setLastWeatherJson(json: String) { context.dataStore.edit { it[LAST_WEATHER_JSON] = json } }
+
+    // Dynamic Quotes Methods
+    val lastQuoteText: Flow<String?> = context.dataStore.data.map { it[LAST_QUOTE_TEXT] }
+    val lastQuoteAuthor: Flow<String?> = context.dataStore.data.map { it[LAST_QUOTE_AUTHOR] }
+    val lastQuoteLang: Flow<String?> = context.dataStore.data.map { it[LAST_QUOTE_LANG] }
+    val lastQuoteDate: Flow<String?> = context.dataStore.data.map { it[LAST_QUOTE_DATE] }
+
+    suspend fun setLastQuote(text: String, author: String, lang: String, date: String) {
+        context.dataStore.edit {
+            it[LAST_QUOTE_TEXT] = text
+            it[LAST_QUOTE_AUTHOR] = author
+            it[LAST_QUOTE_LANG] = lang
+            it[LAST_QUOTE_DATE] = date
+        }
+    }
 }
