@@ -6,6 +6,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -118,7 +120,7 @@ fun SettingsPanel(
         }
     }
 
-    AnimatedVisibility(visible = visible, enter = androidx.compose.animation.fadeIn(), exit = androidx.compose.animation.fadeOut()) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(), exit = fadeOut()) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)).clickable { onDismiss() })
     }
 
@@ -130,14 +132,14 @@ fun SettingsPanel(
                 dampingRatio = Spring.DampingRatioLowBouncy,
                 stiffness = Spring.StiffnessMediumLow,
             )
-        ) + androidx.compose.animation.fadeIn(),
+        ) + fadeIn(),
         exit = slideOutHorizontally(
             targetOffsetX = { it },
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioNoBouncy,
                 stiffness = Spring.StiffnessMedium
             )
-        ) + androidx.compose.animation.fadeOut()
+        ) + fadeOut()
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
             Column(
@@ -157,7 +159,7 @@ fun SettingsPanel(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // ─── 1. GENERAL & SYSTEM ───
-                SettingGroup(title = if(appLanguage == "IT") "Generale & Sistema" else "General & System") {
+                SettingGroup(title = strings.generalSystemSection) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,8 +168,10 @@ fun SettingsPanel(
                             .background(AccentBlue.copy(alpha = 0.15f))
                             .border(1.dp, AccentBlue.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                             .clickable {
-                                val intent = Intent(Settings.ACTION_DREAM_SETTINGS)
-                                context.startActivity(intent)
+                                try {
+                                    val intent = Intent(Settings.ACTION_DREAM_SETTINGS)
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
                             }
                             .padding(12.dp),
                         contentAlignment = Alignment.Center
@@ -189,7 +193,7 @@ fun SettingsPanel(
                     Spacer(modifier = Modifier.height(12.dp))
                     SettingLabel(label = strings.dateFormatLabel, horizontalPadding = 0.dp)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("IT" to "GIORNO/MESE", "EN" to "MONTH/DAY").forEach { (code, label) ->
+                        listOf("IT" to (if(appLanguage == "IT") "GIORNO/MESE" else "DAY/MONTH"), "EN" to (if(appLanguage == "IT") "MESE/GIORNO" else "MONTH/DAY")).forEach { (code, label) ->
                             val isSelected = dateFormat == code
                             Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setDateFormat(code) } }.padding(8.dp), contentAlignment = Alignment.Center) {
                                 Text(text = label, color = if (isSelected) AccentBlue else TextSecondary, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
@@ -198,9 +202,9 @@ fun SettingsPanel(
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    SettingLabel(label = if(appLanguage == "IT") "Orientamento Schermo" else "Screen Orientation", horizontalPadding = 0.dp)
+                    SettingLabel(label = strings.screenOrientationLabel, horizontalPadding = 0.dp)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf("AUTO" to "AUTO", "PORTRAIT" to (if(appLanguage == "IT") "VERTICALE" else "PORTRAIT"), "LANDSCAPE" to (if(appLanguage == "IT") "ORIZZONTALE" else "LANDSCAPE")).forEach { (code, label) ->
+                        listOf("AUTO" to strings.orientationAuto, "PORTRAIT" to strings.orientationPortrait, "LANDSCAPE" to strings.orientationLandscape).forEach { (code, label) ->
                             val isSelected = appOrientation == code
                             Box(modifier = Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(8.dp)).clickable { scope.launch { appSettings.setAppOrientation(code) } }.padding(8.dp), contentAlignment = Alignment.Center) {
                                 Text(text = label, color = if (isSelected) AccentBlue else TextSecondary, fontSize = 9.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
@@ -210,7 +214,7 @@ fun SettingsPanel(
                 }
 
                 // ─── 2. CLOCK & APPEARANCE ───
-                SettingGroup(title = if(appLanguage == "IT") "Orologio & Aspetto" else "Clock & Appearance") {
+                SettingGroup(title = strings.clockAppearanceSection) {
                     SettingLabel(label = strings.clockTypeLabel, horizontalPadding = 0.dp)
                     ClockTypeSelector(selected = clockType, onSelect = { scope.launch { appSettings.setClockType(it) } }, horizontalPadding = 0.dp)
                     
@@ -244,10 +248,10 @@ fun SettingsPanel(
                 }
 
                 // ─── 3. WIDGETS & FEATURES ───
-                SettingGroup(title = if(appLanguage == "IT") "Widget & Funzioni" else "Widgets & Features") {
+                SettingGroup(title = strings.widgetsFeaturesSection) {
                     SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } }, horizontalPadding = 0.dp)
                     if (weatherEnabled) {
-                        SettingSwitch(label = (if(appLanguage == "IT") "Usa GPS" else "Use GPS"), checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
+                        SettingSwitch(label = strings.gpsLabel, checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
                         
                         if (!weatherUseGps) {
                             var localCityQuery by remember { mutableStateOf(currentCity) }
@@ -306,7 +310,7 @@ fun SettingsPanel(
                 }
 
                 // ─── 4. DISPLAY OPTIONS ───
-                SettingGroup(title = if(appLanguage == "IT") "Opzioni Display" else "Display Options") {
+                SettingGroup(title = strings.displayOptionsSection) {
                     SettingSwitch(label = strings.nightShiftLabel, checked = nightShiftEnabled, onCheckedChange = { scope.launch { appSettings.setNightShiftEnabled(it) } }, horizontalPadding = 0.dp)
                     if (nightShiftEnabled) {
                         Column(modifier = Modifier.padding(top = 4.dp)) {

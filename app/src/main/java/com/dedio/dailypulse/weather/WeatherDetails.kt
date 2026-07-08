@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
@@ -66,25 +67,59 @@ fun WeatherDetailsPanel(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = cityName,
                             color = Color.White,
-                            fontSize = if (isSmallHeight) 18.sp else 22.sp,
+                            fontSize = if (isSmallHeight) 20.sp else 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = data.description,
                             color = Color.White.copy(alpha = 0.7f),
-                            fontSize = if (isSmallHeight) 12.sp else 14.sp
+                            fontSize = if (isSmallHeight) 13.sp else 15.sp
                         )
                     }
                     
-                    Text(
-                        text = "${data.temperature.roundToInt()}°",
-                        color = Color.White,
-                        fontSize = if (isSmallHeight) 32.sp else 42.sp,
-                        fontWeight = FontWeight.Light
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = data.iconEmoji,
+                            fontSize = if (isSmallHeight) 32.sp else 40.sp,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                        Text(
+                            text = "${data.temperature.roundToInt()}°",
+                            color = Color.White,
+                            fontSize = if (isSmallHeight) 36.sp else 48.sp,
+                            fontWeight = FontWeight.Light
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(sectionSpacing))
+
+                // Additional Details (Humidity, Wind, Feels Like)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    DetailItem(
+                        icon = "🌡️",
+                        value = "${data.feelsLike.roundToInt()}°",
+                        label = strings.weatherFeelsLike,
+                        isSmall = isSmallHeight
+                    )
+                    DetailItem(
+                        icon = "💧",
+                        value = "${data.humidity}%",
+                        label = strings.weatherHumidity,
+                        isSmall = isSmallHeight
+                    )
+                    DetailItem(
+                        icon = "💨",
+                        value = "${data.windSpeed.roundToInt()} km/h",
+                        label = strings.weatherWind,
+                        isSmall = isSmallHeight
                     )
                 }
 
@@ -157,6 +192,34 @@ fun WeatherDetailsPanel(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DetailItem(icon: String, value: String, label: String, isSmall: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(vertical = if (isSmall) 8.dp else 12.dp)
+            .width(if (isSmall) 82.dp else 100.dp)
+    ) {
+        Text(text = icon, fontSize = if (isSmall) 16.sp else 20.sp)
+        Text(
+            text = value,
+            color = Color.White,
+            fontSize = if (isSmall) 13.sp else 15.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = if (isSmall) 10.sp else 11.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

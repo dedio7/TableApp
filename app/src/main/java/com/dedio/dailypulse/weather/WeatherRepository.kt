@@ -195,15 +195,17 @@ class WeatherRepository {
                 val displayDate = if (i == 0) (if (language == "EN") "Today" else "Oggi") else dayFormat.format(date!!).replaceFirstChar { it.uppercase() }
                 
                 val dCode = dCodes.getInt(i)
-                val (_, dEmoji) = getWeatherDescription(dCode, true, language)
+                val (_, dEmoji) = getWeatherDescription(dCode, isDay = true, language)
 
-                dailyForecasts.add(DailyForecast(
-                    date = displayDate,
-                    maxTemp = dMaxs.getDouble(i),
-                    minTemp = dMins.getDouble(i),
-                    weatherCode = dCode,
-                    iconEmoji = dEmoji
-                ))
+                dailyForecasts.add(
+                    DailyForecast(
+                        date = displayDate,
+                        maxTemp = dMaxs.getDouble(i),
+                        minTemp = dMins.getDouble(i),
+                        weatherCode = dCode,
+                        iconEmoji = dEmoji,
+                    ),
+                )
             }
 
             WeatherData(
@@ -240,7 +242,7 @@ class WeatherRepository {
 
                 val cityName = buildString {
                     append(name)
-                    if ((admin1.isNotEmpty()) && admin1 != name) append(", ").append(admin1)
+                    if (admin1.isNotEmpty() && (admin1 != name)) append(", ").append(admin1)
                     if (country.isNotEmpty()) append(", ").append(country)
                 }
 

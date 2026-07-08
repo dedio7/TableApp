@@ -27,8 +27,7 @@ enum class Atmosphere(val displayName: String, val colors: List<Color>) {
     SOLAR_FLARE("Solar Flare", listOf(Color(0xFF2B0000), Color(0xFF5E1914), Color(0xFFD4A017), Color(0xFFFF5400))),
     GOLDEN_HOUR("Golden Hour", listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFF92400E), Color(0xFFB45309))),
     NORDIC_AURORA("Nordic Aurora", listOf(Color(0xFF064E3B), Color(0xFF0F172A), Color(0xFF4C1D95), Color(0xFF10b981))),
-    FROZEN_TUNDRA("Frozen Tundra", listOf(Color(0xFF0A1931), Color(0xFF185ADB), Color(0xFFEFEFEF), Color(0xFF93C5FD))),
-    MORNING_MIST("Morning Mist", listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0), Color(0xFFBFDBFE), Color(0xFFFFFFFF)))
+    FROZEN_TUNDRA("Frozen Tundra", listOf(Color(0xFF0A1931), Color(0xFF185ADB), Color(0xFFEFEFEF), Color(0xFF93C5FD)))
 }
 
 data class BackgroundConfig(

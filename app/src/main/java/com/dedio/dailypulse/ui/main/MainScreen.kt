@@ -62,7 +62,9 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val appSettings = remember { AppSettings(context) }
-    val viewModel: MainScreenViewModel = viewModel { MainScreenViewModel(context, appSettings) }
+    val viewModel: MainScreenViewModel = viewModel { 
+        MainScreenViewModel(context.applicationContext as android.app.Application, appSettings) 
+    }
     val batteryInfo = rememberBatteryState()
     val mediaInfo = com.dedio.dailypulse.media.rememberMediaController()
 

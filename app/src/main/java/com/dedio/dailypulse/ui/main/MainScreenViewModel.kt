@@ -1,10 +1,10 @@
 package com.dedio.dailypulse.ui.main
 
-import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.location.Geocoder
 import androidx.compose.ui.geometry.Offset
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dedio.dailypulse.background.Atmosphere
 import com.dedio.dailypulse.settings.AppSettings
@@ -17,9 +17,11 @@ import java.util.Calendar
 import kotlin.time.Duration.Companion.minutes
 
 class MainScreenViewModel(
-    private val context: Context,
+    application: Application,
     private val appSettings: AppSettings
-) : ViewModel() {
+) : AndroidViewModel(application) {
+
+    private val context: Context get() = getApplication()
 
     // --- Settings StateFlows ---
     val atmosphereName = appSettings.atmosphereName.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "DEEP_SPACE")
@@ -30,7 +32,7 @@ class MainScreenViewModel(
 
     val clockTypeName = appSettings.clockType.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FLIP")
     val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEE)
-    val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = true)
     val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val binaryModeName = appSettings.binaryClockMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "BINARY")
 
@@ -63,25 +65,7 @@ class MainScreenViewModel(
     private val _burnInOffset = MutableStateFlow(Offset.Zero)
     val burnInOffset: StateFlow<Offset> = _burnInOffset.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            appSettings.antiBurnInEnabled.collectLatest { enabled ->
-                if (enabled) {
-                    while (true) {
-                        delay(1.minutes)
-                        _burnInOffset.value = Offset(
-                            x = (-3..3).random().toFloat(),
-                            y = (-3..3).random().toFloat(),
-                        )
-                    }
-                } else {
-                    _burnInOffset.value = Offset.Zero
-                }
-            }
-        }
-    }
-
-    // --- Night Shift ---
+    // --- Night Shift Logic ---
     val isNightTime = combine(nightModeStart, nightModeEnd) { start, end ->
         val calendar = Calendar.getInstance()
         val hour = calendar[Calendar.HOUR_OF_DAY]
@@ -100,7 +84,24 @@ class MainScreenViewModel(
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     init {
-        // Periodic location refresh if GPS is enabled
+        // 1. Burn-in Protection Loop
+        viewModelScope.launch {
+            appSettings.antiBurnInEnabled.collectLatest { enabled ->
+                if (enabled) {
+                    while (true) {
+                        delay(1.minutes)
+                        _burnInOffset.value = Offset(
+                            x = (-3..3).random().toFloat(),
+                            y = (-3..3).random().toFloat(),
+                        )
+                    }
+                } else {
+                    _burnInOffset.value = Offset.Zero
+                }
+            }
+        }
+
+        // 2. Periodic location refresh if GPS is enabled
         viewModelScope.launch {
             while (true) {
                 refreshLocationIfGpsEnabled()
@@ -109,7 +110,7 @@ class MainScreenViewModel(
         }
     }
 
-    @SuppressLint("MissingPermission")
+    @android.annotation.SuppressLint("MissingPermission")
     private fun refreshLocationIfGpsEnabled() {
         viewModelScope.launch {
             val useGps = appSettings.weatherUseGps.firstOrNull() ?: false
@@ -122,8 +123,8 @@ class MainScreenViewModel(
                             updateLocationSettings(it.latitude, it.longitude)
                         }
                     }
-            } catch (e: Exception) {
-                android.util.Log.e("MainViewModel", "Error getting location", e)
+            } catch (_: Exception) {
+                // Silently ignore location errors
             }
         }
     }
@@ -135,7 +136,7 @@ class MainScreenViewModel(
             val addresses = try {
                 @Suppress("DEPRECATION")
                 geocoder.getFromLocation(lat, lon, 1)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
 
@@ -145,7 +146,7 @@ class MainScreenViewModel(
 
             // Only update if significantly changed or city name updated
             val currentCity = appSettings.weatherCity.firstOrNull()
-            if (cityName != "Unknown" && cityName != currentCity) {
+            if (cityName != "Unknown" && (cityName != currentCity)) {
                 appSettings.setWeatherLocation(lat, lon, cityName)
             }
         }

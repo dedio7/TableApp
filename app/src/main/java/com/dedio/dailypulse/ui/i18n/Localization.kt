@@ -80,6 +80,14 @@ data class Strings(
     val inspirationLabel: String,
     val binarySettingsLabel: String,
     val gpsLabel: String,
+    val generalSystemSection: String,
+    val clockAppearanceSection: String,
+    val widgetsFeaturesSection: String,
+    val displayOptionsSection: String,
+    val screenOrientationLabel: String,
+    val orientationAuto: String,
+    val orientationPortrait: String,
+    val orientationLandscape: String,
 )
 
 val ItalianStrings = Strings(
@@ -157,7 +165,15 @@ val ItalianStrings = Strings(
     burnInLabel = "Protezione Burn-in",
     inspirationLabel = "Citazione del Giorno",
     binarySettingsLabel = "Impostazioni Binario",
-    gpsLabel = "Usa GPS"
+    gpsLabel = "Usa GPS",
+    generalSystemSection = "Generale & Sistema",
+    clockAppearanceSection = "Orologio & Aspetto",
+    widgetsFeaturesSection = "Widget & Funzioni",
+    displayOptionsSection = "Opzioni Display",
+    screenOrientationLabel = "Orientamento Schermo",
+    orientationAuto = "AUTO",
+    orientationPortrait = "VERTICALE",
+    orientationLandscape = "ORIZZONTALE"
 )
 
 val EnglishStrings = Strings(
@@ -235,7 +251,15 @@ val EnglishStrings = Strings(
     burnInLabel = "Burn-in Protection",
     inspirationLabel = "Daily Inspiration",
     binarySettingsLabel = "Binary Settings",
-    gpsLabel = "Use GPS"
+    gpsLabel = "Use GPS",
+    generalSystemSection = "General & System",
+    clockAppearanceSection = "Clock & Appearance",
+    widgetsFeaturesSection = "Widgets & Features",
+    displayOptionsSection = "Display Options",
+    screenOrientationLabel = "Screen Orientation",
+    orientationAuto = "AUTO",
+    orientationPortrait = "PORTRAIT",
+    orientationLandscape = "LANDSCAPE"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }
