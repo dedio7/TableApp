@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -249,9 +250,13 @@ fun SettingsPanel(
                         SettingSwitch(label = (if(appLanguage == "IT") "Usa GPS" else "Use GPS"), checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
                         
                         if (!weatherUseGps) {
+                            var localCityQuery by remember { mutableStateOf(currentCity) }
                             OutlinedTextField(
-                                value = cityQuery, 
-                                onValueChange = { cityQuery = it }, 
+                                value = localCityQuery, 
+                                onValueChange = { 
+                                    localCityQuery = it
+                                    cityQuery = it 
+                                }, 
                                 placeholder = { Text(strings.weatherSearchPlaceholder, color = TextSecondary, fontSize = 12.sp) }, 
                                 label = { Text(strings.weatherCurrentCity.format(currentCity), fontSize = 11.sp) },
                                 singleLine = true, 
@@ -325,6 +330,14 @@ fun SettingsPanel(
                     SettingSwitch(label = strings.sunriseModeLabel, checked = sunriseModeEnabled, onCheckedChange = { scope.launch { appSettings.setSunriseModeEnabled(it) } }, horizontalPadding = 0.dp)
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "DailyPulse Version 1.3.2 (Code 31)",
+                    color = TextSecondary.copy(alpha = 0.5f),
+                    fontSize = 10.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

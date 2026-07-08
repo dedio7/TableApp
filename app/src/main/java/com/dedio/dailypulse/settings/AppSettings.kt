@@ -57,6 +57,12 @@ class AppSettings(private val context: Context) {
         val LAST_QUOTE_AUTHOR = stringPreferencesKey("last_quote_author")
         val LAST_QUOTE_LANG = stringPreferencesKey("last_quote_lang")
         val LAST_QUOTE_DATE = stringPreferencesKey("last_quote_date")
+
+        // Discovery (Online Media)
+        val DISCOVERY_MOVIE_JSON = stringPreferencesKey("discovery_movie_json")
+        val DISCOVERY_ALBUM_JSON = stringPreferencesKey("discovery_album_json")
+        val DISCOVERY_SERIES_JSON = stringPreferencesKey("discovery_series_json")
+        val DISCOVERY_LAST_DATE = stringPreferencesKey("discovery_last_date")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -158,6 +164,23 @@ class AppSettings(private val context: Context) {
             it[LAST_QUOTE_AUTHOR] = author
             it[LAST_QUOTE_LANG] = lang
             it[LAST_QUOTE_DATE] = date
+        }
+    }
+
+    // Discovery Methods
+    val discoveryMovieJson: Flow<String?> = context.dataStore.data.map { it[DISCOVERY_MOVIE_JSON] }
+    val discoveryAlbumJson: Flow<String?> = context.dataStore.data.map { it[DISCOVERY_ALBUM_JSON] }
+    val discoverySeriesJson: Flow<String?> = context.dataStore.data.map { it[DISCOVERY_SERIES_JSON] }
+    val discoveryLastDate: Flow<String?> = context.dataStore.data.map { it[DISCOVERY_LAST_DATE] }
+
+    suspend fun setDiscoveryMedia(type: Int, json: String, date: String) {
+        context.dataStore.edit {
+            when(type) {
+                0 -> it[DISCOVERY_MOVIE_JSON] = json
+                1 -> it[DISCOVERY_ALBUM_JSON] = json
+                else -> it[DISCOVERY_SERIES_JSON] = json
+            }
+            it[DISCOVERY_LAST_DATE] = date
         }
     }
 }

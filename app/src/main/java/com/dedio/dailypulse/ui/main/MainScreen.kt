@@ -157,14 +157,18 @@ fun MainScreen(
             BoxWithConstraints(
                 modifier = modifier
                     .fillMaxSize()
-                    .pointerInput(Unit) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                awaitPointerEvent(PointerEventPass.Initial)
-                                lastInteraction = System.currentTimeMillis()
+                    .then(
+                        if (!isDreamMode) {
+                            Modifier.pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        awaitPointerEvent(PointerEventPass.Initial)
+                                        lastInteraction = System.currentTimeMillis()
+                                    }
+                                }
                             }
-                        }
-                    }
+                        } else Modifier
+                    )
                     .then(
                         if (antiBurnInEnabled) {
                             Modifier.layout { measurable, constraints ->

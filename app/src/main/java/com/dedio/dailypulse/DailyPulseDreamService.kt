@@ -1,10 +1,10 @@
 package com.dedio.dailypulse
 
+import android.os.BatteryManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.BatteryManager
 import android.service.dreams.DreamService
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -25,9 +25,6 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.dedio.dailypulse.theme.DailyPulseTheme
 import com.dedio.dailypulse.ui.main.MainScreen
 
-/**
- * Service that allows DailyPulse to be used as an Android Daydream (Screensaver).
- */
 class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
@@ -37,11 +34,7 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
 
-    private val batteryReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            updateScreenBrightness(intent)
-        }
-    }
+    private var batteryReceiver: BroadcastReceiver? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -52,22 +45,14 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
-        // Configure DreamService
-        isInteractive = true
+        isInteractive = false // Disable interactivity to prevent freezing and conflicts
         isFullscreen = true
         
-        // Initial check for brightness
-        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val currentStatus = registerReceiver(batteryReceiver, filter)
-        updateScreenBrightness(currentStatus)
-
-        val composeView = ComposeView(this)
-        
-        // Set up the necessary owners for Compose to work in a Service
-        // These MUST be set before setContent or any composition begins
-        composeView.setViewTreeLifecycleOwner(this)
-        composeView.setViewTreeViewModelStoreOwner(this)
-        composeView.setViewTreeSavedStateRegistryOwner(this)
+        val composeView = ComposeView(this).apply {
+            setViewTreeLifecycleOwner(this@DailyPulseDreamService)
+            setViewTreeViewModelStoreOwner(this@DailyPulseDreamService)
+            setViewTreeSavedStateRegistryOwner(this@DailyPulseDreamService)
+        }
 
         composeView.setContent {
             DailyPulseTheme {
@@ -81,20 +66,16 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         }
 
         setContentView(composeView)
-    }
 
-    private fun updateScreenBrightness(intent: Intent?) {
-        val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        val plugged = intent?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
-        
-        val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-                (status == BatteryManager.BATTERY_STATUS_FULL) ||
-                (plugged == BatteryManager.BATTERY_PLUGGED_AC) ||
-                (plugged == BatteryManager.BATTERY_PLUGGED_USB) ||
-                (plugged == BatteryManager.BATTERY_PLUGGED_WIRELESS)
-
-        // Keep screen bright if charging, allow dimming if on battery
-        isScreenBright = isCharging
+        // Brightness management
+        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        batteryReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+                isScreenBright = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+            }
+        }
+        registerReceiver(batteryReceiver, filter)
     }
 
     override fun onDreamingStarted() {
@@ -111,16 +92,8 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        try {
-            unregisterReceiver(batteryReceiver)
-        } catch (_: Exception) {
-            // Receiver might not be registered
-        }
-    }
-
-    override fun onDestroy() {
+        batteryReceiver?.let { unregisterReceiver(it) }
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        super.onDestroy()
         viewModelStore.clear()
     }
 }

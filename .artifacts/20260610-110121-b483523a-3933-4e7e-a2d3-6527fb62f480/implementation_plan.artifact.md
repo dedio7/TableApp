@@ -1,41 +1,43 @@
-# Piano di Implementazione - Citazioni Online Dinamiche
+# Piano di Implementazione - Discovery 2.0: Immagini e Wiki Localizzata
 
-Sostituzione delle citazioni statiche con un servizio online multilingua (Italiano/Inglese).
-
-## Obiettivo
-Attualmente le citazioni sono salvate nel codice e si ripetono ogni pochi giorni. L'obiettivo è collegare l'app a un'API esterna per avere una citazione diversa ogni giorno, mantenendo il supporto sia per l'Italiano che per l'Inglese.
-
-## Servizi Identificati
-- **Multilingual Quote API**: Un servizio open-source che supporta nativamente `it` ed `en`.
-- **ZenQuotes**: Ottimo per l'inglese (come backup).
+Aggiornamento del sistema Discovery per mostrare le locandine originali e aprire la pagina Wikipedia nella lingua corretta.
 
 ## Proposed Changes
 
-### 1. Data Layer (Repository)
+### 1. Data Layer (Miglioramento Repository)
 
-#### [NEW] [InspirationRepository.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/InspirationRepository.kt)
-- Gestione chiamate `GET` verso l'API delle citazioni.
-- Logica di parsing JSON per estrarre testo e autore.
-- Implementazione di un timeout rapido per non rallentare l'avvio dell'app.
+#### [DiscoveryRepository.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/DiscoveryRepository.kt)
+- Estrarre l'URL dell'immagine (locandina/copertina) dal feed Apple RSS.
+- Trasformare l'URL in alta risoluzione (da 100x100 a 600x600).
+- Implementare la logica `getLocalizedWikiUrl(title, lang)` che genera automaticamente il link:
+    - `https://it.wikipedia.org/wiki/Titolo_Film` (se l'app è in ITA)
+    - `https://en.wikipedia.org/wiki/Movie_Title` (se l'app è in ENG)
 
-### 2. UI Layer (Widget)
+### 2. UI Layer (Widget & Immagini)
 
-#### [InspirationWidget.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/InspirationWidget.kt)
-- Aggiunta di un caricamento asincrono (`LaunchedEffect`).
-- **Sistema di Fallback**: Se internet è assente o l'API non risponde, l'app userà istantaneamente la lista locale di citazioni (quelle attuali).
-- Cache giornaliera: La citazione scaricata verrà salvata temporaneamente per la sessione corrente.
+#### [DiscoveryWidget.kt](file:///C:/Android Project/DailyPulse/app/src/main/java/com/dedio/dailypulse/inspiration/DiscoveryWidget.kt)
+- Integrazione della libreria **Coil** per il caricamento fluido delle immagini.
+- Sostituzione dell'emoji statica con la locandina reale.
+- Gestione di un "placeholder" elegante mentre l'immagine scarica.
+- Supporto per angoli arrotondati e ombre sulle locandine per mantenere lo stile Neon.
 
 ---
 
 ## Prossimi Passaggi
-1. Creazione della classe `InspirationRepository`.
-2. Modifica del widget per gestire lo stato "Online" vs "Offline".
+
+### [Componente Dati]
+- Aggiornamento `MediaItem` per includere `imageUrl`.
+- Refactoring `DiscoveryRepository` per catturare l'immagine dai metadati Apple.
+
+### [Componente UI]
+- Layout aggiornato con immagine a sinistra e testi a destra.
+- Logica di navigazione verso Wikipedia in base alla lingua attiva.
 
 ---
 
 ## Piano di Verifica
 
 ### Manual Verification
-1. **Verifica Online**: Avvio l'app e controllo che la citazione sia diversa da quelle predefinite.
-2. **Verifica Offline**: Metto il dispositivo in modalità aereo e verifico che compaia una citazione della lista locale senza errori o blocchi.
-3. **Verifica Lingua**: Cambio lingua nelle impostazioni e verifico che la citazione cambi lingua coerentemente.
+1. **Verifica Immagine**: Verificherò che compaia la locandina reale del film o la copertina del disco invece dell'emoji.
+2. **Verifica Wikipedia**: Cliccherò su un film (es. "Interstellar") e verificherò che si apra la pagina in italiano se l'app è in ITA.
+3. **Verifica Qualità**: Verificherò che le immagini non siano sgranate (usando il trucco della risoluzione 600x600).
