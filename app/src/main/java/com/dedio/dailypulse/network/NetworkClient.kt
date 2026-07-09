@@ -6,11 +6,11 @@ import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
-import java.net.InetAddress
 import java.net.URL
 
 /**
- * Unified network client with a unique User-Agent and deep connectivity diagnostics.
+ * Unified network client with a unique User-Agent.
+ * Removed unreliable pre-flight checks to ensure maximum compatibility.
  */
 object NetworkClient {
     private const val TAG = "NetworkClient"
@@ -20,16 +20,11 @@ object NetworkClient {
         return withContext(Dispatchers.IO) {
             var connection: HttpURLConnection? = null
             try {
-                // Pre-flight check: Can we resolve any address?
-                if (!isGoogleReachable()) {
-                    return@withContext NetworkResult.Error("Device Internet Unreachable")
-                }
-
                 val url = URL(urlString)
                 connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
-                connection.connectTimeout = 15000
-                connection.readTimeout = 15000
+                connection.connectTimeout = 20000 // Increased to 20s
+                connection.readTimeout = 20000    // Increased to 20s
                 connection.setRequestProperty("User-Agent", USER_AGENT)
                 connection.setRequestProperty("Accept", "application/json")
 
@@ -49,24 +44,11 @@ object NetworkClient {
                     NetworkResult.Error("HTTP $responseCode", responseCode)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Connection Exception: ${e.message}")
+                Log.e(TAG, "Connection Exception for $urlString: ${e.message}")
                 NetworkResult.Error(e.message ?: "Network Failure")
             } finally {
                 connection?.disconnect()
             }
-        }
-    }
-
-    /**
-     * Checks if Google DNS is reachable to distinguish between server error and device internet error.
-     */
-    private fun isGoogleReachable(): Boolean {
-        return try {
-            val timeoutMs = 2000
-            val address = InetAddress.getByName("8.8.8.8")
-            address.isReachable(timeoutMs)
-        } catch (e: Exception) {
-            false
         }
     }
 }

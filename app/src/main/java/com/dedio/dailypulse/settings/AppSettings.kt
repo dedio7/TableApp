@@ -57,6 +57,9 @@ class AppSettings(private val context: Context) {
         val LAST_QUOTE_AUTHOR = stringPreferencesKey("last_quote_author")
         val LAST_QUOTE_LANG = stringPreferencesKey("last_quote_lang")
         val LAST_QUOTE_DATE = stringPreferencesKey("last_quote_date")
+
+        val WORLD_CLOCK_ENABLED = booleanPreferencesKey("world_clock_enabled")
+        val WORLD_CLOCK_CITIES = stringSetPreferencesKey("world_clock_cities")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -160,4 +163,10 @@ class AppSettings(private val context: Context) {
             it[LAST_QUOTE_DATE] = date
         }
     }
+
+    val worldClockEnabled: Flow<Boolean> = context.dataStore.data.map { it[WORLD_CLOCK_ENABLED] ?: false }
+    suspend fun setWorldClockEnabled(enabled: Boolean) { context.dataStore.edit { it[WORLD_CLOCK_ENABLED] = enabled } }
+
+    val worldClockCities: Flow<Set<String>> = context.dataStore.data.map { it[WORLD_CLOCK_CITIES] ?: setOf("Europe/London", "America/New_York", "Asia/Tokyo") }
+    suspend fun setWorldClockCities(cities: Set<String>) { context.dataStore.edit { it[WORLD_CLOCK_CITIES] = cities } }
 }

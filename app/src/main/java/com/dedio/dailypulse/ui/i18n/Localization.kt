@@ -88,6 +88,8 @@ data class Strings(
     val orientationAuto: String,
     val orientationPortrait: String,
     val orientationLandscape: String,
+    val worldClockLabel: String,
+    val worldClockSection: String,
 )
 
 val ItalianStrings = Strings(
@@ -173,7 +175,9 @@ val ItalianStrings = Strings(
     screenOrientationLabel = "Orientamento Schermo",
     orientationAuto = "AUTO",
     orientationPortrait = "VERTICALE",
-    orientationLandscape = "ORIZZONTALE"
+    orientationLandscape = "ORIZZONTALE",
+    worldClockLabel = "Orologio Mondiale",
+    worldClockSection = "Mondiale"
 )
 
 val EnglishStrings = Strings(
@@ -259,7 +263,9 @@ val EnglishStrings = Strings(
     screenOrientationLabel = "Screen Orientation",
     orientationAuto = "AUTO",
     orientationPortrait = "PORTRAIT",
-    orientationLandscape = "LANDSCAPE"
+    orientationLandscape = "LANDSCAPE",
+    worldClockLabel = "World Clock",
+    worldClockSection = "World"
 )
 
 val LocalStrings = staticCompositionLocalOf { ItalianStrings }

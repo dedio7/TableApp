@@ -100,13 +100,18 @@ fun SettingsPanel(
     val mediaEnabled by appSettings.mediaEnabled.collectAsStateWithLifecycle(initialValue = true)
     val calendarEnabled by appSettings.calendarEnabled.collectAsStateWithLifecycle(initialValue = true)
     val timerEnabled by appSettings.timerEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val worldClockEnabled by appSettings.worldClockEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val worldClockCities by appSettings.worldClockCities.collectAsStateWithLifecycle(initialValue = emptySet())
 
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
     val searchResults = remember { mutableStateListOf<WeatherLocation>() }
 
-    BackHandler(enabled = visible) {
-        onDismiss()
+    val backDispatcher = androidx.activity.compose.LocalOnBackPressedDispatcherOwner.current
+    if (backDispatcher != null) {
+        BackHandler(enabled = visible) {
+            onDismiss()
+        }
     }
 
     LaunchedEffect(cityQuery) {
@@ -280,7 +285,45 @@ fun SettingsPanel(
                     SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } }, horizontalPadding = 0.dp)
                     SettingSwitch(label = strings.pomodoroLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } }, horizontalPadding = 0.dp)
                     SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } }, horizontalPadding = 0.dp)
+                    SettingSwitch(label = strings.worldClockLabel, checked = worldClockEnabled, onCheckedChange = { scope.launch { appSettings.setWorldClockEnabled(it) } }, horizontalPadding = 0.dp)
                     
+                    if (worldClockEnabled) {
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            val allTimeZones = listOf(
+                                "Pacific/Midway", "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles",
+                                "America/Denver", "America/Chicago", "America/New_York", "America/Halifax",
+                                "America/Sao_Paulo", "Atlantic/South_Georgia", "Atlantic/Azores", "Europe/London",
+                                "Europe/Rome", "Africa/Cairo", "Europe/Moscow", "Asia/Dubai",
+                                "Asia/Karachi", "Asia/Dhaka", "Asia/Bangkok", "Asia/Singapore",
+                                "Asia/Tokyo", "Australia/Sydney", "Pacific/Guadalcanal", "Pacific/Auckland"
+                            )
+                            allTimeZones.forEach { tz ->
+                                val isSelected = tz in worldClockCities
+                                val cityName = tz.substringAfterLast('/').replace('_', ' ')
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg)
+                                        .border(1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(6.dp))
+                                        .clickable { 
+                                            scope.launch { 
+                                                val current = worldClockCities.toMutableSet()
+                                                if (isSelected) current.remove(tz) else current.add(tz)
+                                                appSettings.setWorldClockCities(current)
+                                            } 
+                                        }
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(text = cityName, color = if (isSelected) AccentBlue else TextPrimary, fontSize = 10.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
                     Spacer(modifier = Modifier.height(8.dp))

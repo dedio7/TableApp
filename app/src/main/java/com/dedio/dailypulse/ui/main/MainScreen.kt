@@ -42,6 +42,7 @@ import com.dedio.dailypulse.calendar.CalendarWidget
 import com.dedio.dailypulse.clock.ClockDisplay
 import com.dedio.dailypulse.clock.ClockType
 import com.dedio.dailypulse.clock.DateWidget
+import com.dedio.dailypulse.clock.WorldClockWidget
 import com.dedio.dailypulse.inspiration.DiscoveryWidget
 import com.dedio.dailypulse.inspiration.InspirationWidget
 import com.dedio.dailypulse.media.MediaWidget
@@ -128,11 +129,13 @@ fun MainScreen(
     val inspirationEnabled by viewModel.inspirationEnabled.collectAsStateWithLifecycle()
     val discoveryEnabled by viewModel.discoveryEnabled.collectAsStateWithLifecycle()
     val sunriseModeEnabled by viewModel.sunriseModeEnabled.collectAsStateWithLifecycle()
+    val worldClockEnabled by viewModel.worldClockEnabled.collectAsStateWithLifecycle()
+    val worldClockCities by viewModel.worldClockCities.collectAsStateWithLifecycle()
     val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
     val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
     val nightBrightness by viewModel.nightBrightness.collectAsStateWithLifecycle()
 
-    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled
+    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled || worldClockEnabled
 
     val sunriseManager = remember { SunriseManager(context) }
     val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
@@ -344,6 +347,7 @@ fun MainScreen(
                         }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
                                 if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
                                 if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
@@ -445,6 +449,7 @@ fun MainScreen(
                         }
                         if (anyWidgetEnabled) {
                             Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)) {
+                                if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
                                 if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
                                 if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
                                 if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())

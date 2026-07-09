@@ -56,6 +56,8 @@ class MainScreenViewModel(
     val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val discoveryEnabled = appSettings.discoveryEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val worldClockEnabled = appSettings.worldClockEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val worldClockCities = appSettings.worldClockCities.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)
     val nightModeEnd = appSettings.nightModeEnd.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)
