@@ -68,14 +68,16 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
         setContentView(composeView)
 
         // Brightness management
-        val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        batteryReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-                isScreenBright = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+        if (batteryReceiver == null) {
+            val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            batteryReceiver = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+                    isScreenBright = (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+                }
             }
+            registerReceiver(batteryReceiver, filter)
         }
-        registerReceiver(batteryReceiver, filter)
     }
 
     override fun onDreamingStarted() {
@@ -92,7 +94,14 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        batteryReceiver?.let { unregisterReceiver(it) }
+        batteryReceiver?.let { 
+            try {
+                unregisterReceiver(it)
+            } catch (_: IllegalArgumentException) {
+                // Receiver not registered
+            }
+        }
+        batteryReceiver = null
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         viewModelStore.clear()
     }
