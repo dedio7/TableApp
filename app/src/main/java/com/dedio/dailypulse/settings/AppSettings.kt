@@ -60,6 +60,9 @@ class AppSettings(private val context: Context) {
 
         val WORLD_CLOCK_ENABLED = booleanPreferencesKey("world_clock_enabled")
         val WORLD_CLOCK_CITIES = stringSetPreferencesKey("world_clock_cities")
+        
+        val STATS_ENABLED = booleanPreferencesKey("stats_enabled")
+        val WIDGET_ORDER = stringPreferencesKey("widget_order")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -169,4 +172,15 @@ class AppSettings(private val context: Context) {
 
     val worldClockCities: Flow<Set<String>> = context.dataStore.data.map { it[WORLD_CLOCK_CITIES] ?: setOf("Europe/London", "America/New_York", "Asia/Tokyo") }
     suspend fun setWorldClockCities(cities: Set<String>) { context.dataStore.edit { it[WORLD_CLOCK_CITIES] = cities } }
+
+    val statsEnabled: Flow<Boolean> = context.dataStore.data.map { it[STATS_ENABLED] ?: false }
+    suspend fun setStatsEnabled(enabled: Boolean) { context.dataStore.edit { it[STATS_ENABLED] = enabled } }
+
+    val widgetOrder: Flow<List<String>> = context.dataStore.data.map { 
+        val order = it[WIDGET_ORDER] ?: "WORLD_CLOCK,STATS,WEATHER,CALENDAR,MEDIA,TIMER,INSPIRATION,DISCOVERY"
+        order.split(",")
+    }
+    suspend fun setWidgetOrder(order: List<String>) {
+        context.dataStore.edit { it[WIDGET_ORDER] = order.joinToString(",") }
+    }
 }

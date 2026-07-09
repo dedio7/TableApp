@@ -1,5 +1,7 @@
 package com.dedio.dailypulse.media
 
+import android.content.ComponentName
+import android.os.Build
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 
@@ -10,6 +12,17 @@ import android.service.notification.StatusBarNotification
  */
 class SpotifyNotificationService : NotificationListenerService() {
     
+    override fun onListenerConnected() {
+        super.onListenerConnected()
+        // Listener connesso correttamente
+    }
+
+    override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        // Rimosso requestRebind da qui per evitare conflitti con il sistema
+        // durante la fase di scollegamento (es. update dell'app).
+    }
+
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         // Non abbiamo bisogno di processare le singole notifiche qui
         // perché usiamo il MediaSessionManager, ma il servizio deve esistere.

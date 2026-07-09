@@ -102,6 +102,8 @@ fun SettingsPanel(
     val timerEnabled by appSettings.timerEnabled.collectAsStateWithLifecycle(initialValue = true)
     val worldClockEnabled by appSettings.worldClockEnabled.collectAsStateWithLifecycle(initialValue = false)
     val worldClockCities by appSettings.worldClockCities.collectAsStateWithLifecycle(initialValue = emptySet())
+    val statsEnabled by appSettings.statsEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val widgetOrder by appSettings.widgetOrder.collectAsStateWithLifecycle(initialValue = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY"))
 
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
@@ -254,8 +256,41 @@ fun SettingsPanel(
 
                 // ─── 3. WIDGETS & FEATURES ───
                 SettingGroup(title = strings.widgetsFeaturesSection) {
-                    SettingSwitch(label = strings.weatherEnabledLabel, checked = weatherEnabled, onCheckedChange = { scope.launch { appSettings.setWeatherEnabled(it) } }, horizontalPadding = 0.dp)
+                    SettingLabel(label = if(appLanguage == "IT") "GESTIONE WIDGET (On/Off e Ordine)" else "WIDGET MANAGEMENT (On/Off & Order)", horizontalPadding = 0.dp)
+                    WidgetManagerList(
+                        currentOrder = widgetOrder,
+                        onOrderChange = { scope.launch { appSettings.setWidgetOrder(it) } },
+                        onToggle = { id, enabled ->
+                            scope.launch {
+                                when(id) {
+                                    "WORLD_CLOCK" -> appSettings.setWorldClockEnabled(enabled)
+                                    "STATS" -> appSettings.setStatsEnabled(enabled)
+                                    "WEATHER" -> appSettings.setWeatherEnabled(enabled)
+                                    "CALENDAR" -> appSettings.setCalendarEnabled(enabled)
+                                    "MEDIA" -> appSettings.setMediaEnabled(enabled)
+                                    "TIMER" -> appSettings.setTimerEnabled(enabled)
+                                    "INSPIRATION" -> appSettings.setInspirationEnabled(enabled)
+                                    "DISCOVERY" -> appSettings.setDiscoveryEnabled(enabled)
+                                }
+                            }
+                        },
+                        states = mapOf(
+                            "WORLD_CLOCK" to worldClockEnabled,
+                            "STATS" to statsEnabled,
+                            "WEATHER" to weatherEnabled,
+                            "CALENDAR" to calendarEnabled,
+                            "MEDIA" to mediaEnabled,
+                            "TIMER" to timerEnabled,
+                            "INSPIRATION" to inspirationEnabled,
+                            "DISCOVERY" to discoveryEnabled
+                        ),
+                        appLanguage = appLanguage
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     if (weatherEnabled) {
+                        SettingLabel(label = strings.weatherEnabledLabel.uppercase(), horizontalPadding = 0.dp)
                         SettingSwitch(label = strings.gpsLabel, checked = weatherUseGps, onCheckedChange = { scope.launch { appSettings.setWeatherUseGps(it) } }, horizontalPadding = 0.dp)
                         
                         if (!weatherUseGps) {
@@ -278,16 +313,11 @@ fun SettingsPanel(
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
                     
-                    SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } }, horizontalPadding = 0.dp)
-                    SettingSwitch(label = strings.mediaEnabledLabel, checked = mediaEnabled, onCheckedChange = { scope.launch { appSettings.setMediaEnabled(it) } }, horizontalPadding = 0.dp)
-                    SettingSwitch(label = strings.pomodoroLabel, checked = timerEnabled, onCheckedChange = { scope.launch { appSettings.setTimerEnabled(it) } }, horizontalPadding = 0.dp)
-                    SettingSwitch(label = strings.calendarEnabledLabel, checked = calendarEnabled, onCheckedChange = { scope.launch { appSettings.setCalendarEnabled(it) } }, horizontalPadding = 0.dp)
-                    SettingSwitch(label = strings.worldClockLabel, checked = worldClockEnabled, onCheckedChange = { scope.launch { appSettings.setWorldClockEnabled(it) } }, horizontalPadding = 0.dp)
-                    
                     if (worldClockEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SettingLabel(label = strings.worldClockLabel.uppercase(), horizontalPadding = 0.dp)
                         FlowRow(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -348,8 +378,7 @@ fun SettingsPanel(
                         }
                     }
                     
-                    SettingSwitch(label = strings.inspirationEnabledLabel, checked = inspirationEnabled, onCheckedChange = { scope.launch { appSettings.setInspirationEnabled(it) } }, horizontalPadding = 0.dp)
-                    SettingSwitch(label = if(appLanguage == "IT") "Abilita Discovery" else "Enable Discovery", checked = discoveryEnabled, onCheckedChange = { scope.launch { appSettings.setDiscoveryEnabled(it) } }, horizontalPadding = 0.dp)
+                    SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } }, horizontalPadding = 0.dp)
                 }
 
                 // ─── 4. DISPLAY OPTIONS ───
@@ -379,13 +408,106 @@ fun SettingsPanel(
 
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "DailyPulse Version 1.3.2 (Code 31)",
+                    text = "DailyPulse Version 1.3.3 (Code 32)",
                     color = TextSecondary.copy(alpha = 0.5f),
                     fontSize = 10.sp,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun WidgetManagerList(
+    currentOrder: List<String>,
+    onOrderChange: (List<String>) -> Unit,
+    onToggle: (String, Boolean) -> Unit,
+    states: Map<String, Boolean>,
+    appLanguage: String
+) {
+    val widgetNames = mapOf(
+        "WORLD_CLOCK" to (if (appLanguage == "IT") "Orologio Mondiale" else "World Clock"),
+        "STATS" to (if (appLanguage == "IT") "Statistiche Sistema" else "System Stats"),
+        "WEATHER" to (if (appLanguage == "IT") "Meteo" else "Weather"),
+        "CALENDAR" to (if (appLanguage == "IT") "Calendario" else "Calendar"),
+        "MEDIA" to (if (appLanguage == "IT") "Media Player" else "Media Player"),
+        "TIMER" to (if (appLanguage == "IT") "Timer / Pomodoro" else "Timer / Pomodoro"),
+        "INSPIRATION" to (if (appLanguage == "IT") "Citazione del Giorno" else "Quote of the Day"),
+        "DISCOVERY" to (if (appLanguage == "IT") "Discovery" else "Discovery")
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        currentOrder.forEachIndexed { index, id ->
+            val isEnabled = states[id] ?: false
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isEnabled) SurfaceBg else SurfaceBg.copy(alpha = 0.4f))
+                    .border(1.dp, if (isEnabled) DividerColor else DividerColor.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 1. Toggle Switch
+                Switch(
+                    checked = isEnabled,
+                    onCheckedChange = { onToggle(id, it) },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = AccentBlue,
+                        uncheckedThumbColor = TextSecondary,
+                        uncheckedTrackColor = DividerColor
+                    ),
+                    modifier = Modifier.scale(0.6f)
+                )
+                
+                // 2. Label
+                Text(
+                    text = widgetNames[id] ?: id,
+                    color = if (isEnabled) TextPrimary else TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = if (isEnabled) FontWeight.Bold else FontWeight.Normal,
+                    modifier = Modifier.weight(1f).padding(start = 4.dp)
+                )
+                
+                // 3. Reorder Arrows
+                Row {
+                    if (index > 0) {
+                        IconButton(
+                            modifier = Modifier.size(28.dp),
+                            onClick = {
+                                val newList = currentOrder.toMutableList()
+                                val item = newList.removeAt(index)
+                                newList.add(index - 1, item)
+                                onOrderChange(newList)
+                            }
+                        ) {
+                            Text("▲", color = if (isEnabled) AccentBlue else TextSecondary.copy(alpha = 0.3f), fontSize = 12.sp)
+                        }
+                    }
+                    if (index < currentOrder.size - 1) {
+                        IconButton(
+                            modifier = Modifier.size(28.dp),
+                            onClick = {
+                                val newList = currentOrder.toMutableList()
+                                val item = newList.removeAt(index)
+                                newList.add(index + 1, item)
+                                onOrderChange(newList)
+                            }
+                        ) {
+                            Text("▼", color = if (isEnabled) AccentBlue else TextSecondary.copy(alpha = 0.3f), fontSize = 12.sp)
+                        }
+                    }
+                }
             }
         }
     }

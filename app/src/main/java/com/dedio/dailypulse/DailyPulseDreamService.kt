@@ -45,7 +45,7 @@ class DailyPulseDreamService : DreamService(), LifecycleOwner, ViewModelStoreOwn
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
-        isInteractive = false // Disable interactivity to prevent freezing and conflicts
+        isInteractive = true // Enable interactivity to allow discovery gestures
         isFullscreen = true
         
         val composeView = ComposeView(this).apply {

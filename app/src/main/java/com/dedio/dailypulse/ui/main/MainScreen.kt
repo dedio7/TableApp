@@ -10,6 +10,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -48,6 +50,7 @@ import com.dedio.dailypulse.inspiration.InspirationWidget
 import com.dedio.dailypulse.media.MediaWidget
 import com.dedio.dailypulse.news.NewsTicker
 import com.dedio.dailypulse.settings.AppSettings
+import com.dedio.dailypulse.stats.StatsWidget
 import com.dedio.dailypulse.settings.SettingsPanel
 import com.dedio.dailypulse.sunrise.SunriseManager
 import com.dedio.dailypulse.timer.TimerWidget
@@ -55,6 +58,66 @@ import com.dedio.dailypulse.ui.i18n.ProvideLocalization
 import com.dedio.dailypulse.weather.WeatherWidget
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
+
+@Composable
+private fun DiscoveryPager(
+    textColor: Color,
+    isSmallHeight: Boolean,
+    lastInteraction: () -> Unit
+) {
+    var motivationIndex by remember { mutableIntStateOf(1) } // Default to Movie
+    val pages = listOf(1, 2, 3) // Movie, Album, TV Series
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .pointerInput(Unit) {
+                    var totalDrag = 0f
+                    detectHorizontalDragGestures(onDragEnd = {
+                        if (kotlin.math.abs(totalDrag) > 60f) {
+                            val currentIndexInList = pages.indexOf(motivationIndex).coerceAtLeast(0)
+                            val nextIndexInList = if (totalDrag < 0) {
+                                (currentIndexInList + 1) % pages.size
+                            } else {
+                                (currentIndexInList - 1 + pages.size) % pages.size
+                            }
+                            motivationIndex = pages[nextIndexInList]
+                        }
+                        totalDrag = 0f
+                    }) { change, dragAmount ->
+                        change.consume()
+                        totalDrag += dragAmount
+                        lastInteraction()
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Crossfade(targetState = motivationIndex, label = "motivationFade") { index ->
+                when (index) {
+                    1 -> DiscoveryWidget(index = 0, textColor = textColor) // Movie
+                    2 -> DiscoveryWidget(index = 1, textColor = textColor) // Album
+                    3 -> DiscoveryWidget(index = 2, textColor = textColor) // TV Series
+                }
+            }
+        }
+
+        // Pager Indicators (Dots)
+        Row(
+            modifier = Modifier.padding(top = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            pages.forEach { page ->
+                Box(
+                    modifier = Modifier
+                        .size(if (motivationIndex == page) 6.dp else 4.dp)
+                        .clip(CircleShape)
+                        .background(color = if (motivationIndex == page) textColor else textColor.copy(alpha = 0.3f))
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun MainScreen(
@@ -131,11 +194,13 @@ fun MainScreen(
     val sunriseModeEnabled by viewModel.sunriseModeEnabled.collectAsStateWithLifecycle()
     val worldClockEnabled by viewModel.worldClockEnabled.collectAsStateWithLifecycle()
     val worldClockCities by viewModel.worldClockCities.collectAsStateWithLifecycle()
+    val statsEnabled by viewModel.statsEnabled.collectAsStateWithLifecycle()
+    val widgetOrder by viewModel.widgetOrder.collectAsStateWithLifecycle()
     val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
     val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
     val nightBrightness by viewModel.nightBrightness.collectAsStateWithLifecycle()
 
-    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled || worldClockEnabled
+    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled || worldClockEnabled || statsEnabled || inspirationEnabled || discoveryEnabled
 
     val sunriseManager = remember { SunriseManager(context) }
     val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
@@ -165,11 +230,9 @@ fun MainScreen(
                     .then(
                         if (!isDreamMode) {
                             Modifier.pointerInput(Unit) {
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        awaitPointerEvent(PointerEventPass.Initial)
-                                        lastInteraction = System.currentTimeMillis()
-                                    }
+                                awaitEachGesture {
+                                    awaitFirstDown(pass = PointerEventPass.Initial)
+                                    lastInteraction = System.currentTimeMillis()
                                 }
                             }
                         } else Modifier
@@ -283,75 +346,26 @@ fun MainScreen(
                         }
                         DateWidget(textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
                         Spacer(modifier = Modifier.height(24.dp))
-                        if (inspirationEnabled || discoveryEnabled) {
-                            val pages = remember(inspirationEnabled, discoveryEnabled) {
-                                mutableListOf<Int>().apply {
-                                    if (inspirationEnabled) add(0)
-                                    if (discoveryEnabled) { add(1); add(2); add(3) }
-                                }
-                            }
-                            
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .pointerInput(inspirationEnabled, discoveryEnabled) {
-                                            var totalDrag = 0f
-                                            detectHorizontalDragGestures(onDragEnd = {
-                                                if (kotlin.math.abs(totalDrag) > 60f) {
-                                                    val currentIndexInList = pages.indexOf(motivationIndex).coerceAtLeast(0)
-                                                    val nextIndexInList = if (totalDrag < 0) {
-                                                        (currentIndexInList + 1) % pages.size
-                                                    } else {
-                                                        (currentIndexInList - 1 + pages.size) % pages.size
-                                                    }
-                                                    motivationIndex = pages[nextIndexInList]
-                                                }
-                                                totalDrag = 0f
-                                            }) { change, dragAmount ->
-                                                change.consume()
-                                                totalDrag += dragAmount
-                                                lastInteraction = System.currentTimeMillis()
-                                            }
-                                        },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Crossfade(targetState = motivationIndex, label = "motivationFade") { index ->
-                                        when (index) {
-                                            0 -> InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
-                                            1 -> DiscoveryWidget(index = 0, textColor = clockColor) // Movie
-                                            2 -> DiscoveryWidget(index = 1, textColor = clockColor) // Album
-                                            3 -> DiscoveryWidget(index = 2, textColor = clockColor) // TV Series
-                                        }
-                                    }
-                                }
-                                
-                                // Pager Indicators (Dots)
-                                if (pages.size > 1) {
-                                    Row(
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        pages.forEach { page ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(if (motivationIndex == page) 6.dp else 4.dp)
-                                                    .clip(CircleShape)
-                                                    .background(color = if (motivationIndex == page) clockColor else clockColor.copy(alpha = 0.3f))
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(32.dp))
-                        }
                         if (anyWidgetEnabled) {
-                            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
-                                if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
-                                if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
-                                if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
-                                if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                widgetOrder.forEach { widgetId ->
+                                    when (widgetId) {
+                                        "WORLD_CLOCK" -> if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
+                                        "STATS" -> if (statsEnabled) StatsWidget(textColor = clockColor)
+                                        "WEATHER" -> if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+                                        "CALENDAR" -> if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
+                                        "MEDIA" -> if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
+                                        "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
+                                        "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+                                        "DISCOVERY" -> if (discoveryEnabled) {
+                                            DiscoveryPager(textColor = clockColor, isSmallHeight = isSmallHeight, lastInteraction = { lastInteraction = System.currentTimeMillis() })
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -385,75 +399,27 @@ fun MainScreen(
                             }
                             DateWidget(modifier = Modifier.wrapContentWidth(), textColor = clockColor, dateFormat = dateFormat, isFullScreen = !anyWidgetEnabled)
                             Spacer(modifier = Modifier.height(if (isSmallHeight) 12.dp else 24.dp))
-                            if (inspirationEnabled || discoveryEnabled) {
-                                val pages = remember(inspirationEnabled, discoveryEnabled) {
-                                    mutableListOf<Int>().apply {
-                                        if (inspirationEnabled) add(0)
-                                        if (discoveryEnabled) { add(1); add(2); add(3) }
-                                    }
-                                }
-
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .pointerInput(inspirationEnabled, discoveryEnabled) {
-                                                var totalDrag = 0f
-                                                detectHorizontalDragGestures(onDragEnd = {
-                                                    if (kotlin.math.abs(totalDrag) > 60f) {
-                                                        val currentIndexInList = pages.indexOf(motivationIndex).coerceAtLeast(0)
-                                                        val nextIndexInList = if (totalDrag < 0) {
-                                                            (currentIndexInList + 1) % pages.size
-                                                        } else {
-                                                            (currentIndexInList - 1 + pages.size) % pages.size
-                                                        }
-                                                        motivationIndex = pages[nextIndexInList]
-                                                    }
-                                                    totalDrag = 0f
-                                                }) { change, dragAmount ->
-                                                    change.consume()
-                                                    totalDrag += dragAmount
-                                                    lastInteraction = System.currentTimeMillis()
-                                                }
-                                            },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Crossfade(targetState = motivationIndex, label = "motivationFade") { index ->
-                                            when (index) {
-                                                0 -> InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
-                                                1 -> DiscoveryWidget(index = 0, textColor = clockColor) // Movie
-                                                2 -> DiscoveryWidget(index = 1, textColor = clockColor) // Album
-                                                3 -> DiscoveryWidget(index = 2, textColor = clockColor) // TV Series
-                                            }
-                                        }
-                                    }
-
-                                    // Pager Indicators (Dots)
-                                    if (pages.size > 1) {
-                                        Row(
-                                            modifier = Modifier.padding(top = 4.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            pages.forEach { page ->
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(if (motivationIndex == page) 6.dp else 4.dp)
-                                                        .clip(CircleShape)
-                                                        .background(color = if (motivationIndex == page) clockColor else clockColor.copy(alpha = 0.3f))
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                         }
                         if (anyWidgetEnabled) {
-                            Column(modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)) {
-                                if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
-                                if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
-                                if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
-                                if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
-                                if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
+                            Column(
+                                modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
+                            ) {
+                                widgetOrder.forEach { widgetId ->
+                                    when (widgetId) {
+                                        "WORLD_CLOCK" -> if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
+                                        "STATS" -> if (statsEnabled) StatsWidget(textColor = clockColor)
+                                        "WEATHER" -> if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+                                        "CALENDAR" -> if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
+                                        "MEDIA" -> if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
+                                        "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
+                                        "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+                                        "DISCOVERY" -> if (discoveryEnabled) {
+                                            DiscoveryPager(textColor = clockColor, isSmallHeight = isSmallHeight, lastInteraction = { lastInteraction = System.currentTimeMillis() })
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

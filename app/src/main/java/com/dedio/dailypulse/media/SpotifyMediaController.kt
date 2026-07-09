@@ -8,6 +8,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.provider.Settings
+import android.service.notification.NotificationListenerService
 import android.view.KeyEvent
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.ImageBitmap
@@ -79,7 +80,9 @@ fun rememberMediaController(): MediaInfo {
         }
     }
 
-    DisposableEffect(context, hasPermission, strings) {
+    var refreshTrigger by remember { mutableIntStateOf(0) }
+
+    DisposableEffect(context, hasPermission, strings, refreshTrigger) {
         if (!hasPermission) return@DisposableEffect onDispose {}
 
         val sessionManager = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
@@ -176,10 +179,17 @@ fun rememberMediaController(): MediaInfo {
     // Modern Coroutine-based loop instead of Timer to prevent thread-safety issues
     LaunchedEffect(hasPermission) {
         if (!hasPermission) return@LaunchedEffect
+        
+        // Forza un re-bind del servizio quando l'app è attiva per risolvere problemi di sincronizzazione del sistema
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            try {
+                NotificationListenerService.requestRebind(ComponentName(context, SpotifyNotificationService::class.java))
+            } catch (_: Exception) {}
+        }
+
         while (isActive) {
             delay(5000L)
-            // Re-trigger the controller update if needed
-            // (The callback handles most changes, but we check for new sessions periodically)
+            refreshTrigger++ // Trigger a check for new media sessions
         }
     }
 

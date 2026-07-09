@@ -58,6 +58,8 @@ class MainScreenViewModel(
     val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val worldClockEnabled = appSettings.worldClockEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val worldClockCities = appSettings.worldClockCities.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+    val statsEnabled = appSettings.statsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val widgetOrder = appSettings.widgetOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER"))
 
     val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)
     val nightModeEnd = appSettings.nightModeEnd.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)

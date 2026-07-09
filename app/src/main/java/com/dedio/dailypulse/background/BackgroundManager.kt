@@ -27,7 +27,16 @@ enum class Atmosphere(val displayName: String, val colors: List<Color>) {
     SOLAR_FLARE("Solar Flare", listOf(Color(0xFF2B0000), Color(0xFF5E1914), Color(0xFFD4A017), Color(0xFFFF5400))),
     GOLDEN_HOUR("Golden Hour", listOf(Color(0xFF450A0A), Color(0xFF78350F), Color(0xFF92400E), Color(0xFFB45309))),
     NORDIC_AURORA("Nordic Aurora", listOf(Color(0xFF064E3B), Color(0xFF0F172A), Color(0xFF4C1D95), Color(0xFF10b981))),
-    FROZEN_TUNDRA("Frozen Tundra", listOf(Color(0xFF0A1931), Color(0xFF185ADB), Color(0xFFEFEFEF), Color(0xFF93C5FD)))
+    FROZEN_TUNDRA("Frozen Tundra", listOf(Color(0xFF0A1931), Color(0xFF185ADB), Color(0xFFEFEFEF), Color(0xFF93C5FD))),
+    GEMINI_ANIMATED("Gemini (Animated)", listOf(
+        Color(0xFF020617), // Deep Navy Base
+        Color(0xFF4285F4), // Google Blue
+        Color(0xFF9B72CB), // Purple
+        Color(0xFFD96570), // Soft Red
+        Color(0xFF1AA7EC), // Electric Blue
+        Color(0xFF00F5D4), // Teal/Green
+        Color(0xFFF4B400)  // Golden Yellow
+    ))
 }
 
 data class BackgroundConfig(
@@ -78,38 +87,91 @@ fun AmbientBackground(
             // 1. Solid Base
             drawRect(baseColor)
 
-            // 2. Dynamic Blobs based on color count
-            blobColors.forEachIndexed { index, color ->
-                if (index < timePhases.size) {
-                    val phase = timePhases[index].value
-                    
-                    // Assign semi-random positions and orbits based on index
-                    val centerX = when (index % 4) {
-                        0 -> 0.3f; 1 -> 0.7f; 2 -> 0.4f; else -> 0.6f
-                    }
-                    val centerY = when (index % 3) {
-                        0 -> 0.4f; 1 -> 0.6f; else -> 0.5f
-                    }
-                    val orbitRadius = 0.2f + (index * 0.05f)
-                    val blobRadiusScale = 0.8f + (index * 0.1f)
-                    
-                    // Alpha gets softer for extra layers to avoid over-saturation
-                    val alphaScale = if (index > 2) 0.35f else 0.5f
-                    val finalColor = color.copy(alpha = alphaScale * pulse)
+            // 2. Dynamic Rendering based on theme
+            if (atmosphere == Atmosphere.GEMINI_ANIMATED) {
+                // High-performance Mesh Gradient Simulation for Gemini
+                renderGeminiStyle(w, h, timePhases, blobColors, pulse)
+            } else {
+                // Standard organic blob system
+                blobColors.forEachIndexed { index, color ->
+                    if (index < timePhases.size) {
+                        val phase = timePhases[index].value
+                        
+                        // Assign semi-random positions and orbits based on index
+                        val centerX = when (index % 4) {
+                            0 -> 0.3f; 1 -> 0.7f; 2 -> 0.4f; else -> 0.6f
+                        }
+                        val centerY = when (index % 3) {
+                            0 -> 0.4f; 1 -> 0.6f; else -> 0.5f
+                        }
+                        val orbitRadius = 0.2f + (index * 0.05f)
+                        val blobRadiusScale = 0.8f + (index * 0.1f)
+                        
+                        // Alpha gets softer for extra layers to avoid over-saturation
+                        val alphaScale = if (index > 2) 0.35f else 0.5f
+                        val finalColor = color.copy(alpha = alphaScale * pulse)
 
-                    drawMovingBlob(
-                        w, h, 
-                        phase, 
-                        centerX, centerY, 
-                        orbitRadius, 
-                        finalColor, 
-                        blobRadiusScale,
-                        index
-                    )
+                        drawMovingBlob(
+                            w, h, 
+                            phase, 
+                            centerX, centerY, 
+                            orbitRadius, 
+                            finalColor, 
+                            blobRadiusScale,
+                            index
+                        )
+                    }
                 }
             }
         }
         content()
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.renderGeminiStyle(
+    w: Float, h: Float, 
+    timePhases: List<State<Float>>, 
+    colors: List<Color>,
+    pulse: Float
+) {
+    // Gemini style uses overlapping large mesh gradients that move more fluidly
+    colors.forEachIndexed { index, color ->
+        val phase = timePhases[index % timePhases.size].value
+        val angle = Math.toRadians(phase.toDouble())
+        
+        // Much more dynamic and unpredictable movement patterns
+        val speedMult = 1.0 + (index * 0.15)
+        val xShift = (cos(angle * 0.7 * speedMult) * 0.5 + sin(angle * 0.4) * 0.2).toFloat()
+        val yShift = (sin(angle * 0.5 * speedMult) * 0.4 + cos(angle * 0.3) * 0.1).toFloat()
+        
+        val center = Offset(
+            x = (w * (0.5f + xShift)),
+            y = (h * (0.5f + yShift))
+        )
+        
+        // Varying radii to create depth
+        val radiusBase = if (index % 2 == 0) 1.4f else 1.0f
+        val radius = w * (radiusBase + (index * 0.15f))
+        
+        // Layer blending: higher indices (new colors) are more subtle
+        val alphaBase = when(index) {
+            0 -> 0.55f
+            1 -> 0.45f
+            2 -> 0.40f
+            else -> 0.30f
+        }
+
+        drawCircle(
+            brush = Brush.radialGradient(
+                0.0f to color.copy(alpha = alphaBase * pulse),
+                0.5f to color.copy(alpha = (alphaBase * 0.4f) * pulse),
+                1.0f to Color.Transparent,
+                center = center,
+                radius = radius
+            ),
+            center = center,
+            radius = radius
+        )
     }
 }
 

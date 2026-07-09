@@ -120,19 +120,26 @@ fun NixieClock(
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f)
                 )
 
-                // Glow layers
+                // Glow and filaments
                 val cx = xPos + tubeW / 2f
                 val ty = startY + tubeH * 0.75f
                 
-                textPaint.color = nixieAmber.toArgb()
+                // Filament stack (simulates real Nixie wire layers)
+                textPaint.color = nixieAmber.copy(alpha = 0.05f).toArgb()
+                textPaint.setShadowLayer(0f, 0f, 0f, 0) 
                 textPaint.textSize = tubeH * 0.72f
+                drawContext.canvas.nativeCanvas.drawText("8", cx, ty, textPaint)
+
+                // Active digit glow
+                textPaint.color = nixieAmber.toArgb()
+                textPaint.setShadowLayer(tubeW * 0.25f, 0f, 0f, nixieAmber.copy(alpha = 0.7f).toArgb())
                 drawContext.canvas.nativeCanvas.drawText(digitStr, cx, ty, textPaint)
 
-                // Tube reflection
+                // Tube reflection (glass effect)
                 drawRoundRect(
-                    color = Color.White.copy(alpha = 0.025f),
-                    topLeft = Offset(xPos + tubeW * 0.1f, startY + tubeH * 0.03f),
-                    size = Size(tubeW * 0.8f, tubeH * 0.25f),
+                    color = Color.White.copy(alpha = 0.035f),
+                    topLeft = Offset(xPos + tubeW * 0.12f, startY + tubeH * 0.04f),
+                    size = Size(tubeW * 0.76f, tubeH * 0.22f),
                     cornerRadius = CornerRadius(cornerR * 0.8f)
                 )
 
@@ -150,11 +157,11 @@ fun NixieClock(
             val secY = startY + tubeH + tubeH * 0.10f
             val secX = (cw - secTubeW * 2 - spacing) / 2f
 
-            textPaint.color = secAmber.toArgb()
-            textPaint.textSize = secTubeH * 0.72f
-
             for ((i, d) in listOf(s0, s1).withIndex()) {
                 val sx = secX + i * (secTubeW + spacing)
+                val scx = sx + secTubeW / 2f
+                val sty = secY + secTubeH * 0.76f
+                
                 drawRoundRect(tubeColor, Offset(sx, secY), Size(secTubeW, secTubeH), CornerRadius(secCorner))
                 drawRoundRect(
                     color = tubeRim,
@@ -163,9 +170,17 @@ fun NixieClock(
                     cornerRadius = CornerRadius(secCorner),
                     style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1f)
                 )
-                drawContext.canvas.nativeCanvas.drawText(
-                    d.toString(), sx + secTubeW / 2f, secY + secTubeH * 0.76f, textPaint
-                )
+                
+                // Sec filaments
+                textPaint.color = secAmber.copy(alpha = 0.06f).toArgb()
+                textPaint.setShadowLayer(0f, 0f, 0f, 0)
+                textPaint.textSize = secTubeH * 0.72f
+                drawContext.canvas.nativeCanvas.drawText("8", scx, sty, textPaint)
+                
+                // Sec active
+                textPaint.color = secAmber.toArgb()
+                textPaint.setShadowLayer(secTubeW * 0.25f, 0f, 0f, secAmber.copy(alpha = 0.6f).toArgb())
+                drawContext.canvas.nativeCanvas.drawText(d.toString(), scx, sty, textPaint)
             }
         }
     }

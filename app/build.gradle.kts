@@ -35,8 +35,8 @@ android {
         applicationId = "com.dedio.dailypulse"
         minSdk = 21
         targetSdk = 35
-        versionCode = 31
-        versionName = "1.3.2"
+        versionCode = 32
+        versionName = "1.3.3"
     }
 
     buildTypes {
