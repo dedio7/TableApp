@@ -154,16 +154,13 @@ fun MainScreen(
     )
 
     // --- Screen On Logic ---
-    LaunchedEffect(Unit) {
+    LaunchedEffect(batteryInfo.isCharging) {
         val activity = context as? Activity
-        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
-        val statusIntent = context.registerReceiver(null, intentFilter)
-        statusIntent?.let { intent ->
-            val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val isCharging = (status == BatteryManager.BATTERY_STATUS_CHARGING) || (status == BatteryManager.BATTERY_STATUS_FULL)
-            activity?.window?.let { window ->
-                if (isCharging) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        activity?.window?.let { window ->
+            if (batteryInfo.isCharging) {
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
         }
     }

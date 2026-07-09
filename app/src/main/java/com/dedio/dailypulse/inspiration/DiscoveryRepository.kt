@@ -45,8 +45,16 @@ class DiscoveryRepository() {
                     val entries = feed.getJSONArray("entry")
                     if (entries.length() == 0) return null
 
-                    val dayOfYear = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-                    val item = entries.getJSONObject(dayOfYear % entries.length())
+                    // Logic: Use day of year + salted index to prevent predictable streaks
+                    val cal = Calendar.getInstance()
+                    val dayOfYear = cal.get(Calendar.DAY_OF_YEAR)
+                    val currentYear = cal.get(Calendar.YEAR)
+                    
+                    // Salt: a combination of type and year to vary the starting point each year
+                    val salt = (type * 31) + currentYear
+                    val index = (dayOfYear + salt) % entries.length()
+                    
+                    val item = entries.getJSONObject(index)
                     
                     val title = item.optJSONObject("im:name")?.optString("label") ?: "Unknown Title"
                     val artist = item.optJSONObject("im:artist")?.optString("label") ?: ""
