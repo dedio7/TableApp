@@ -59,7 +59,15 @@ class MainScreenViewModel(
     val worldClockEnabled = appSettings.worldClockEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val worldClockCities = appSettings.worldClockCities.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
     val statsEnabled = appSettings.statsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val widgetOrder = appSettings.widgetOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER"))
+    val widgetOrder = appSettings.widgetOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET"))
+
+    val onThisDayEnabled = appSettings.onThisDayEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val visualNewsEnabled = appSettings.visualNewsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val countdownEnabled = appSettings.countdownEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val countdownDate = appSettings.countdownDate.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "2026-12-25")
+    val countdownLabel = appSettings.countdownLabel.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Christmas")
+    val marketTickerEnabled = appSettings.marketTickerEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val marketTickerSymbols = appSettings.marketTickerSymbols.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)
     val nightModeEnd = appSettings.nightModeEnd.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 7)

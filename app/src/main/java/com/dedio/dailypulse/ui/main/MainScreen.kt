@@ -51,6 +51,10 @@ import com.dedio.dailypulse.media.MediaWidget
 import com.dedio.dailypulse.news.NewsTicker
 import com.dedio.dailypulse.settings.AppSettings
 import com.dedio.dailypulse.stats.StatsWidget
+import com.dedio.dailypulse.history.OnThisDayWidget
+import com.dedio.dailypulse.news.visual.VisualNewsWidget
+import com.dedio.dailypulse.countdown.CountdownWidget
+import com.dedio.dailypulse.market.MarketTickerWidget
 import com.dedio.dailypulse.settings.SettingsPanel
 import com.dedio.dailypulse.sunrise.SunriseManager
 import com.dedio.dailypulse.timer.TimerWidget
@@ -62,7 +66,6 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 private fun DiscoveryPager(
     textColor: Color,
-    isSmallHeight: Boolean,
     lastInteraction: () -> Unit
 ) {
     var motivationIndex by remember { mutableIntStateOf(1) } // Default to Movie
@@ -193,11 +196,18 @@ fun MainScreen(
     val worldClockCities by viewModel.worldClockCities.collectAsStateWithLifecycle()
     val statsEnabled by viewModel.statsEnabled.collectAsStateWithLifecycle()
     val widgetOrder by viewModel.widgetOrder.collectAsStateWithLifecycle()
+    val onThisDayEnabled by viewModel.onThisDayEnabled.collectAsStateWithLifecycle()
+    val visualNewsEnabled by viewModel.visualNewsEnabled.collectAsStateWithLifecycle()
+    val countdownEnabled by viewModel.countdownEnabled.collectAsStateWithLifecycle()
+    val countdownDate by viewModel.countdownDate.collectAsStateWithLifecycle()
+    val countdownLabel by viewModel.countdownLabel.collectAsStateWithLifecycle()
+    val marketTickerEnabled by viewModel.marketTickerEnabled.collectAsStateWithLifecycle()
+    val marketTickerSymbols by viewModel.marketTickerSymbols.collectAsStateWithLifecycle()
     val burnInOffset by viewModel.burnInOffset.collectAsStateWithLifecycle()
     val applyNightShift by viewModel.applyNightShift.collectAsStateWithLifecycle()
     val nightBrightness by viewModel.nightBrightness.collectAsStateWithLifecycle()
 
-    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled || worldClockEnabled || statsEnabled || inspirationEnabled || discoveryEnabled
+    val anyWidgetEnabled = weatherEnabled || calendarEnabled || mediaEnabled || timerEnabled || worldClockEnabled || statsEnabled || inspirationEnabled || discoveryEnabled || onThisDayEnabled || visualNewsEnabled || countdownEnabled || marketTickerEnabled
 
     val sunriseManager = remember { SunriseManager(context) }
     val sunriseProgress = if (sunriseModeEnabled) sunriseManager.rememberSunriseProgress() else 0f
@@ -213,9 +223,6 @@ fun MainScreen(
 
     var settingsOpen by remember { mutableStateOf(value = false) }
     var newsRefreshTrigger by remember { mutableIntStateOf(0) }
-    
-    // 0 = Inspiration, 1 = Movie, 2 = Album, 3 = TV Series
-    var motivationIndex by remember { mutableIntStateOf(0) }
     
     val gearRotation by animateFloatAsState(targetValue = if (settingsOpen) 90f else 0f, animationSpec = tween(300), label = "gear")
     
@@ -359,8 +366,12 @@ fun MainScreen(
                                         "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
                                         "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
                                         "DISCOVERY" -> if (discoveryEnabled) {
-                                            DiscoveryPager(textColor = clockColor, isSmallHeight = isSmallHeight, lastInteraction = { lastInteraction = System.currentTimeMillis() })
+                                            DiscoveryPager(textColor = clockColor, lastInteraction = { lastInteraction = System.currentTimeMillis() })
                                         }
+                                        "ON_THIS_DAY" -> if (onThisDayEnabled) OnThisDayWidget(textColor = clockColor, language = appLanguage)
+                                        "VISUAL_NEWS" -> if (visualNewsEnabled) VisualNewsWidget(textColor = clockColor, language = appLanguage)
+                                        "COUNTDOWN" -> if (countdownEnabled) CountdownWidget(targetDate = countdownDate, label = countdownLabel, textColor = clockColor)
+                                        "MARKET" -> if (marketTickerEnabled) MarketTickerWidget(symbols = marketTickerSymbols, textColor = clockColor)
                                     }
                                 }
                             }
@@ -413,8 +424,12 @@ fun MainScreen(
                                         "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
                                         "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
                                         "DISCOVERY" -> if (discoveryEnabled) {
-                                            DiscoveryPager(textColor = clockColor, isSmallHeight = isSmallHeight, lastInteraction = { lastInteraction = System.currentTimeMillis() })
+                                            DiscoveryPager(textColor = clockColor, lastInteraction = { lastInteraction = System.currentTimeMillis() })
                                         }
+                                        "ON_THIS_DAY" -> if (onThisDayEnabled) OnThisDayWidget(textColor = clockColor, language = appLanguage)
+                                        "VISUAL_NEWS" -> if (visualNewsEnabled) VisualNewsWidget(textColor = clockColor, language = appLanguage)
+                                        "COUNTDOWN" -> if (countdownEnabled) CountdownWidget(targetDate = countdownDate, label = countdownLabel, textColor = clockColor)
+                                        "MARKET" -> if (marketTickerEnabled) MarketTickerWidget(symbols = marketTickerSymbols, textColor = clockColor)
                                     }
                                 }
                             }

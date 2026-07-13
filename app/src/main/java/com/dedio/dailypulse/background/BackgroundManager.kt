@@ -88,38 +88,47 @@ fun AmbientBackground(
             drawRect(baseColor)
 
             // 2. Dynamic Rendering based on theme
-            if (atmosphere == Atmosphere.GEMINI_ANIMATED) {
-                // High-performance Mesh Gradient Simulation for Gemini
-                renderGeminiStyle(w, h, timePhases, blobColors, pulse)
-            } else {
-                // Standard organic blob system
-                blobColors.forEachIndexed { index, color ->
-                    if (index < timePhases.size) {
-                        val phase = timePhases[index].value
-                        
-                        // Assign semi-random positions and orbits based on index
-                        val centerX = when (index % 4) {
-                            0 -> 0.3f; 1 -> 0.7f; 2 -> 0.4f; else -> 0.6f
-                        }
-                        val centerY = when (index % 3) {
-                            0 -> 0.4f; 1 -> 0.6f; else -> 0.5f
-                        }
-                        val orbitRadius = 0.2f + (index * 0.05f)
-                        val blobRadiusScale = 0.8f + (index * 0.1f)
-                        
-                        // Alpha gets softer for extra layers to avoid over-saturation
-                        val alphaScale = if (index > 2) 0.35f else 0.5f
-                        val finalColor = color.copy(alpha = alphaScale * pulse)
+            when (atmosphere) {
+                Atmosphere.GEMINI_ANIMATED -> {
+                    // High-performance Mesh Gradient Simulation for Gemini
+                    renderGeminiStyle(w, h, timePhases, blobColors, pulse)
+                }
+                Atmosphere.NORDIC_AURORA -> {
+                    renderAuroraStyle(w, h, timePhases, blobColors, pulse)
+                }
+                Atmosphere.OCEAN_DEPTHS -> {
+                    renderOceanStyle(w, h, timePhases, blobColors, pulse)
+                }
+                else -> {
+                    // Standard organic blob system
+                    blobColors.forEachIndexed { index, color ->
+                        if (index < timePhases.size) {
+                            val phase = timePhases[index].value
+                            
+                            // Assign semi-random positions and orbits based on index
+                            val centerX = when (index % 4) {
+                                0 -> 0.3f; 1 -> 0.7f; 2 -> 0.4f; else -> 0.6f
+                            }
+                            val centerY = when (index % 3) {
+                                0 -> 0.4f; 1 -> 0.6f; else -> 0.5f
+                            }
+                            val orbitRadius = 0.2f + (index * 0.05f)
+                            val blobRadiusScale = 0.8f + (index * 0.1f)
+                            
+                            // Alpha gets softer for extra layers to avoid over-saturation
+                            val alphaScale = if (index > 2) 0.35f else 0.5f
+                            val finalColor = color.copy(alpha = alphaScale * pulse)
 
-                        drawMovingBlob(
-                            w, h, 
-                            phase, 
-                            centerX, centerY, 
-                            orbitRadius, 
-                            finalColor, 
-                            blobRadiusScale,
-                            index
-                        )
+                            drawMovingBlob(
+                                w, h, 
+                                phase, 
+                                centerX, centerY, 
+                                orbitRadius, 
+                                finalColor, 
+                                blobRadiusScale,
+                                index
+                            )
+                        }
                     }
                 }
             }
@@ -166,6 +175,64 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.renderGeminiStyle(
                 0.0f to color.copy(alpha = alphaBase * pulse),
                 0.5f to color.copy(alpha = (alphaBase * 0.4f) * pulse),
                 1.0f to Color.Transparent,
+                center = center,
+                radius = radius
+            ),
+            center = center,
+            radius = radius
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.renderAuroraStyle(
+    w: Float, h: Float, 
+    timePhases: List<State<Float>>, 
+    colors: List<Color>,
+    pulse: Float
+) {
+    // Aurora style uses vertical stretched blobs with wave-like movement
+    colors.forEachIndexed { index, color ->
+        val phase = timePhases[index % timePhases.size].value
+        val angle = Math.toRadians(phase.toDouble())
+        
+        val xPos = (0.2f + (index * 0.3f) + (sin(angle * 0.5) * 0.1f)).toFloat()
+        val center = Offset(w * xPos, h * 0.3f)
+        val rectH = h * 1.2f
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                0.0f to color.copy(alpha = 0.4f * pulse),
+                0.6f to color.copy(alpha = 0.1f * pulse),
+                1.0f to Color.Transparent,
+                center = center,
+                radius = rectH
+            ),
+            center = center,
+            radius = rectH
+        )
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.renderOceanStyle(
+    w: Float, h: Float, 
+    timePhases: List<State<Float>>, 
+    colors: List<Color>,
+    pulse: Float
+) {
+    // Ocean depths uses slow, horizontal swaying waves
+    colors.forEachIndexed { index, color ->
+        val phase = timePhases[index % timePhases.size].value
+        val angle = Math.toRadians(phase.toDouble())
+        
+        val yPos = (0.4f + (index * 0.2f) + (cos(angle * 0.3) * 0.1f)).toFloat()
+        val center = Offset(w * 0.5f, h * yPos)
+        
+        val radius = w * 1.5f
+        
+        drawCircle(
+            brush = Brush.radialGradient(
+                0.0f to color.copy(alpha = 0.3f * pulse),
+                0.8f to Color.Transparent,
                 center = center,
                 radius = radius
             ),

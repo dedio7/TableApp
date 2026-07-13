@@ -63,6 +63,14 @@ class AppSettings(private val context: Context) {
         
         val STATS_ENABLED = booleanPreferencesKey("stats_enabled")
         val WIDGET_ORDER = stringPreferencesKey("widget_order")
+
+        val ON_THIS_DAY_ENABLED = booleanPreferencesKey("on_this_day_enabled")
+        val VISUAL_NEWS_ENABLED = booleanPreferencesKey("visual_news_enabled")
+        val COUNTDOWN_ENABLED = booleanPreferencesKey("countdown_enabled")
+        val COUNTDOWN_DATE = stringPreferencesKey("countdown_date")
+        val COUNTDOWN_LABEL = stringPreferencesKey("countdown_label")
+        val MARKET_TICKER_ENABLED = booleanPreferencesKey("market_ticker_enabled")
+        val MARKET_TICKER_SYMBOLS = stringSetPreferencesKey("market_ticker_symbols")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -177,10 +185,37 @@ class AppSettings(private val context: Context) {
     suspend fun setStatsEnabled(enabled: Boolean) { context.dataStore.edit { it[STATS_ENABLED] = enabled } }
 
     val widgetOrder: Flow<List<String>> = context.dataStore.data.map { 
-        val order = it[WIDGET_ORDER] ?: "WORLD_CLOCK,STATS,WEATHER,CALENDAR,MEDIA,TIMER,INSPIRATION,DISCOVERY"
-        order.split(",")
+        val defaultList = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET")
+        val savedOrder = it[WIDGET_ORDER]?.split(",") ?: defaultList
+        // Merge saved order with missing defaults to handle app updates
+        val mergedList = savedOrder.toMutableList()
+        defaultList.forEach { id ->
+            if (id !in mergedList) mergedList.add(id)
+        }
+        mergedList
     }
     suspend fun setWidgetOrder(order: List<String>) {
         context.dataStore.edit { it[WIDGET_ORDER] = order.joinToString(",") }
     }
+
+    val onThisDayEnabled: Flow<Boolean> = context.dataStore.data.map { it[ON_THIS_DAY_ENABLED] ?: false }
+    suspend fun setOnThisDayEnabled(enabled: Boolean) { context.dataStore.edit { it[ON_THIS_DAY_ENABLED] = enabled } }
+
+    val visualNewsEnabled: Flow<Boolean> = context.dataStore.data.map { it[VISUAL_NEWS_ENABLED] ?: false }
+    suspend fun setVisualNewsEnabled(enabled: Boolean) { context.dataStore.edit { it[VISUAL_NEWS_ENABLED] = enabled } }
+
+    val countdownEnabled: Flow<Boolean> = context.dataStore.data.map { it[COUNTDOWN_ENABLED] ?: false }
+    suspend fun setCountdownEnabled(enabled: Boolean) { context.dataStore.edit { it[COUNTDOWN_ENABLED] = enabled } }
+
+    val countdownDate: Flow<String> = context.dataStore.data.map { it[COUNTDOWN_DATE] ?: "2026-12-25" }
+    val countdownLabel: Flow<String> = context.dataStore.data.map { it[COUNTDOWN_LABEL] ?: "Christmas" }
+    suspend fun setCountdownTarget(date: String, label: String) {
+        context.dataStore.edit { it[COUNTDOWN_DATE] = date; it[COUNTDOWN_LABEL] = label }
+    }
+
+    val marketTickerEnabled: Flow<Boolean> = context.dataStore.data.map { it[MARKET_TICKER_ENABLED] ?: false }
+    suspend fun setMarketTickerEnabled(enabled: Boolean) { context.dataStore.edit { it[MARKET_TICKER_ENABLED] = enabled } }
+
+    val marketTickerSymbols: Flow<Set<String>> = context.dataStore.data.map { it[MARKET_TICKER_SYMBOLS] ?: setOf("BTC-USD", "ETH-USD", "AAPL", "TSLA") }
+    suspend fun setMarketTickerSymbols(symbols: Set<String>) { context.dataStore.edit { it[MARKET_TICKER_SYMBOLS] = symbols } }
 }

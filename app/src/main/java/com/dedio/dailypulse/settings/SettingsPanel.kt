@@ -76,15 +76,10 @@ fun SettingsPanel(
     val clockColor by appSettings.clockColor.collectAsStateWithLifecycle(initialValue = 0xFFE8E8E8L)
     val showSeconds by appSettings.showSeconds.collectAsStateWithLifecycle(initialValue = true)
     val neonModeEnabled by appSettings.neonModeEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
     val currentCity by appSettings.weatherCity.collectAsStateWithLifecycle(initialValue = "Roma")
     val binaryMode by appSettings.binaryClockMode.collectAsStateWithLifecycle(initialValue = "BINARY")
     val nightShiftEnabled by appSettings.nightShiftEnabled.collectAsStateWithLifecycle(initialValue = false)
     val antiBurnInEnabled by appSettings.antiBurnInEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val discoveryEnabled by appSettings.discoveryEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val enabledNewsSources by appSettings.newsSources.collectAsStateWithLifecycle(initialValue = emptySet())
     val appLanguage by appSettings.appLanguage.collectAsStateWithLifecycle(initialValue = "IT")
     val dateFormat by appSettings.dateFormat.collectAsStateWithLifecycle(initialValue = "IT")
     val atmosphereName by appSettings.atmosphereName.collectAsStateWithLifecycle(initialValue = "DEEP_SPACE")
@@ -103,7 +98,20 @@ fun SettingsPanel(
     val worldClockEnabled by appSettings.worldClockEnabled.collectAsStateWithLifecycle(initialValue = false)
     val worldClockCities by appSettings.worldClockCities.collectAsStateWithLifecycle(initialValue = emptySet())
     val statsEnabled by appSettings.statsEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val widgetOrder by appSettings.widgetOrder.collectAsStateWithLifecycle(initialValue = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY"))
+    val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
+    
+    val onThisDayEnabled by appSettings.onThisDayEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val visualNewsEnabled by appSettings.visualNewsEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val countdownEnabled by appSettings.countdownEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val marketTickerEnabled by appSettings.marketTickerEnabled.collectAsStateWithLifecycle(initialValue = false)
+    
+    val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val discoveryEnabled by appSettings.discoveryEnabled.collectAsStateWithLifecycle(initialValue = false)
+    
+    val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val enabledNewsSources by appSettings.newsSources.collectAsStateWithLifecycle(initialValue = emptySet())
+
+    val widgetOrder by appSettings.widgetOrder.collectAsStateWithLifecycle(initialValue = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET"))
 
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
@@ -256,7 +264,7 @@ fun SettingsPanel(
 
                 // ─── 3. WIDGETS & FEATURES ───
                 SettingGroup(title = strings.widgetsFeaturesSection) {
-                    SettingLabel(label = if(appLanguage == "IT") "GESTIONE WIDGET (On/Off e Ordine)" else "WIDGET MANAGEMENT (On/Off & Order)", horizontalPadding = 0.dp)
+                    SettingLabel(label = if(appLanguage == "IT") "GESTIONE WIDGET" else "WIDGET MANAGEMENT", horizontalPadding = 0.dp)
                     WidgetManagerList(
                         currentOrder = widgetOrder,
                         onOrderChange = { scope.launch { appSettings.setWidgetOrder(it) } },
@@ -271,6 +279,10 @@ fun SettingsPanel(
                                     "TIMER" -> appSettings.setTimerEnabled(enabled)
                                     "INSPIRATION" -> appSettings.setInspirationEnabled(enabled)
                                     "DISCOVERY" -> appSettings.setDiscoveryEnabled(enabled)
+                                    "ON_THIS_DAY" -> appSettings.setOnThisDayEnabled(enabled)
+                                    "VISUAL_NEWS" -> appSettings.setVisualNewsEnabled(enabled)
+                                    "COUNTDOWN" -> appSettings.setCountdownEnabled(enabled)
+                                    "MARKET" -> appSettings.setMarketTickerEnabled(enabled)
                                 }
                             }
                         },
@@ -282,7 +294,11 @@ fun SettingsPanel(
                             "MEDIA" to mediaEnabled,
                             "TIMER" to timerEnabled,
                             "INSPIRATION" to inspirationEnabled,
-                            "DISCOVERY" to discoveryEnabled
+                            "DISCOVERY" to discoveryEnabled,
+                            "ON_THIS_DAY" to onThisDayEnabled,
+                            "VISUAL_NEWS" to visualNewsEnabled,
+                            "COUNTDOWN" to countdownEnabled,
+                            "MARKET" to marketTickerEnabled
                         ),
                         appLanguage = appLanguage
                     )
@@ -315,6 +331,37 @@ fun SettingsPanel(
                         }
                     }
                     
+                    if (countdownEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SettingLabel(label = if(appLanguage == "IT") "CONFIGURA COUNTDOWN" else "COUNTDOWN CONFIG", horizontalPadding = 0.dp)
+                        val cDate by appSettings.countdownDate.collectAsStateWithLifecycle(initialValue = "2026-12-25")
+                        val cLabel by appSettings.countdownLabel.collectAsStateWithLifecycle(initialValue = "Christmas")
+                        var tempDate by remember { mutableStateOf(cDate) }
+                        var tempLabel by remember { mutableStateOf(cLabel) }
+                        
+                        OutlinedTextField(
+                            value = tempLabel,
+                            onValueChange = { tempLabel = it },
+                            label = { Text("Label", fontSize = 10.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue)
+                        )
+                        OutlinedTextField(
+                            value = tempDate,
+                            onValueChange = { tempDate = it },
+                            label = { Text("Date (YYYY-MM-DD)", fontSize = 10.sp) },
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = TextPrimary, unfocusedTextColor = TextPrimary, focusedBorderColor = AccentBlue)
+                        )
+                        Button(
+                            onClick = { scope.launch { appSettings.setCountdownTarget(tempDate, tempLabel) } },
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text("SAVE TARGET", fontSize = 11.sp)
+                        }
+                    }
+
                     if (worldClockEnabled) {
                         Spacer(modifier = Modifier.height(12.dp))
                         SettingLabel(label = strings.worldClockLabel.uppercase(), horizontalPadding = 0.dp)
@@ -436,7 +483,11 @@ private fun WidgetManagerList(
         "MEDIA" to (if (appLanguage == "IT") "Media Player" else "Media Player"),
         "TIMER" to (if (appLanguage == "IT") "Timer / Pomodoro" else "Timer / Pomodoro"),
         "INSPIRATION" to (if (appLanguage == "IT") "Citazione del Giorno" else "Quote of the Day"),
-        "DISCOVERY" to (if (appLanguage == "IT") "Discovery" else "Discovery")
+        "DISCOVERY" to (if (appLanguage == "IT") "Discovery" else "Discovery"),
+        "ON_THIS_DAY" to (if (appLanguage == "IT") "Accadde Oggi" else "On This Day"),
+        "VISUAL_NEWS" to (if (appLanguage == "IT") "News Visive" else "Visual News"),
+        "COUNTDOWN" to (if (appLanguage == "IT") "Countdown Evento" else "Event Countdown"),
+        "MARKET" to (if (appLanguage == "IT") "Ticker Mercati" else "Market Ticker")
     )
 
     Column(

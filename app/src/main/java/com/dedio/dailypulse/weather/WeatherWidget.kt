@@ -133,12 +133,24 @@ fun WeatherWidget(
             }
             (weatherData != null) -> {
                 Box {
-                    WeatherContent(
-                        data = weatherData!!,
-                        cityName = cityName,
-                        textColor = textColor,
-                        secondaryTextColor = secondaryTextColor
-                    )
+                    Column {
+                        WeatherContent(
+                            data = weatherData!!,
+                            cityName = cityName,
+                            textColor = textColor,
+                            secondaryTextColor = secondaryTextColor
+                        )
+
+                        // --- Hourly Graphic Section ---
+                        if (weatherData!!.hourly.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TemperatureChart(
+                                hourlyData = weatherData!!.hourly,
+                                textColor = textColor,
+                                lineColor = textColor.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
                     
                     if (isOffline) {
                         Text(
