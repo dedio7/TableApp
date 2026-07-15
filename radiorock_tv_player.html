@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<title>Radio Rock TV - powered by Fluidstream.net</title>
+<meta charset="UTF-8">
+<meta name="description" content="Radio Rock TV">
+<meta name="keywords" content="TV, Radio, Musica,">
+<meta name="author" content="Fluidstream.net">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script type="text/javascript">
+streamv = "https://rr.fluid.stream/RadioRockTV/livestream/playlist.m3u8";
+function PlayerjsEvents(event,id,data){
+   if(event == "pause"){
+      player.api("stop");
+   }
+}
+</script>
+<script src="/_vplayer/player.js?v=1" type="text/javascript"></script>
+<style type="text/css">
+body, html {
+  /* no scrollbars */
+  overflow: hidden;
+  /* pin player to top left corner of page/iframe */
+  margin: 0;
+  padding: 0;
+}
+</style>
+</head>
+<body>
+<div id="fluidPlayer"></div>
+<script>
+   var player = new Playerjs({id:"fluidPlayer", file:"js:streamv", poster:"splash.jpg", autoplay:0});
+</script>
+</body>
+</html>
