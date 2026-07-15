@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dedio.dailypulse.background.Atmosphere
 import com.dedio.dailypulse.clock.ClockType
-import com.dedio.dailypulse.news.DEFAULT_RSS_SOURCES
 import com.dedio.dailypulse.ui.i18n.LocalStrings
 import com.dedio.dailypulse.weather.WeatherLocation
 import com.dedio.dailypulse.weather.WeatherRepository
@@ -98,6 +97,8 @@ fun SettingsPanel(
     val worldClockEnabled by appSettings.worldClockEnabled.collectAsStateWithLifecycle(initialValue = false)
     val worldClockCities by appSettings.worldClockCities.collectAsStateWithLifecycle(initialValue = emptySet())
     val statsEnabled by appSettings.statsEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val radioEnabled by appSettings.radioEnabled.collectAsStateWithLifecycle(initialValue = false)
+    val lyricsEnabled by appSettings.lyricsEnabled.collectAsStateWithLifecycle(initialValue = false)
     val sunriseModeEnabled by appSettings.sunriseModeEnabled.collectAsStateWithLifecycle(initialValue = false)
     
     val onThisDayEnabled by appSettings.onThisDayEnabled.collectAsStateWithLifecycle(initialValue = false)
@@ -108,10 +109,7 @@ fun SettingsPanel(
     val inspirationEnabled by appSettings.inspirationEnabled.collectAsStateWithLifecycle(initialValue = false)
     val discoveryEnabled by appSettings.discoveryEnabled.collectAsStateWithLifecycle(initialValue = false)
     
-    val newsEnabled by appSettings.newsEnabled.collectAsStateWithLifecycle(initialValue = true)
-    val enabledNewsSources by appSettings.newsSources.collectAsStateWithLifecycle(initialValue = emptySet())
-
-    val widgetOrder by appSettings.widgetOrder.collectAsStateWithLifecycle(initialValue = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET"))
+    val widgetOrder by appSettings.widgetOrder.collectAsStateWithLifecycle(initialValue = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET", "RADIO", "LYRICS"))
 
     val weatherRepo = remember { WeatherRepository() }
     var cityQuery by remember { mutableStateOf("") }
@@ -283,6 +281,8 @@ fun SettingsPanel(
                                     "VISUAL_NEWS" -> appSettings.setVisualNewsEnabled(enabled)
                                     "COUNTDOWN" -> appSettings.setCountdownEnabled(enabled)
                                     "MARKET" -> appSettings.setMarketTickerEnabled(enabled)
+                                    "RADIO" -> appSettings.setRadioEnabled(enabled)
+                                    "LYRICS" -> appSettings.setLyricsEnabled(enabled)
                                 }
                             }
                         },
@@ -298,7 +298,9 @@ fun SettingsPanel(
                             "ON_THIS_DAY" to onThisDayEnabled,
                             "VISUAL_NEWS" to visualNewsEnabled,
                             "COUNTDOWN" to countdownEnabled,
-                            "MARKET" to marketTickerEnabled
+                            "MARKET" to marketTickerEnabled,
+                            "RADIO" to radioEnabled,
+                            "LYRICS" to lyricsEnabled,
                         ),
                         appLanguage = appLanguage
                     )
@@ -405,26 +407,6 @@ fun SettingsPanel(
                     HorizontalDivider(color = DividerColor.copy(alpha = 0.5f), thickness = 0.5.dp)
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    SettingSwitch(label = strings.newsEnabledLabel, checked = newsEnabled, onCheckedChange = { scope.launch { appSettings.setNewsEnabled(it) } }, horizontalPadding = 0.dp)
-                    if (newsEnabled) {
-                        FlowRow(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            DEFAULT_RSS_SOURCES.forEach { source ->
-                                val isSelected = source.name in enabledNewsSources
-                                Box(modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(if (isSelected) AccentBlue.copy(alpha = 0.2f) else SurfaceBg).border(1.dp, if (isSelected) AccentBlue else DividerColor, RoundedCornerShape(6.dp)).clickable { scope.launch { val current = enabledNewsSources.toMutableSet(); if (isSelected) current.remove(source.name) else current.add(source.name); appSettings.setNewsSources(current) } }.padding(horizontal = 8.dp, vertical = 4.dp)) {
-                                    Text(text = source.name, color = if (isSelected) AccentBlue else TextPrimary, fontSize = 10.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-                                }
-                            }
-                        }
-                        Button(
-                            onClick = { onNewsRefresh(); onDismiss() },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentBlue.copy(alpha = 0.2f), contentColor = AccentBlue)
-                        ) {
-                            Text(strings.newsRefreshButton.uppercase(), fontSize = 12.sp, fontWeight = FontWeight.Black)
-                        }
-                    }
-                    
                     SettingSwitch(label = strings.batteryEnabledLabel, checked = batteryEnabled, onCheckedChange = { scope.launch { appSettings.setBatteryEnabled(it) } }, horizontalPadding = 0.dp)
                 }
 
@@ -487,7 +469,9 @@ private fun WidgetManagerList(
         "ON_THIS_DAY" to (if (appLanguage == "IT") "Accadde Oggi" else "On This Day"),
         "VISUAL_NEWS" to (if (appLanguage == "IT") "News Visive" else "Visual News"),
         "COUNTDOWN" to (if (appLanguage == "IT") "Countdown Evento" else "Event Countdown"),
-        "MARKET" to (if (appLanguage == "IT") "Ticker Mercati" else "Market Ticker")
+        "MARKET" to (if (appLanguage == "IT") "Ticker Mercati" else "Market Ticker"),
+        "RADIO" to (if (appLanguage == "IT") "Web Radio" else "Web Radio"),
+        "LYRICS" to (if (appLanguage == "IT") "Testi Spotify" else "Spotify Lyrics")
     )
 
     Column(
@@ -545,7 +529,7 @@ private fun WidgetManagerList(
                             Text("▲", color = if (isEnabled) AccentBlue else TextSecondary.copy(alpha = 0.3f), fontSize = 12.sp)
                         }
                     }
-                    if (index < currentOrder.size - 1) {
+                    if (index < (currentOrder.size - 1)) {
                         IconButton(
                             modifier = Modifier.size(28.dp),
                             onClick = {

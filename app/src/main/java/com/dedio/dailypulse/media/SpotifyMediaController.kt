@@ -17,8 +17,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.dedio.dailypulse.ui.i18n.LocalStrings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 
 data class MediaInfo(
     val title: String = "Nessun brano",
@@ -26,10 +28,16 @@ data class MediaInfo(
     val artwork: ImageBitmap? = null,
     val isPlaying: Boolean = false,
     val hasPermission: Boolean = true,
+    val lyrics: String? = null,
+    val syncedLyrics: List<LyricLine>? = null,
+    val playbackPosition: Long = 0,
+    val duration: Long = 0,
     val onPlayPause: () -> Unit = {},
     val onNext: () -> Unit = {},
     val onPrevious: () -> Unit = {},
 )
+
+data class LyricLine(val timeMs: Long, val text: String)
 
 @Composable
 fun rememberMediaController(): MediaInfo {
@@ -68,6 +76,41 @@ fun rememberMediaController(): MediaInfo {
         )
     }
 
+    // --- Lyrics Fetching Logic ---
+    var lastLyricsKey by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+
+    fun fetchLyrics(title: String, artist: String) {
+        val key = "$title-$artist"
+        if (key == lastLyricsKey || title == strings.spotifyNoTrack) return
+        lastLyricsKey = key
+
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val encodedTitle = java.net.URLEncoder.encode(title, "UTF-8")
+                val encodedArtist = java.net.URLEncoder.encode(artist, "UTF-8")
+                val url = "https://lrclib.net/api/get?artist_name=$encodedArtist&track_name=$encodedTitle"
+                
+                val result = com.dedio.dailypulse.network.NetworkClient.performGet(url)
+                if (result is com.dedio.dailypulse.network.NetworkResult.Success) {
+                    val json = org.json.JSONObject(result.data)
+                    val plain = json.optString("plainLyrics", "")
+                    val synced = json.optString("syncedLyrics", "")
+                    
+                    val lyricLines = if (synced.isNotEmpty()) {
+                        parseLrc(synced)
+                    } else null
+                    
+                    mediaInfo = mediaInfo.copy(lyrics = plain.ifEmpty { null }, syncedLyrics = lyricLines)
+                } else {
+                    mediaInfo = mediaInfo.copy(lyrics = null, syncedLyrics = null)
+                }
+            } catch (_: Exception) {
+                mediaInfo = mediaInfo.copy(lyrics = null, syncedLyrics = null)
+            }
+        }
+    }
+
     LaunchedEffect(hasPermission, strings) {
         if (!mediaInfo.isPlaying) {
             mediaInfo = mediaInfo.copy(
@@ -94,18 +137,25 @@ fun rememberMediaController(): MediaInfo {
                     val bitmap = it.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) 
                         ?: it.getBitmap(MediaMetadata.METADATA_KEY_ART)
                     
+                    val title = it.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Sconosciuto"
+                    val artist = it.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Artista Sconosciuto"
+                    val duration = it.getLong(MediaMetadata.METADATA_KEY_DURATION)
+
                     mediaInfo = mediaInfo.copy(
-                        title = it.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "Sconosciuto",
-                        artist = it.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Artista Sconosciuto",
-                        artwork = bitmap?.asImageBitmap()
+                        title = title,
+                        artist = artist,
+                        artwork = bitmap?.asImageBitmap(),
+                        duration = duration
                     )
+                    fetchLyrics(title, artist)
                 }
             }
 
             override fun onPlaybackStateChanged(state: PlaybackState?) {
                 state?.let {
                     mediaInfo = mediaInfo.copy(
-                        isPlaying = it.state == PlaybackState.STATE_PLAYING
+                        isPlaying = it.state == PlaybackState.STATE_PLAYING,
+                        playbackPosition = it.position
                     )
                 }
             }
@@ -140,6 +190,8 @@ fun rememberMediaController(): MediaInfo {
                     artist = meta?.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "Artista...",
                     artwork = bitmap?.asImageBitmap(),
                     isPlaying = pbState?.state == PlaybackState.STATE_PLAYING,
+                    playbackPosition = pbState?.position ?: 0L,
+                    duration = meta?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L,
                     onPlayPause = {
                         val activeState = controller.playbackState?.state
                         if (activeState == PlaybackState.STATE_PLAYING) controller.transportControls.pause()
@@ -148,6 +200,7 @@ fun rememberMediaController(): MediaInfo {
                     onNext = { controller.transportControls.skipToNext() },
                     onPrevious = { controller.transportControls.skipToPrevious() },
                 )
+                meta?.let { fetchLyrics(it.getString(MediaMetadata.METADATA_KEY_TITLE) ?: "", it.getString(MediaMetadata.METADATA_KEY_ARTIST) ?: "") }
             } else {
                 mediaInfo = mediaInfo.copy(
                     title = strings.spotifyNoTrack,
@@ -194,4 +247,25 @@ fun rememberMediaController(): MediaInfo {
     }
 
     return mediaInfo
+}
+
+private fun parseLrc(lrcContent: String): List<LyricLine> {
+    val lines = mutableListOf<LyricLine>()
+    val regex = Regex("\\[(\\d+):(\\d+)\\.(\\d+)\\](.*)")
+    
+    lrcContent.lines().forEach { line ->
+        val match = regex.find(line)
+        if (match != null) {
+            val min = match.groupValues[1].toLong()
+            val sec = match.groupValues[2].toLong()
+            val ms = match.groupValues[3].toLong() * 10
+            
+            val totalMs = (min * 60 * 1000) + (sec * 1000) + ms
+            val text = match.groupValues[4].trim()
+            if (text.isNotEmpty()) {
+                lines.add(LyricLine(totalMs, text))
+            }
+        }
+    }
+    return lines.sortedBy { it.timeMs }
 }

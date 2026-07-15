@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.minutes
 
 class MainScreenViewModel(
     application: Application,
-    private val appSettings: AppSettings
+    private val appSettings: AppSettings,
 ) : AndroidViewModel(application) {
 
     private val context: Context get() = getApplication()
@@ -33,7 +33,7 @@ class MainScreenViewModel(
     val clockTypeName = appSettings.clockType.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FLIP")
     val clockColorLong = appSettings.clockColor.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0xFFEEEEEE)
     val showSeconds = appSettings.showSeconds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = true)
-    val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val neonModeEnabled = appSettings.neonModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
     val binaryModeName = appSettings.binaryClockMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "BINARY")
 
     val newsEnabled = appSettings.newsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
@@ -53,20 +53,24 @@ class MainScreenViewModel(
     val dateFormat = appSettings.dateFormat.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
     val appLanguage = appSettings.appLanguage.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "IT")
     val antiBurnInEnabled = appSettings.antiBurnInEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-    val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val discoveryEnabled = appSettings.discoveryEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val worldClockEnabled = appSettings.worldClockEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val inspirationEnabled = appSettings.inspirationEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val discoveryEnabled = appSettings.discoveryEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val sunriseModeEnabled = appSettings.sunriseModeEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val worldClockEnabled = appSettings.worldClockEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
     val worldClockCities = appSettings.worldClockCities.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
-    val statsEnabled = appSettings.statsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val widgetOrder = appSettings.widgetOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET"))
+    val statsEnabled = appSettings.statsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    
+    val radioEnabled = appSettings.radioEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val lyricsEnabled = appSettings.lyricsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
 
-    val onThisDayEnabled = appSettings.onThisDayEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val visualNewsEnabled = appSettings.visualNewsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val countdownEnabled = appSettings.countdownEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val widgetOrder = appSettings.widgetOrder.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET", "RADIO", "LYRICS"))
+
+    val onThisDayEnabled = appSettings.onThisDayEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val visualNewsEnabled = appSettings.visualNewsEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
+    val countdownEnabled = appSettings.countdownEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
     val countdownDate = appSettings.countdownDate.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "2026-12-25")
     val countdownLabel = appSettings.countdownLabel.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Christmas")
-    val marketTickerEnabled = appSettings.marketTickerEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val marketTickerEnabled = appSettings.marketTickerEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
     val marketTickerSymbols = appSettings.marketTickerSymbols.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
 
     val nightModeStart = appSettings.nightModeStart.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 22)
@@ -86,11 +90,11 @@ class MainScreenViewModel(
         } else {
             hour !in (end until start)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
 
     val applyNightShift = combine(appSettings.nightShiftEnabled, isNightTime) { enabled, night ->
         enabled && night
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), initialValue = false)
 
     // --- Dynamic Location Tracking ---
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -158,7 +162,7 @@ class MainScreenViewModel(
 
             // Only update if significantly changed or city name updated
             val currentCity = appSettings.weatherCity.firstOrNull()
-            if (cityName != "Unknown" && (cityName != currentCity)) {
+            if ((cityName != "Unknown") && (cityName != currentCity)) {
                 appSettings.setWeatherLocation(lat, lon, cityName)
             }
         }

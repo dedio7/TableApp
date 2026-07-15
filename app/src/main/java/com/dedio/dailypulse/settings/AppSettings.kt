@@ -71,6 +71,9 @@ class AppSettings(private val context: Context) {
         val COUNTDOWN_LABEL = stringPreferencesKey("countdown_label")
         val MARKET_TICKER_ENABLED = booleanPreferencesKey("market_ticker_enabled")
         val MARKET_TICKER_SYMBOLS = stringSetPreferencesKey("market_ticker_symbols")
+
+        val RADIO_ENABLED = booleanPreferencesKey("radio_enabled")
+        val LYRICS_ENABLED = booleanPreferencesKey("lyrics_enabled")
     }
 
     val clockType: Flow<String> = context.dataStore.data.map { it[CLOCK_TYPE] ?: "FLIP" }
@@ -184,8 +187,14 @@ class AppSettings(private val context: Context) {
     val statsEnabled: Flow<Boolean> = context.dataStore.data.map { it[STATS_ENABLED] ?: false }
     suspend fun setStatsEnabled(enabled: Boolean) { context.dataStore.edit { it[STATS_ENABLED] = enabled } }
 
+    val radioEnabled: Flow<Boolean> = context.dataStore.data.map { it[RADIO_ENABLED] ?: false }
+    suspend fun setRadioEnabled(enabled: Boolean) { context.dataStore.edit { it[RADIO_ENABLED] = enabled } }
+
+    val lyricsEnabled: Flow<Boolean> = context.dataStore.data.map { it[LYRICS_ENABLED] ?: false }
+    suspend fun setLyricsEnabled(enabled: Boolean) { context.dataStore.edit { it[LYRICS_ENABLED] = enabled } }
+
     val widgetOrder: Flow<List<String>> = context.dataStore.data.map { 
-        val defaultList = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET")
+        val defaultList = listOf("WORLD_CLOCK", "STATS", "WEATHER", "CALENDAR", "MEDIA", "TIMER", "INSPIRATION", "DISCOVERY", "ON_THIS_DAY", "VISUAL_NEWS", "COUNTDOWN", "MARKET", "RADIO", "LYRICS")
         val savedOrder = it[WIDGET_ORDER]?.split(",") ?: defaultList
         // Merge saved order with missing defaults to handle app updates
         val mergedList = savedOrder.toMutableList()
