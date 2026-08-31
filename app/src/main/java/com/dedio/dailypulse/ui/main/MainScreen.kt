@@ -124,6 +124,40 @@ private fun DiscoveryPager(
 }
 
 @Composable
+private fun RenderWidget(
+    widgetId: String,
+    clockColor: Color,
+    weatherLat: Double,
+    weatherLon: Double,
+    weatherCity: String,
+    appLanguage: String,
+    countdownDate: String,
+    countdownLabel: String,
+    marketTickerSymbols: Set<String>,
+    worldClockCities: Set<String>,
+    mediaInfo: com.dedio.dailypulse.media.MediaInfo,
+    isSmallHeight: Boolean,
+    lastInteraction: () -> Unit
+) {
+    when (widgetId) {
+        "WORLD_CLOCK" -> WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
+        "STATS" -> StatsWidget(textColor = clockColor)
+        "WEATHER" -> WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
+        "CALENDAR" -> CalendarWidget(modifier = Modifier.fillMaxWidth())
+        "MEDIA" -> MediaWidget(modifier = Modifier.fillMaxWidth())
+        "TIMER" -> TimerWidget(modifier = Modifier.fillMaxWidth())
+        "INSPIRATION" -> InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
+        "DISCOVERY" -> DiscoveryPager(textColor = clockColor, lastInteraction = lastInteraction)
+        "ON_THIS_DAY" -> OnThisDayWidget(textColor = clockColor, language = appLanguage)
+        "VISUAL_NEWS" -> VisualNewsWidget(textColor = clockColor, language = appLanguage)
+        "COUNTDOWN" -> CountdownWidget(targetDate = countdownDate, label = countdownLabel, textColor = clockColor)
+        "MARKET" -> MarketTickerWidget(symbols = marketTickerSymbols, textColor = clockColor)
+        "RADIO" -> RadioWidget(textColor = clockColor)
+        "LYRICS" -> LyricsWidget(mediaInfo = mediaInfo, textColor = clockColor)
+    }
+}
+
+@Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
     isDreamMode: Boolean = false,
@@ -360,25 +394,39 @@ fun MainScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 widgetOrder.forEach { widgetId ->
-                                    when (widgetId) {
-                                        "WORLD_CLOCK" -> if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
-                                        "STATS" -> if (statsEnabled) StatsWidget(textColor = clockColor)
-                                        "WEATHER" -> if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
-                                        "CALENDAR" -> if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
-                                        "MEDIA" -> if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
-                                        "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
-                                        "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
-                                        "DISCOVERY" -> if (discoveryEnabled) {
-                                            DiscoveryPager(textColor = clockColor) { 
-                                                lastInteraction = System.currentTimeMillis() 
-                                            }
-                                        }
-                                        "ON_THIS_DAY" -> if (onThisDayEnabled) OnThisDayWidget(textColor = clockColor, language = appLanguage)
-                                        "VISUAL_NEWS" -> if (visualNewsEnabled) VisualNewsWidget(textColor = clockColor, language = appLanguage)
-                                        "COUNTDOWN" -> if (countdownEnabled) CountdownWidget(targetDate = countdownDate, label = countdownLabel, textColor = clockColor)
-                                        "MARKET" -> if (marketTickerEnabled) MarketTickerWidget(symbols = marketTickerSymbols, textColor = clockColor)
-                                        "RADIO" -> if (radioEnabled) RadioWidget(textColor = clockColor)
-                                        "LYRICS" -> if (lyricsEnabled) LyricsWidget(mediaInfo = mediaInfo, textColor = clockColor)
+                                    val enabled = when (widgetId) {
+                                        "WORLD_CLOCK" -> worldClockEnabled
+                                        "STATS" -> statsEnabled
+                                        "WEATHER" -> weatherEnabled
+                                        "CALENDAR" -> calendarEnabled
+                                        "MEDIA" -> mediaEnabled
+                                        "TIMER" -> timerEnabled
+                                        "INSPIRATION" -> inspirationEnabled
+                                        "DISCOVERY" -> discoveryEnabled
+                                        "ON_THIS_DAY" -> onThisDayEnabled
+                                        "VISUAL_NEWS" -> visualNewsEnabled
+                                        "COUNTDOWN" -> countdownEnabled
+                                        "MARKET" -> marketTickerEnabled
+                                        "RADIO" -> radioEnabled
+                                        "LYRICS" -> lyricsEnabled
+                                        else -> false
+                                    }
+                                    if (enabled) {
+                                        RenderWidget(
+                                            widgetId = widgetId,
+                                            clockColor = clockColor,
+                                            weatherLat = weatherLat,
+                                            weatherLon = weatherLon,
+                                            weatherCity = weatherCity,
+                                            appLanguage = appLanguage,
+                                            countdownDate = countdownDate,
+                                            countdownLabel = countdownLabel,
+                                            marketTickerSymbols = marketTickerSymbols,
+                                            worldClockCities = worldClockCities,
+                                            mediaInfo = mediaInfo,
+                                            isSmallHeight = isSmallHeight,
+                                            lastInteraction = { lastInteraction = System.currentTimeMillis() }
+                                        )
                                     }
                                 }
                             }
@@ -390,7 +438,7 @@ fun MainScreen(
                         horizontalArrangement = Arrangement.spacedBy(if (isSmallHeight) 12.dp else 32.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(if (anyWidgetEnabled) 2.2f else 1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Column(modifier = Modifier.weight(if (anyWidgetEnabled) 1.5f else 1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                             Box(
                                 modifier = Modifier.weight(1f).fillMaxWidth().pointerInput(Unit) {
                                     var totalDrag = 0f
@@ -416,31 +464,81 @@ fun MainScreen(
                             Spacer(modifier = Modifier.height(if (isSmallHeight) 12.dp else 24.dp))
                         }
                         if (anyWidgetEnabled) {
-                            Column(
-                                modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(vertical = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.Top)
+                            val activeWidgets = widgetOrder.filter { widgetId ->
+                                when (widgetId) {
+                                    "WORLD_CLOCK" -> worldClockEnabled
+                                    "STATS" -> statsEnabled
+                                    "WEATHER" -> weatherEnabled
+                                    "CALENDAR" -> calendarEnabled
+                                    "MEDIA" -> mediaEnabled
+                                    "TIMER" -> timerEnabled
+                                    "INSPIRATION" -> inspirationEnabled
+                                    "DISCOVERY" -> discoveryEnabled
+                                    "ON_THIS_DAY" -> onThisDayEnabled
+                                    "VISUAL_NEWS" -> visualNewsEnabled
+                                    "COUNTDOWN" -> countdownEnabled
+                                    "MARKET" -> marketTickerEnabled
+                                    "RADIO" -> radioEnabled
+                                    "LYRICS" -> lyricsEnabled
+                                    else -> false
+                                }
+                            }
+                            
+                            val col1 = activeWidgets.filterIndexed { index, _ -> index % 2 == 0 }
+                            val col2 = activeWidgets.filterIndexed { index, _ -> index % 2 != 0 }
+
+                            Row(
+                                modifier = Modifier
+                                    .weight(2f)
+                                    .fillMaxHeight()
+                                    .verticalScroll(rememberScrollState())
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                widgetOrder.forEach { widgetId ->
-                                    when (widgetId) {
-                                        "WORLD_CLOCK" -> if (worldClockEnabled) WorldClockWidget(timeZones = worldClockCities, textColor = clockColor)
-                                        "STATS" -> if (statsEnabled) StatsWidget(textColor = clockColor)
-                                        "WEATHER" -> if (weatherEnabled) WeatherWidget(modifier = Modifier.fillMaxWidth(), latitude = weatherLat, longitude = weatherLon, cityName = weatherCity, language = appLanguage)
-                                        "CALENDAR" -> if (calendarEnabled) CalendarWidget(modifier = Modifier.fillMaxWidth())
-                                        "MEDIA" -> if (mediaEnabled) MediaWidget(modifier = Modifier.fillMaxWidth())
-                                        "TIMER" -> if (timerEnabled) TimerWidget(modifier = Modifier.fillMaxWidth())
-                                        "INSPIRATION" -> if (inspirationEnabled) InspirationWidget(textColor = clockColor, isSmallHeight = isSmallHeight)
-                                        "DISCOVERY" -> if (discoveryEnabled) {
-                                            DiscoveryPager(textColor = clockColor) { 
-                                                lastInteraction = System.currentTimeMillis() 
-                                            }
-                                        }
-                                        "ON_THIS_DAY" -> if (onThisDayEnabled) OnThisDayWidget(textColor = clockColor, language = appLanguage)
-                                        "VISUAL_NEWS" -> if (visualNewsEnabled) VisualNewsWidget(textColor = clockColor, language = appLanguage)
-                                        "COUNTDOWN" -> if (countdownEnabled) CountdownWidget(targetDate = countdownDate, label = countdownLabel, textColor = clockColor)
-                                        "MARKET" -> if (marketTickerEnabled) MarketTickerWidget(symbols = marketTickerSymbols, textColor = clockColor)
-                                        "RADIO" -> if (radioEnabled) RadioWidget(textColor = clockColor)
-                                        "LYRICS" -> if (lyricsEnabled) LyricsWidget(mediaInfo = mediaInfo, textColor = clockColor)
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    col1.forEach { widgetId ->
+                                        RenderWidget(
+                                            widgetId = widgetId,
+                                            clockColor = clockColor,
+                                            weatherLat = weatherLat,
+                                            weatherLon = weatherLon,
+                                            weatherCity = weatherCity,
+                                            appLanguage = appLanguage,
+                                            countdownDate = countdownDate,
+                                            countdownLabel = countdownLabel,
+                                            marketTickerSymbols = marketTickerSymbols,
+                                            worldClockCities = worldClockCities,
+                                            mediaInfo = mediaInfo,
+                                            isSmallHeight = isSmallHeight,
+                                            lastInteraction = { lastInteraction = System.currentTimeMillis() }
+                                        )
+                                    }
+                                }
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    col2.forEach { widgetId ->
+                                        RenderWidget(
+                                            widgetId = widgetId,
+                                            clockColor = clockColor,
+                                            weatherLat = weatherLat,
+                                            weatherLon = weatherLon,
+                                            weatherCity = weatherCity,
+                                            appLanguage = appLanguage,
+                                            countdownDate = countdownDate,
+                                            countdownLabel = countdownLabel,
+                                            marketTickerSymbols = marketTickerSymbols,
+                                            worldClockCities = worldClockCities,
+                                            mediaInfo = mediaInfo,
+                                            isSmallHeight = isSmallHeight,
+                                            lastInteraction = { lastInteraction = System.currentTimeMillis() }
+                                        )
                                     }
                                 }
                             }

@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -78,6 +79,28 @@ fun AmbientBackground(
     val colors = atmosphere.colors
     val baseColor = colors[0]
     val blobColors = colors.drop(1)
+
+    // Music visualizer animation phases (independent fast cycles)
+    val vizPhase1 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Restart),
+        label = "viz1"
+    )
+    val vizPhase2 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(1100, easing = LinearEasing), RepeatMode.Restart),
+        label = "viz2"
+    )
+    val vizPhase3 by infiniteTransition.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(650, easing = LinearEasing), RepeatMode.Restart),
+        label = "viz3"
+    )
+    val vizPulse by infiniteTransition.animateFloat(
+        initialValue = 0.5f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "vizPulse"
+    )
     
     Box(modifier = modifier.fillMaxSize()) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -133,6 +156,84 @@ fun AmbientBackground(
                 }
             }
         }
+
+        // Music Visualizer Overlay — shown only when music is playing
+        if (config.isMusicPlaying) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val w = size.width
+                val h = size.height
+                val vizColor = Color.White
+
+                // Simulated bar heights driven by sine waves at different frequencies
+                val barCount = 32
+                val barWidth = (w / (barCount * 2f))
+                val maxBarHeight = h * 0.25f
+                val baseY = h - 4.dp.toPx()
+
+                for (i in 0 until barCount) {
+                    val t1 = Math.toRadians((vizPhase1 + i * 11.25))
+                    val t2 = Math.toRadians((vizPhase2 + i * 7.5))
+                    val t3 = Math.toRadians((vizPhase3 + i * 13.5))
+
+                    // Combine 3 sine waves per bar for organic motion
+                    val rawHeight = (
+                        sin(t1) * 0.5 +
+                        sin(t2) * 0.3 +
+                        sin(t3) * 0.2
+                    ).toFloat()
+                    val barHeight = maxBarHeight * ((rawHeight + 1f) / 2f * 0.8f + 0.2f) * vizPulse
+
+                    val xCenter = w * (i + 0.5f) / barCount
+                    val alpha = 0.12f + 0.18f * vizPulse
+
+                    // Draw the bar (bottom-anchored, rounded)
+                    drawRoundRect(
+                        color = vizColor.copy(alpha = alpha),
+                        topLeft = Offset(
+                            x = xCenter - barWidth / 2f,
+                            y = baseY - barHeight
+                        ),
+                        size = androidx.compose.ui.geometry.Size(
+                            width = barWidth,
+                            height = barHeight
+                        ),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f)
+                    )
+
+                    // Mirrored top bar (symmetric waveform)
+                    val topBarHeight = barHeight * 0.4f
+                    drawRoundRect(
+                        color = vizColor.copy(alpha = alpha * 0.5f),
+                        topLeft = Offset(
+                            x = xCenter - barWidth / 2f,
+                            y = 4.dp.toPx()
+                        ),
+                        size = androidx.compose.ui.geometry.Size(
+                            width = barWidth,
+                            height = topBarHeight
+                        ),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(barWidth / 2f)
+                    )
+                }
+
+                // Glowing center ripple ring
+                val ringPhaseRad = Math.toRadians(vizPhase1.toDouble()).toFloat()
+                val ringRadius = (w * 0.15f) + (w * 0.05f * sin(ringPhaseRad))
+                drawCircle(
+                    color = vizColor.copy(alpha = 0.06f * vizPulse),
+                    radius = ringRadius,
+                    center = Offset(w / 2f, h / 2f),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                )
+                drawCircle(
+                    color = vizColor.copy(alpha = 0.03f * vizPulse),
+                    radius = ringRadius * 1.6f,
+                    center = Offset(w / 2f, h / 2f),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx())
+                )
+            }
+        }
+
         content()
     }
 }

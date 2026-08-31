@@ -34,7 +34,7 @@ android {
     defaultConfig {
         applicationId = "com.dedio.dailypulse"
         minSdk = 21
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 33
         versionName = "1.3.4"
     }
@@ -111,6 +111,10 @@ dependencies {
 
   // Image Loading
   implementation(libs.coil.compose)
+
+  // Media3 (ExoPlayer)
+  implementation(libs.androidx.media3.exoplayer)
+  implementation(libs.androidx.media3.ui)
 
   // Local tests
   testImplementation(libs.junit)

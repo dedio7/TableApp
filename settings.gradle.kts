@@ -13,9 +13,9 @@ dependencyResolutionManagement {
     }
 }
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-}
+// Note: foojay-resolver-convention removed — it makes external SSL calls (api.foojay.io)
+// that fail in environments with strict SSL policies. The JBR bundled with Android Studio
+// provides the JVM toolchain without needing remote resolution.
 
 rootProject.name = "DailyPulse"
 include(":app")
